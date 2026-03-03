@@ -52,8 +52,8 @@ gateway:
   cors:
     allowed-origins: ${GATEWAY_CORS_ALLOWED_ORIGINS:http://localhost:5173}
   resilience:
-    timeout-ms: ${GATEWAY_RESILIENCE_TIMEOUT_MS:1000}
-    retry-max: ${GATEWAY_RESILIENCE_RETRY_MAX:2}
+    timeout-ms: ${GATEWAY_RESILIENCE_TIMEOUT_MS:800}
+    retry-max: ${GATEWAY_RESILIENCE_RETRY_MAX:1}
     circuit-breaker-enabled: ${GATEWAY_RESILIENCE_CIRCUIT_BREAKER_ENABLED:true}
   governance:
     contracts-config: ${GATEWAY_CONTRACTS_CONFIG:classpath:contracts/route-contracts.yml}
@@ -64,11 +64,11 @@ gateway:
       - id: ${GATEWAY_DEFAULT_POLICY_ID:default}
         name: ${GATEWAY_DEFAULT_POLICY_NAME:default}
         rate-limit:
-          requests-per-minute: ${GATEWAY_RATE_LIMIT_RPM:600}
-          burst: ${GATEWAY_RATE_LIMIT_BURST:100}
+          requests-per-minute: ${GATEWAY_RATE_LIMIT_RPM:300}
+          burst: ${GATEWAY_RATE_LIMIT_BURST:40}
         resilience:
-          timeout-ms: ${GATEWAY_POLICY_TIMEOUT_MS:1000}
-          retry-max: ${GATEWAY_POLICY_RETRY_MAX:2}
+          timeout-ms: ${GATEWAY_POLICY_TIMEOUT_MS:800}
+          retry-max: ${GATEWAY_POLICY_RETRY_MAX:1}
           circuit-breaker-enabled: ${GATEWAY_POLICY_CB_ENABLED:true}
         rollout:
           strategy: ${GATEWAY_ROLLOUT_STRATEGY:immediate}

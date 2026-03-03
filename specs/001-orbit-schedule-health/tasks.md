@@ -320,18 +320,18 @@
 
 **Purpose**: 여러 스토리에 걸친 완성도, 성능, 보안, 운영성을 강화한다.
 
-- [ ] T159 [P] Add cross-service performance benchmark scenario in `/home/lhs/dev/tasks/tests/integration/perf/core-flow-benchmark.test.ts`
-- [ ] T160 [P] Add visual regression baseline snapshots for light/dark responsive screens in `/home/lhs/dev/tasks/tests/e2e/visual/orbit-visual-baseline.spec.ts`
-- [ ] T161 Harden API rate-limit/circuit-breaker defaults in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/resources/application.yml`
-- [ ] T162 [P] Add SLO dashboard and alert rules in `/home/lhs/dev/tasks/deploy/monitoring/orbit-slo-rules.yml`
-- [ ] T163 [P] Add security threat model document in `/home/lhs/dev/tasks/backend/orbit-platform/docs/security/threat-model.md`
-- [ ] T164 Add production runbook for incident response in `/home/lhs/dev/tasks/backend/orbit-platform/docs/runbooks/incident-response.md`
-- [ ] T165 [P] Add deep-link abuse detection runbook in `/home/lhs/dev/tasks/backend/orbit-platform/docs/runbooks/deeplink-abuse-response.md`
-- [ ] T166 [P] Add migration operations runbook in `/home/lhs/dev/tasks/backend/orbit-platform/docs/runbooks/migration-operations.md`
-- [ ] T167 Finalize quickstart execution guide in `/home/lhs/dev/tasks/specs/001-orbit-schedule-health/quickstart.md`
-- [ ] T168 Update architecture and boundary ADR index in `/home/lhs/dev/tasks/backend/orbit-platform/docs/adr/README.md`
-- [ ] T169 Run full validation checklist and record evidence in `/home/lhs/dev/tasks/specs/001-orbit-schedule-health/release-readiness-checklist.md`
-- [ ] T170 Create final implementation handoff summary in `/home/lhs/dev/tasks/specs/001-orbit-schedule-health/implementation-handoff.md`
+- [X] T159 [P] Add cross-service performance benchmark scenario in `/home/lhs/dev/tasks/tests/integration/perf/core-flow-benchmark.test.ts`
+- [X] T160 [P] Add visual regression baseline snapshots for light/dark responsive screens in `/home/lhs/dev/tasks/tests/e2e/visual/orbit-visual-baseline.spec.ts`
+- [X] T161 Harden API rate-limit/circuit-breaker defaults in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/resources/application.yml`
+- [X] T162 [P] Add SLO dashboard and alert rules in `/home/lhs/dev/tasks/deploy/monitoring/orbit-slo-rules.yml`
+- [X] T163 [P] Add security threat model document in `/home/lhs/dev/tasks/backend/orbit-platform/docs/security/threat-model.md`
+- [X] T164 Add production runbook for incident response in `/home/lhs/dev/tasks/backend/orbit-platform/docs/runbooks/incident-response.md`
+- [X] T165 [P] Add deep-link abuse detection runbook in `/home/lhs/dev/tasks/backend/orbit-platform/docs/runbooks/deeplink-abuse-response.md`
+- [X] T166 [P] Add migration operations runbook in `/home/lhs/dev/tasks/backend/orbit-platform/docs/runbooks/migration-operations.md`
+- [X] T167 Finalize quickstart execution guide in `/home/lhs/dev/tasks/specs/001-orbit-schedule-health/quickstart.md`
+- [X] T168 Update architecture and boundary ADR index in `/home/lhs/dev/tasks/backend/orbit-platform/docs/adr/README.md`
+- [X] T169 Run full validation checklist and record evidence in `/home/lhs/dev/tasks/specs/001-orbit-schedule-health/release-readiness-checklist.md`
+- [X] T170 Create final implementation handoff summary in `/home/lhs/dev/tasks/specs/001-orbit-schedule-health/implementation-handoff.md`
 
 ---
 

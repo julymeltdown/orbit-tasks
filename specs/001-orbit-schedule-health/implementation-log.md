@@ -401,3 +401,31 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - `api-gateway` tests: pass
 - frontend build: pass
 - US11 contract/integration tests: pass
+
+---
+
+## Phase 14 - Polish & Cross-Cutting (T159-T170)
+
+### Completed
+
+- Added perf benchmark and visual baseline E2E spec files
+- Hardened gateway resilience/rate-limit defaults in `application.yml`
+- Added SLO alert rules in `deploy/monitoring/orbit-slo-rules.yml`
+- Added security threat model document
+- Added incident/deep-link-abuse/migration operations runbooks
+- Finalized quickstart guide, ADR index, release-readiness checklist, and implementation handoff summary
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run /home/lhs/dev/tasks/tests/contract/*.test.ts /home/lhs/dev/tasks/tests/integration/*.test.ts /home/lhs/dev/tasks/tests/integration/perf/core-flow-benchmark.test.ts
+```
+
+### Validation Result
+
+- `api-gateway` tests: pass
+- frontend build: pass
+- contract + integration + perf tests: pass
+- visual E2E spec added; Playwright execution deferred (runtime not installed)

@@ -375,3 +375,29 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - `api-gateway` tests: pass
 - frontend build: pass
 - US10 contract/integration tests: pass
+
+---
+
+## Phase 13 - US11 Integrations and Guided Migration (T147-T158)
+
+### Completed
+
+- Added US11 contract and preview/rollback integration tests
+- Scaffolded `integration-migration-service` with migration/proto/domain/services/grpc adapter
+- Added gateway `IntegrationController` preview/execute/rollback endpoints
+- Implemented frontend `ImportWizardPage`, `MigrationValidationReport`, and `IntegrationHealthPanel`
+- Added `/integrations/import` route and navigation link
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us11-migration.contract.test.ts tests/integration/us11-migration-preview-rollback.test.ts
+```
+
+### Validation Result
+
+- `api-gateway` tests: pass
+- frontend build: pass
+- US11 contract/integration tests: pass

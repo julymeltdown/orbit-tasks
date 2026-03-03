@@ -299,18 +299,18 @@
 
 **Independent Test**: 연동 이벤트 동기화와 이관 검증 리포트/롤백 포인트 생성이 확인되면 검증 완료.
 
-- [ ] T147 [P] [US11] Add integration/migration contract tests in `/home/lhs/dev/tasks/tests/contract/us11-migration.contract.test.ts`
-- [ ] T148 [P] [US11] Add migration preview and rollback integration tests in `/home/lhs/dev/tasks/tests/integration/us11-migration-preview-rollback.test.ts`
-- [ ] T149 [US11] Scaffold integration-migration-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/build.gradle.kts`
-- [ ] T150 [P] [US11] Add connector/import job schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/src/main/resources/db/migration/V1__integration_migration.sql`
-- [ ] T151 [P] [US11] Implement connector subscription aggregate in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/src/main/java/com/orbit/migration/domain/ConnectorSubscription.java`
-- [ ] T152 [P] [US11] Implement import mapping and validation service in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/src/main/java/com/orbit/migration/application/service/ImportValidationService.java`
-- [ ] T153 [US11] Implement import execution and rollback snapshot service in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/src/main/java/com/orbit/migration/application/service/ImportExecutionService.java`
-- [ ] T154 [US11] Implement integration-migration gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/src/main/java/com/orbit/migration/adapters/in/grpc/MigrationGrpcService.java`
-- [ ] T155 [US11] Add integration/migration endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/IntegrationController.java`
-- [ ] T156 [US11] Implement frontend import wizard page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/integrations/ImportWizardPage.tsx`
-- [ ] T157 [P] [US11] Implement migration validation report component in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/integrations/MigrationValidationReport.tsx`
-- [ ] T158 [US11] Implement integration health and retry panel in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/integrations/IntegrationHealthPanel.tsx`
+- [X] T147 [P] [US11] Add integration/migration contract tests in `/home/lhs/dev/tasks/tests/contract/us11-migration.contract.test.ts`
+- [X] T148 [P] [US11] Add migration preview and rollback integration tests in `/home/lhs/dev/tasks/tests/integration/us11-migration-preview-rollback.test.ts`
+- [X] T149 [US11] Scaffold integration-migration-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/build.gradle.kts`
+- [X] T150 [P] [US11] Add connector/import job schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/src/main/resources/db/migration/V1__integration_migration.sql`
+- [X] T151 [P] [US11] Implement connector subscription aggregate in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/src/main/java/com/orbit/migration/domain/ConnectorSubscription.java`
+- [X] T152 [P] [US11] Implement import mapping and validation service in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/src/main/java/com/orbit/migration/application/service/ImportValidationService.java`
+- [X] T153 [US11] Implement import execution and rollback snapshot service in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/src/main/java/com/orbit/migration/application/service/ImportExecutionService.java`
+- [X] T154 [US11] Implement integration-migration gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/integration-migration-service/src/main/java/com/orbit/migration/adapters/in/grpc/MigrationGrpcService.java`
+- [X] T155 [US11] Add integration/migration endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/IntegrationController.java`
+- [X] T156 [US11] Implement frontend import wizard page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/integrations/ImportWizardPage.tsx`
+- [X] T157 [P] [US11] Implement migration validation report component in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/integrations/MigrationValidationReport.tsx`
+- [X] T158 [US11] Implement integration health and retry panel in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/integrations/IntegrationHealthPanel.tsx`
 
 **Checkpoint**: US11 independently functional and testable.
 

@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: integration-migration-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/integration_migration_db}
+    username: ${DB_USERNAME:migration_user}
+    password: ${DB_PASSWORD:migration_pass}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+  grpc:
+    server:
+      port: ${GRPC_SERVER_PORT:9100}
+      reflection:
+        enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

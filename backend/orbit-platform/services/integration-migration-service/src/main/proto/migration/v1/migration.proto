@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package orbit.migration.v1;
+
+option java_package = "com.orbit.migration.v1";
+option java_multiple_files = true;
+
+service Migration {
+  rpc Preview(PreviewRequest) returns (PreviewResponse);
+}
+
+message PreviewRequest {
+  string workspace_id = 1;
+  string source_system = 2;
+}
+
+message PreviewResponse {
+  string status = 1;
+}

@@ -10,6 +10,7 @@ const navItems = [
   { to: "/insights", label: "Insights" },
   { to: "/portfolio", label: "Portfolio" },
   { to: "/admin/compliance", label: "Admin" },
+  { to: "/integrations/import", label: "Integrations" },
   { to: "/team", label: "Teams" },
   { to: "/profile", label: "Profile" },
   { to: "/inbox", label: "Inbox" }

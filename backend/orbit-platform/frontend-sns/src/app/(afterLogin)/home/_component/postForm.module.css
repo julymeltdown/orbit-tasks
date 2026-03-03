@@ -1,0 +1,150 @@
+.postUserSection {
+    margin-right: var(--space-3);
+    width: 40px;
+}
+
+.postUserImage {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+}
+
+.postUserImage img {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    object-fit: cover;
+}
+
+.avatarImage {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    object-fit: cover;
+}
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    background: rgb(29, 155, 240);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.postForm {
+    margin-top: 0;
+    display: flex;
+    padding: var(--space-4) var(--space-4) var(--space-2);
+    border-color: rgb(239, 243, 244);
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+@media (prefers-color-scheme: dark) {
+    .postForm {
+        border-color: rgb(47, 51, 54);
+    }
+}
+.postInputSection {
+    flex: 1;
+}
+.postButtonSection {
+    width: 100%;
+}
+.postForm textarea {
+    width: 100%;
+    border: none;
+    padding: var(--space-3) 0;
+    font-size: 20px;
+    line-height: 24px;
+    outline: none;
+    font-family: Malgun Gothic;
+}
+.postForm textarea::placeholder {
+    font-family: Malgun Gothic;
+}
+.footerButtons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.footerButtonLeft {
+    flex: 1;
+}
+.footerButtonLeft select {
+    border: 1px solid rgb(207, 217, 222);
+    border-radius: 16px;
+    padding: 6px var(--space-3);
+    background: transparent;
+    font-size: 13px;
+}
+@media (prefers-color-scheme: dark) {
+    .footerButtonLeft select {
+        color: white;
+        border-color: rgb(47, 51, 54);
+    }
+}
+.uploadButton {
+    width: 34px;
+    height: 34px;
+    border: none;
+    cursor: pointer;
+    border-radius: 17px;
+    transition-duration: 0.2s;
+    transition-property: background-color;
+    background-color: rgb(29, 155, 240, 0.01);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.uploadButton:hover {
+    background-color: rgb(29, 155, 240, 0.1);
+}
+.uploadButton svg {
+    fill: rgb(29, 155, 240);
+}
+.actionButton:disabled {
+    opacity: 0.5;
+}
+.actionButton {
+    width: 94px;
+    height: 36px;
+    border: none;
+    color: rgb(255, 255, 255);
+    font-weight: 700;
+    font-size: 15px;
+    border-radius: 18px;
+    background-color: rgb(29, 155, 240);
+}
+.actionButton:hover {
+    background-color: rgb(26, 140, 216);
+}
+
+@media (max-width: 720px) {
+    .postUserSection {
+        margin-right: var(--space-2);
+        width: 36px;
+    }
+
+    .postUserImage,
+    .postUserImage img,
+    .avatarImage,
+    .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 18px;
+    }
+
+    .postForm {
+        padding: var(--space-3) var(--space-3) var(--space-2);
+    }
+
+    .postForm textarea {
+        font-size: 18px;
+        line-height: 22px;
+        padding: var(--space-2) 0;
+    }
+}

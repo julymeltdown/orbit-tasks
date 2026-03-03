@@ -1,0 +1,80 @@
+.search {
+    position: fixed;
+    height: 42px;
+    width: inherit;
+    border-radius: 21px;
+    background-color: rgb(239, 243, 244);
+    margin-top: 6px;
+    margin-bottom: var(--space-3);
+    display: flex;
+    align-items: center;
+}
+
+.search svg {
+    margin-left: var(--space-5);
+    fill: rgb(83, 100, 113);
+}
+
+.search input {
+    outline: none;
+    background-color: transparent;
+    border: none;
+    padding: var(--space-3);
+    margin-left: var(--space-1);
+    font-size: 15px;
+    width: 100%;
+}
+@media (prefers-color-scheme: dark) {
+    .search {
+        background-color: rgb(22, 24, 28);
+    }
+    .search input {
+        color: white;
+    }
+}
+.filterTitle {
+    background: #ffffff;
+    padding: var(--space-3) var(--space-4);
+    color: rgba(15,20,25,1.00);
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: var(--space-4);
+    border-radius: 16px;
+    border: 1px solid rgb(239,243,244);
+    margin-top: var(--space-3);
+}
+@media (prefers-color-scheme: dark) {
+    .filterTitle {
+        background: black;
+        border-color: rgb(47, 51, 54);
+        color: white;
+    }
+}
+.filterSection {
+    padding: 0 var(--space-4) var(--space-3);
+    margin-bottom: var(--space-4);
+    border-radius: 16px;
+    border: 1px solid rgb(239,243,244);
+}
+@media (prefers-color-scheme: dark) {
+    .filterSection {
+        background: black;
+        border-color: rgb(47, 51, 54);
+        color: white;
+    }
+}
+.filterSection label {
+    font-size: 15px;
+    font-weight: bold;
+    height: 36px;
+    display: flex;
+    align-items: center;
+}
+
+.radio {
+    display: flex;
+}
+
+.radio > div {
+    flex: 1;
+}

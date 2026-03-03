@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package profile.v1;
+
+option java_multiple_files = true;
+option java_package = "com.example.profile.v1";
+option java_outer_classname = "ProfileProto";
+
+message Profile {
+  string user_id = 1; // UUID
+  string nickname = 2;
+  string avatar_url = 3;
+  string bio = 4;
+  int64 follower_count = 5;
+  int64 post_count = 6;
+  string username = 7;
+  int64 following_count = 8;
+}
+
+message GetProfileRequest {
+  string user_id = 1; // UUID
+}
+
+message GetProfileResponse {
+  Profile profile = 1;
+}
+
+message GetProfileByUsernameRequest {
+  string username = 1;
+}
+
+message GetProfilesRequest {
+  repeated string user_ids = 1; // UUID
+}
+
+message GetProfilesResponse {
+  repeated Profile profiles = 1;
+}
+
+message UpdateProfileRequest {
+  string user_id = 1; // UUID
+  string nickname = 2;
+  string avatar_url = 3;
+  string bio = 4;
+  string username = 5;
+}
+
+message UpdateProfileResponse {
+  Profile profile = 1;
+}
+
+message SearchProfilesRequest {
+  string query = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message SearchProfilesResponse {
+  repeated Profile profiles = 1;
+  string next_cursor = 2;
+}
+
+message UploadAvatarRequest {
+  string user_id = 1;
+  bytes content = 2;
+  string content_type = 3;
+  string filename = 4;
+}
+
+message UploadAvatarResponse {
+  string avatar_path = 1;
+}
+
+message GetAvatarRequest {
+  string user_id = 1;
+}
+
+message GetAvatarResponse {
+  bytes content = 1;
+  string content_type = 2;
+}
+
+service ProfileService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc GetProfileByUsername(GetProfileByUsernameRequest) returns (GetProfileResponse);
+  rpc GetProfiles(GetProfilesRequest) returns (GetProfilesResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc SearchProfiles(SearchProfilesRequest) returns (SearchProfilesResponse);
+  rpc UploadAvatar(UploadAvatarRequest) returns (UploadAvatarResponse);
+  rpc GetAvatar(GetAvatarRequest) returns (GetAvatarResponse);
+}

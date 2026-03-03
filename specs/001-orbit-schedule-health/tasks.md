@@ -23,18 +23,18 @@
 
 **Purpose**: 프로젝트 작업 기반과 실행 환경을 준비한다.
 
-- [ ] T001 Create backend working tree bootstrap script in `/home/lhs/dev/tasks/scripts/bootstrap-orbit-platform.sh`
-- [ ] T002 Execute bootstrap and document result in `/home/lhs/dev/tasks/backend/orbit-platform/README.md`
-- [ ] T003 [P] Create local dependency compose stack in `/home/lhs/dev/tasks/deploy/local/docker-compose.orbit.yml`
-- [ ] T004 [P] Create backend shared env template in `/home/lhs/dev/tasks/backend/orbit-platform/.env.example`
-- [ ] T005 [P] Create frontend env template in `/home/lhs/dev/tasks/frontend/orbit-web/.env.example`
-- [ ] T006 Create backend service registry manifest in `/home/lhs/dev/tasks/backend/orbit-platform/services/services.manifest.yaml`
-- [ ] T007 [P] Create CI pipeline skeleton for backend services in `/home/lhs/dev/tasks/.github/workflows/orbit-backend-ci.yml`
-- [ ] T008 [P] Create CI pipeline skeleton for frontend app in `/home/lhs/dev/tasks/.github/workflows/orbit-frontend-ci.yml`
-- [ ] T009 Create monorepo task runner config in `/home/lhs/dev/tasks/package.json`
-- [ ] T010 [P] Create root lint/format baseline config in `/home/lhs/dev/tasks/.editorconfig`
-- [ ] T011 [P] Create root ignore rules for generated/runtime files in `/home/lhs/dev/tasks/.gitignore`
-- [ ] T012 Create implementation progress ledger in `/home/lhs/dev/tasks/specs/001-orbit-schedule-health/implementation-log.md`
+- [X] T001 Create backend working tree bootstrap script in `/home/lhs/dev/tasks/scripts/bootstrap-orbit-platform.sh`
+- [X] T002 Execute bootstrap and document result in `/home/lhs/dev/tasks/backend/orbit-platform/README.md`
+- [X] T003 [P] Create local dependency compose stack in `/home/lhs/dev/tasks/deploy/local/docker-compose.orbit.yml`
+- [X] T004 [P] Create backend shared env template in `/home/lhs/dev/tasks/backend/orbit-platform/.env.example`
+- [X] T005 [P] Create frontend env template in `/home/lhs/dev/tasks/frontend/orbit-web/.env.example`
+- [X] T006 Create backend service registry manifest in `/home/lhs/dev/tasks/backend/orbit-platform/services/services.manifest.yaml`
+- [X] T007 [P] Create CI pipeline skeleton for backend services in `/home/lhs/dev/tasks/.github/workflows/orbit-backend-ci.yml`
+- [X] T008 [P] Create CI pipeline skeleton for frontend app in `/home/lhs/dev/tasks/.github/workflows/orbit-frontend-ci.yml`
+- [X] T009 Create monorepo task runner config in `/home/lhs/dev/tasks/package.json`
+- [X] T010 [P] Create root lint/format baseline config in `/home/lhs/dev/tasks/.editorconfig`
+- [X] T011 [P] Create root ignore rules for generated/runtime files in `/home/lhs/dev/tasks/.gitignore`
+- [X] T012 Create implementation progress ledger in `/home/lhs/dev/tasks/specs/001-orbit-schedule-health/implementation-log.md`
 
 ---
 

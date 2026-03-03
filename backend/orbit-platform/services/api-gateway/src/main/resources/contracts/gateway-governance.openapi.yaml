@@ -1,0 +1,496 @@
+openapi: 3.0.3
+info:
+  title: Gateway Governance API
+  version: v1
+  description: Governance and policy management endpoints for the API gateway.
+servers:
+  - url: https://api.example.com
+
+security:
+  - bearerAuth: []
+
+paths:
+  /admin/contracts:
+    get:
+      summary: List gateway route contracts
+      responses:
+        "200":
+          description: Contract list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteContractList"
+    post:
+      summary: Register a new route contract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteContractCreate"
+      responses:
+        "201":
+          description: Contract created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteContract"
+
+  /admin/contracts/{contractId}:
+    get:
+      summary: Get a route contract by id
+      parameters:
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contract detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteContract"
+
+  /admin/contracts/{contractId}/versions:
+    get:
+      summary: List versions for a route contract
+      parameters:
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Version list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteContractVersionList"
+    post:
+      summary: Publish a new version for a route contract
+      parameters:
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteContractVersionCreate"
+      responses:
+        "201":
+          description: Version created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteContractVersion"
+
+  /admin/contracts/{contractId}/versions/{version}:
+    get:
+      summary: Get a contract version
+      parameters:
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Version detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteContractVersion"
+    patch:
+      summary: Update contract version status
+      parameters:
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteContractVersionUpdate"
+      responses:
+        "200":
+          description: Version updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteContractVersion"
+
+  /admin/policies:
+    get:
+      summary: List policy sets
+      responses:
+        "200":
+          description: Policy list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicySetList"
+    post:
+      summary: Create a policy set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicySetCreate"
+      responses:
+        "201":
+          description: Policy created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicySet"
+
+  /admin/policies/{policyId}:
+    get:
+      summary: Get policy set
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Policy detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicySet"
+    put:
+      summary: Update policy set
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicySetCreate"
+      responses:
+        "200":
+          description: Policy updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicySet"
+
+  /admin/clients:
+    get:
+      summary: List client profiles
+      responses:
+        "200":
+          description: Client list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientProfileList"
+    post:
+      summary: Register client profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientProfileCreate"
+      responses:
+        "201":
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientProfile"
+
+  /admin/rollouts:
+    post:
+      summary: Create a staged rollout for a contract version
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RolloutCreate"
+      responses:
+        "201":
+          description: Rollout created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rollout"
+
+  /admin/rollouts/{rolloutId}:
+    get:
+      summary: Get rollout status
+      parameters:
+        - name: rolloutId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Rollout detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rollout"
+
+  /admin/telemetry/summary:
+    get:
+      summary: Retrieve aggregated gateway telemetry
+      responses:
+        "200":
+          description: Telemetry summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelemetrySummary"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        traceId:
+          type: string
+        details:
+          type: object
+      required: [code, message, traceId]
+
+    RouteContract:
+      type: object
+      properties:
+        id:
+          type: string
+        routeKey:
+          type: string
+        owner:
+          type: string
+        slaTarget:
+          type: string
+        status:
+          type: string
+        versions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteContractVersion"
+      required: [id, routeKey, owner, status]
+
+    RouteContractCreate:
+      type: object
+      properties:
+        routeKey:
+          type: string
+        owner:
+          type: string
+        slaTarget:
+          type: string
+        description:
+          type: string
+      required: [routeKey, owner]
+
+    RouteContractList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteContract"
+
+    RouteContractVersion:
+      type: object
+      properties:
+        version:
+          type: string
+        status:
+          type: string
+        deprecationDate:
+          type: string
+          format: date-time
+        responseSchemaRef:
+          type: string
+      required: [version, status]
+
+    RouteContractVersionCreate:
+      type: object
+      properties:
+        version:
+          type: string
+        responseSchemaRef:
+          type: string
+      required: [version, responseSchemaRef]
+
+    RouteContractVersionUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        deprecationDate:
+          type: string
+          format: date-time
+
+    RouteContractVersionList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteContractVersion"
+
+    PolicySet:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        rateLimit:
+          type: string
+        quota:
+          type: string
+        timeoutMs:
+          type: integer
+        retryPolicy:
+          type: string
+        circuitBreakerPolicy:
+          type: string
+        cachePolicy:
+          type: string
+      required: [id, name]
+
+    PolicySetCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        rateLimit:
+          type: string
+        quota:
+          type: string
+        timeoutMs:
+          type: integer
+        retryPolicy:
+          type: string
+        circuitBreakerPolicy:
+          type: string
+        cachePolicy:
+          type: string
+      required: [name]
+
+    PolicySetList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PolicySet"
+
+    ClientProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        clientType:
+          type: string
+        allowedContracts:
+          type: array
+          items:
+            type: string
+        policySetId:
+          type: string
+      required: [id, clientType]
+
+    ClientProfileCreate:
+      type: object
+      properties:
+        clientType:
+          type: string
+        allowedContracts:
+          type: array
+          items:
+            type: string
+        policySetId:
+          type: string
+      required: [clientType]
+
+    ClientProfileList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientProfile"
+
+    Rollout:
+      type: object
+      properties:
+        id:
+          type: string
+        contractId:
+          type: string
+        version:
+          type: string
+        status:
+          type: string
+        strategy:
+          type: string
+      required: [id, contractId, version, status]
+
+    RolloutCreate:
+      type: object
+      properties:
+        contractId:
+          type: string
+        version:
+          type: string
+        strategy:
+          type: string
+      required: [contractId, version, strategy]
+
+    TelemetrySummary:
+      type: object
+      properties:
+        totalRequests:
+          type: integer
+        errorRate:
+          type: number
+        p95LatencyMs:
+          type: integer

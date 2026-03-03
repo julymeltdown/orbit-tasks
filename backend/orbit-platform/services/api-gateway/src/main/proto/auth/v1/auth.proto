@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option java_multiple_files = true;
+option java_package = "com.example.auth.v1";
+option java_outer_classname = "AuthProto";
+
+enum IdentityProvider {
+  IDENTITY_PROVIDER_UNSPECIFIED = 0;
+  EMAIL = 1;
+  GOOGLE = 2;
+  APPLE = 3;
+}
+
+message SignupEmailRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message VerifyEmailRequest {
+  string email = 1;
+  string code = 2;
+}
+
+message CheckEmailRequest {
+  string email = 1;
+}
+
+message LoginEmailRequest {
+  string email = 1;
+  string password = 2;
+  string ip_address = 3;
+  string user_agent = 4;
+}
+
+message RefreshTokensRequest {
+  string refresh_token = 1;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+message RequestPasswordResetRequest {
+  string email = 1;
+}
+
+message ConfirmPasswordResetRequest {
+  string token = 1;
+  string new_password = 2;
+}
+
+message AuthorizeOAuthRequest {
+  IdentityProvider provider = 1;
+}
+
+message OAuthCallbackRequest {
+  IdentityProvider provider = 1;
+  string code = 2;
+  string state = 3;
+  string ip_address = 4;
+  string user_agent = 5;
+}
+
+message LinkOAuthProviderRequest {
+  IdentityProvider provider = 1;
+  string user_id = 2;
+  string code = 3;
+  string state = 4;
+}
+
+message SignupResponse {
+  string user_id = 1;
+  string status = 2;
+}
+
+message EmailAvailabilityResponse {
+  string email = 1;
+  bool available = 2;
+  string status = 3;
+}
+
+message AuthResponse {
+  string user_id = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  string token_type = 4;
+  int64 expires_in_seconds = 5;
+  repeated IdentityProvider linked_providers = 6;
+}
+
+message PasswordResetResponse {
+  string status = 1;
+}
+
+message OAuthAuthorizeResponse {
+  string authorization_uri = 1;
+}
+
+message LinkedProvidersResponse {
+  string user_id = 1;
+  repeated IdentityProvider providers = 2;
+}
+
+service AuthService {
+  rpc SignupEmail(SignupEmailRequest) returns (SignupResponse);
+  rpc VerifyEmail(VerifyEmailRequest) returns (SignupResponse);
+  rpc CheckEmail(CheckEmailRequest) returns (EmailAvailabilityResponse);
+
+  rpc LoginEmail(LoginEmailRequest) returns (AuthResponse);
+  rpc RefreshTokens(RefreshTokensRequest) returns (AuthResponse);
+  rpc Logout(LogoutRequest) returns (PasswordResetResponse);
+
+  rpc RequestPasswordReset(RequestPasswordResetRequest) returns (PasswordResetResponse);
+  rpc ConfirmPasswordReset(ConfirmPasswordResetRequest) returns (PasswordResetResponse);
+
+  rpc AuthorizeOAuth(AuthorizeOAuthRequest) returns (OAuthAuthorizeResponse);
+  rpc OAuthCallback(OAuthCallbackRequest) returns (AuthResponse);
+  rpc LinkOAuthProvider(LinkOAuthProviderRequest) returns (LinkedProvidersResponse);
+}
+

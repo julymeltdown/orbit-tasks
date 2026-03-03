@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: auth-jwt
+  namespace: boilerplate-random
+type: Opaque
+stringData:
+  JWT_PRIVATE_KEY_PEM: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDP91rwXEOF9XVa
+    UxOODjvEEt73SripKy68HPdlRQe0w9HWRzoR8YFyxvYUtsrLL6yaQ2/BARczv93o
+    BOy4bPPezzZo1Sjvz/OO2pQpASbFrvHgFcCmscBNBTblvIzw7fh4dUuZhvYBw/5C
+    Q45OJeWuexLcuUZ4kpNeSuBkc4Coav/3NmFTfspzylcs2Msz/EVTOatp1oe3owZq
+    V7gr3Iu77RvvgUMJxOj75b0xnbw9X4r4AszLCt5XU5BXLvZaEM0a2SHwL9QbPLkD
+    9OCwKqapOTXDGbsJQSP7eG+e8LoESgpJXboXyIMNCtWRb8YfzW9o9vBlZvKmlAb5
+    pSGydDW7AgMBAAECggEAE/vyBNeTiYONKQaDV4rt7/6G5yk1VimXI8PTe4DG/SDg
+    FiuMB1NiHBRwazcm2krqLCdqIsLRvEr7WPi4LVS9mTM88uqg3209O1oCaMT6jn6B
+    hwYFbZShJQWTlpSoJTLI8KeyLGj3/4gaSRB9fpb3sOzqDW8kYsu7AObzFH62O04N
+    3xRusCdt/UzTcwyRWYqoOJL4AG7jjVI2vc4nrCDg0NOgQWT/4fA+OEhj2PWvyIXy
+    alM9rhYdT1p/iwxhO4jZaaq7GPm1ZQDs/arsm0zRQkOwYOM0yGjVTUETaczjy6dB
+    bRyfzImp1a/ouBeJ36JAIZQs8issftMmmwOSPiCvIQKBgQDwSF61pDQ+zwNPVw/I
+    5o+lpR3DjqUEpSuqNSNCV0ubqx5jZ1UnVJJG28CMNMoqOLwBjpUGdQNM36nFGNwG
+    IerKFpCi1KUfWH4kzEksv2M7BdcWiVReSnXwyBh5m3VpBGNy6N050wDC+Ml2+ns6
+    Kbe2xR7NVKaWEGWVOOjBhHTjKwKBgQDdkdVIH2Ynj5RIUxhGFq6bukhhZZj0B6Y6
+    IPqff6O4ZpaNgoZvTNuU64hwk7l7yaBCmiC+KmgtV1BM6IBfpPcTphBzJC5ZDXIy
+    qRZszrljFbhh11HuBE6pA6nc1EZWvHzKLKvS8bM0+WVo1VsmDu40mi8pKZjkAVzZ
+    YGNh6arvsQKBgEyRgzy2ur9ZEGD0CV+nuRa76yQqDIPSbnuquzWkw78zZFeg0g3a
+    cVKLLGyBVfrmYWLNoMeR+h9BFsRsC5EYtcz4K9b3lDbM6EWpo5fS1Tg1wDi6QlxZ
+    tgOof8QgueVhNJ+lfPm0N4Xp6ak0YJhEOvrPDeW4l+0yBGzs2Z7xKp5JAoGABdvm
+    XOrfo6orTKJN4QSWh22snk62dbWCEsVueys/5A9qacGK1oScxdpYmEl/vSM+xqQW
+    u5CZgqFtcSswwda15eIdSz4or5gobeiEvEnXIySe5I9yDi40+kkrg7hlR8PiNOJr
+    hL95cqwpn1UM/PumFuQA3UDJVzYmA2WGGz+3knECgYAcorbPMQAPvlvJye20uK90
+    fW/olF+rkO7QwbhaiAJADjC7PdeLS0Zq0X8fNs51rrhpX18i5pLlnYWxOtDu4RLk
+    9WKWPI/rZmoD+iBFdE0sPbv9UKPUX0wAl/kRRoLuPxLHpDV56W7tIMlPpeAIwW1o
+    krtof5yz4/8jtPfIixDSOA==
+    -----END PRIVATE KEY-----
+  JWT_PUBLIC_KEY_PEM: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz/da8FxDhfV1WlMTjg47
+    xBLe90q4qSsuvBz3ZUUHtMPR1kc6EfGBcsb2FLbKyy+smkNvwQEXM7/d6ATsuGzz
+    3s82aNUo78/zjtqUKQEmxa7x4BXAprHATQU25byM8O34eHVLmYb2AcP+QkOOTiXl
+    rnsS3LlGeJKTXkrgZHOAqGr/9zZhU37Kc8pXLNjLM/xFUzmradaHt6MGale4K9yL
+    u+0b74FDCcTo++W9MZ28PV+K+ALMywreV1OQVy72WhDNGtkh8C/UGzy5A/TgsCqm
+    qTk1wxm7CUEj+3hvnvC6BEoKSV26F8iDDQrVkW/GH81vaPbwZWbyppQG+aUhsnQ1
+    uwIDAQAB
+    -----END PUBLIC KEY-----

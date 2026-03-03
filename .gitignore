@@ -1,0 +1,47 @@
+# Node
+node_modules/
+dist/
+coverage/
+
+# Java/Gradle
+.gradle/
+build/
+out/
+target/
+*.class
+*.jar
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Runtime/logs
+*.log
+logs/
+*.tmp
+*.swp
+
+# IDE/OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python fallback
+__pycache__/
+*.pyc
+
+# Terraform
+.terraform/
+*.tfstate*
+.terraform.lock.hcl
+
+# Kubernetes secrets
+*.secret.yaml
+secrets/
+.kube/
+kubeconfig*

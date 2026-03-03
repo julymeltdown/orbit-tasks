@@ -1,0 +1,924 @@
+openapi: 3.0.3
+info:
+  title: API Gateway REST Contract
+  version: 1.0.0
+  description: REST facade for frontend, backed by auth REST and domain gRPC services.
+servers:
+  - url: https://api.example.com
+paths:
+  /auth/email/signup:
+    post:
+      summary: Email signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailSignupRequest'
+      responses:
+        '200':
+          description: Signup response (pending verification)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
+  /auth/email/check:
+    post:
+      summary: Email availability check
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailCheckRequest'
+      responses:
+        '200':
+          description: Email availability response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailAvailabilityResponse'
+  /auth/email/verify:
+    post:
+      summary: Email verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailVerifyRequest'
+      responses:
+        '200':
+          description: Verification response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
+  /auth/login:
+    post:
+      summary: Email login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Auth session
+          headers:
+            Set-Cookie:
+              description: Refresh token cookie (HTTP-only)
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      responses:
+        '200':
+          description: New auth session
+          headers:
+            Set-Cookie:
+              description: Rotated refresh token cookie (HTTP-only)
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /auth/logout:
+    post:
+      summary: Logout (revoke refresh token)
+      responses:
+        '204':
+          description: Logged out
+  /auth/oauth/{provider}/authorize:
+    get:
+      summary: OAuth authorization redirect
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+            enum: [google, apple]
+      responses:
+        '302':
+          description: Redirect to OAuth provider
+  /auth/oauth/{provider}/callback:
+    get:
+      summary: OAuth callback
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+            enum: [google, apple]
+        - in: query
+          name: code
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: state
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Auth session
+          headers:
+            Set-Cookie:
+              description: Refresh token cookie (HTTP-only)
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /auth/oauth/{provider}/link:
+    post:
+      summary: Link OAuth provider to current user
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+            enum: [google, apple]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OAuthLinkRequest'
+      responses:
+        '200':
+          description: Linked providers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkedProvidersResponse'
+  /api/profile/{userId}:
+    get:
+      summary: Get profile
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+    put:
+      summary: Update profile
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+  /api/profile/username/{username}:
+    get:
+      summary: Get profile by username
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+  /api/profile/batch:
+    post:
+      summary: Get profiles by user IDs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileBatchRequest'
+      responses:
+        '200':
+          description: Profile batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileBatchResponse'
+  /api/profile/search:
+    get:
+      summary: Search profiles
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Profile search response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSearchResponse'
+  /api/profile/avatar:
+    post:
+      summary: Upload avatar image
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar upload response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvatarUploadResponse'
+  /api/profile/avatar/{userId}:
+    get:
+      summary: Get avatar image
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Avatar image
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+  /api/feed:
+    get:
+      summary: Get feed
+      parameters:
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Feed response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedResponse'
+  /api/posts:
+    post:
+      summary: Create post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '200':
+          description: Created post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+  /api/posts/author/{authorId}:
+    get:
+      summary: Get posts by author
+      parameters:
+        - in: path
+          name: authorId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Feed response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedResponse'
+  /api/posts/search:
+    get:
+      summary: Search posts
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Feed response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedResponse'
+  /api/posts/trending:
+    get:
+      summary: Get trending posts
+      parameters:
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Feed response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedResponse'
+  /api/posts/{postId}:
+    get:
+      summary: Get post detail
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Post detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetailResponse'
+  /api/posts/{postId}/likes:
+    post:
+      summary: Like a post
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Post like response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostLikeResponse'
+    delete:
+      summary: Unlike a post
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Post like response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostLikeResponse'
+  /api/posts/{postId}/comments:
+    post:
+      summary: Create comment
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentRequest'
+      responses:
+        '200':
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+  /api/follows:
+    post:
+      summary: Follow user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FollowRequest'
+      responses:
+        '200':
+          description: Follow action response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowActionResponse'
+  /api/follows/{targetUserId}:
+    delete:
+      summary: Unfollow user
+      parameters:
+        - in: path
+          name: targetUserId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Follow action response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowActionResponse'
+  /api/follows/followers:
+    get:
+      summary: List followers
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Followers list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowListResponse'
+  /api/follows/following:
+    get:
+      summary: List following
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Following list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowListResponse'
+  /api/follows/counts:
+    get:
+      summary: Get follow counts
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Follow counts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowCountsResponse'
+  /api/follows/status:
+    get:
+      summary: Check follow status
+      parameters:
+        - in: query
+          name: targetUserId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Follow status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStatusResponse'
+  /api/notifications:
+    get:
+      summary: List notifications
+      parameters:
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notifications response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationFeed'
+components:
+  schemas:
+    EmailSignupRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+    EmailCheckRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    EmailAvailabilityResponse:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        available:
+          type: boolean
+        status:
+          type: string
+          enum: [AVAILABLE, TAKEN, INVALID]
+    EmailVerifyRequest:
+      type: object
+      required: [email, code]
+      properties:
+        email:
+          type: string
+          format: email
+        code:
+          type: string
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    SignupResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING_VERIFICATION, VERIFIED]
+    AuthResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+        linkedProviders:
+          type: array
+          items:
+            type: string
+            enum: [EMAIL, GOOGLE, APPLE]
+    OAuthLinkRequest:
+      type: object
+      required: [code, state]
+      properties:
+        code:
+          type: string
+        state:
+          type: string
+    LinkedProvidersResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        providers:
+          type: array
+          items:
+            type: string
+            enum: [EMAIL, GOOGLE, APPLE]
+    Profile:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        nickname:
+          type: string
+        avatarUrl:
+          type: string
+        bio:
+          type: string
+        followerCount:
+          type: integer
+        followingCount:
+          type: integer
+        postCount:
+          type: integer
+    UpdateProfileRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        nickname:
+          type: string
+        avatarUrl:
+          type: string
+        bio:
+          type: string
+    ProfileBatchRequest:
+      type: object
+      properties:
+        userIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    ProfileBatchResponse:
+      type: object
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Profile'
+    ProfileSearchResponse:
+      type: object
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Profile'
+        nextCursor:
+          type: string
+    AvatarUploadResponse:
+      type: object
+      properties:
+        avatarUrl:
+          type: string
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        authorId:
+          type: string
+          format: uuid
+        content:
+          type: string
+        visibility:
+          type: string
+          enum: [PUBLIC, FRIENDS, PRIVATE]
+        createdAt:
+          type: string
+          format: date-time
+        commentCount:
+          type: integer
+        likeCount:
+          type: integer
+        likedByMe:
+          type: boolean
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        postId:
+          type: string
+          format: uuid
+        authorId:
+          type: string
+          format: uuid
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    PostDetailResponse:
+      type: object
+      properties:
+        post:
+          $ref: '#/components/schemas/Post'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    PostLikeResponse:
+      type: object
+      properties:
+        postId:
+          type: string
+          format: uuid
+        likeCount:
+          type: integer
+        liked:
+          type: boolean
+    CreatePostRequest:
+      type: object
+      required: [content, visibility]
+      properties:
+        content:
+          type: string
+        visibility:
+          type: string
+          enum: [PUBLIC, FRIENDS, PRIVATE]
+    CreateCommentRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+    FeedResponse:
+      type: object
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        nextCursor:
+          type: string
+    FollowRequest:
+      type: object
+      required: [targetUserId]
+      properties:
+        targetUserId:
+          type: string
+          format: uuid
+    FollowActionResponse:
+      type: object
+      properties:
+        following:
+          type: boolean
+        followedAt:
+          type: string
+    FollowEdge:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        followedAt:
+          type: string
+    FollowListResponse:
+      type: object
+      properties:
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/FollowEdge'
+        nextCursor:
+          type: string
+        totalCount:
+          type: integer
+          format: int64
+    FollowCountsResponse:
+      type: object
+      properties:
+        followerCount:
+          type: integer
+          format: int64
+        followingCount:
+          type: integer
+          format: int64
+    FollowStatusResponse:
+      type: object
+      properties:
+        following:
+          type: boolean
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [COMMENT, FRIEND_REQUEST, FRIEND_ACCEPTED, SYSTEM]
+        payloadJson:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        readAt:
+          type: string
+          format: date-time
+    NotificationFeed:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        nextCursor:
+          type: string

@@ -1,0 +1,27 @@
+name: orbit-frontend-ci
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/orbit-frontend-ci.yml'
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/orbit-frontend-ci.yml'
+
+jobs:
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install and test
+        run: |
+          cd frontend/orbit-web
+          npm ci
+          npm run lint
+          npm run test
+          npm run build

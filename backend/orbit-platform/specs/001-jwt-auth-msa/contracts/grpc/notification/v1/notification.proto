@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package notification.v1;
+
+option java_multiple_files = true;
+option java_package = "com.example.notification.v1";
+option java_outer_classname = "NotificationProto";
+
+message Notification {
+  string id = 1; // UUID
+  string user_id = 2; // UUID
+  string type = 3; // COMMENT, FRIEND_REQUEST, FRIEND_ACCEPTED, SYSTEM
+  string payload_json = 4; // serialized JSON
+  string created_at = 5; // RFC3339
+  string read_at = 6; // RFC3339 or empty
+}
+
+message CreateNotificationRequest {
+  string user_id = 1; // UUID
+  string type = 2;
+  string payload_json = 3;
+}
+
+message CreateNotificationResponse {
+  Notification notification = 1;
+}
+
+message ListNotificationsRequest {
+  string user_id = 1; // UUID
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message ListNotificationsResponse {
+  repeated Notification items = 1;
+  string next_cursor = 2;
+}
+
+service NotificationService {
+  rpc CreateNotification(CreateNotificationRequest) returns (CreateNotificationResponse);
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse);
+}

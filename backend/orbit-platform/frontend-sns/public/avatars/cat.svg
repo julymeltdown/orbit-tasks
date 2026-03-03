@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Cat avatar">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f6d365"/>
+      <stop offset="100%" stop-color="#fda085"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <path d="M48 76l40 24 40-32 40 32 40-24v84c0 40-32 72-72 72h-56c-40 0-72-32-72-72V76z" fill="#fff3e0"/>
+  <circle cx="96" cy="140" r="10" fill="#3b2f2f"/>
+  <circle cx="160" cy="140" r="10" fill="#3b2f2f"/>
+  <path d="M128 150l8 10-8 10-8-10z" fill="#d96c6c"/>
+  <path d="M116 176c8 6 16 6 24 0" stroke="#3b2f2f" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M72 156h32" stroke="#d9b6a3" stroke-width="6" stroke-linecap="round"/>
+  <path d="M152 156h32" stroke="#d9b6a3" stroke-width="6" stroke-linecap="round"/>
+ </svg>

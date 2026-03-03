@@ -1,0 +1,114 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(var(--background-end-rgb));
+    width: 100%;
+    min-height: 100dvh;
+    padding: var(--space-9);
+}
+.left {
+    display: flex;
+    align-items: center;
+}
+.left img {
+    width: 55px;
+    height: 65px;
+}
+
+.right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.right h1 {
+    font-size: 40px;
+    font-weight: bold;
+    margin: var(--space-10) 0;
+}
+@media all and (min-width: 1000px) {
+    .container {
+        flex-direction: row;
+        padding: 0;
+    }
+    .left {
+        flex: 1;
+        justify-content: center;
+    }
+    .left img {
+        width: 450px;
+        height: 550px;
+    }
+    .right {
+        justify-content: center;
+    }
+    .right h1 {
+        font-size: 64px;
+    }
+}
+
+.right h2 {
+    font-weight: bold;
+    font-size: 31px;
+    margin-bottom: var(--space-8);
+}
+.right h3 {
+    font-weight: bold;
+    font-size: 17px;
+    margin-bottom: var(--space-5);
+    margin-top: var(--space-9);
+}
+
+.signup {
+    width: 300px;
+    min-height: 44px;
+    border-radius: 20px;
+    padding: var(--space-2) var(--space-4);
+    font-size: 15px;
+    background-color: rgb(29, 155, 240);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.signup:hover {
+    background-color: rgb(26, 140, 216);
+}
+.login {
+    width: 300px;
+    min-height: 44px;
+    border-radius: 20px;
+    padding: var(--space-2) var(--space-4);
+    font-size: 15px;
+    color: rgb(29, 155, 240);
+    border: 1px solid rgb(207, 217, 222);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.login:hover {
+    background-color: rgba(29,155,240,0.1);
+}
+
+@media all and (max-width: 687px) {
+    .container {
+        padding: var(--space-6) var(--space-5);
+        gap: var(--space-6);
+    }
+    .right h1 {
+        font-size: 32px;
+        margin: var(--space-6) 0;
+    }
+    .right h2 {
+        font-size: 24px;
+        margin-bottom: var(--space-5);
+    }
+    .right h3 {
+        margin-top: var(--space-7);
+    }
+    .signup,
+    .login {
+        width: 100%;
+        max-width: 360px;
+    }
+}

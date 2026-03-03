@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package friend.v1;
+
+option java_multiple_files = true;
+option java_package = "com.example.friend.v1";
+option java_outer_classname = "FriendProto";
+
+message FollowEdge {
+  string follower_id = 1; // UUID
+  string followee_id = 2; // UUID
+  string created_at = 3; // ISO-8601
+}
+
+message FollowUserRequest {
+  string follower_id = 1; // UUID
+  string followee_id = 2; // UUID
+}
+
+message FollowUserResponse {
+  FollowEdge edge = 1;
+  bool following = 2;
+}
+
+message UnfollowUserRequest {
+  string follower_id = 1; // UUID
+  string followee_id = 2; // UUID
+}
+
+message UnfollowUserResponse {
+  bool following = 1;
+}
+
+message ListFollowersRequest {
+  string user_id = 1; // UUID
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message ListFollowersResponse {
+  repeated FollowEdge edges = 1;
+  string next_cursor = 2;
+  int64 total_count = 3;
+}
+
+message ListFollowingRequest {
+  string user_id = 1; // UUID
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message ListFollowingResponse {
+  repeated FollowEdge edges = 1;
+  string next_cursor = 2;
+  int64 total_count = 3;
+}
+
+message GetFollowCountsRequest {
+  string user_id = 1; // UUID
+}
+
+message GetFollowCountsResponse {
+  int64 follower_count = 1;
+  int64 following_count = 2;
+}
+
+message FollowStats {
+  string user_id = 1; // UUID
+  int64 follower_count = 2;
+  int64 following_count = 3;
+}
+
+message GetFollowStatsRequest {
+  repeated string user_ids = 1; // UUID
+}
+
+message GetFollowStatsResponse {
+  repeated FollowStats stats = 1;
+}
+
+message CheckFollowRequest {
+  string follower_id = 1; // UUID
+  string followee_id = 2; // UUID
+}
+
+message CheckFollowResponse {
+  bool following = 1;
+}
+
+service FriendService {
+  rpc FollowUser(FollowUserRequest) returns (FollowUserResponse);
+  rpc UnfollowUser(UnfollowUserRequest) returns (UnfollowUserResponse);
+  rpc ListFollowers(ListFollowersRequest) returns (ListFollowersResponse);
+  rpc ListFollowing(ListFollowingRequest) returns (ListFollowingResponse);
+  rpc GetFollowCounts(GetFollowCountsRequest) returns (GetFollowCountsResponse);
+  rpc GetFollowStats(GetFollowStatsRequest) returns (GetFollowStatsResponse);
+  rpc CheckFollow(CheckFollowRequest) returns (CheckFollowResponse);
+}

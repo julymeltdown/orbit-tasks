@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package friend.v1;
+
+option java_multiple_files = true;
+option java_package = "com.example.friend.v1";
+option java_outer_classname = "FriendProto";
+
+message FriendRequest {
+  string request_id = 1; // UUID
+  string requester_id = 2; // UUID
+  string addressee_id = 3; // UUID
+  string status = 4; // REQUESTED, ACCEPTED, REJECTED, CANCELED, BLOCKED
+}
+
+message SendFriendRequestRequest {
+  string requester_id = 1; // UUID
+  string addressee_id = 2; // UUID
+}
+
+message SendFriendResponse {
+  FriendRequest request = 1;
+}
+
+message RespondFriendRequest {
+  string request_id = 1; // UUID
+}
+
+message RespondFriendResponse {
+  FriendRequest request = 1;
+}
+
+message GetFriendListRequest {
+  string user_id = 1; // UUID
+}
+
+message GetFriendListResponse {
+  repeated string friend_ids = 1; // UUIDs
+}
+
+service FriendService {
+  rpc SendFriendRequest(SendFriendRequestRequest) returns (SendFriendResponse);
+  rpc AcceptFriendRequest(RespondFriendRequest) returns (RespondFriendResponse);
+  rpc RejectFriendRequest(RespondFriendRequest) returns (RespondFriendResponse);
+  rpc GetFriendList(GetFriendListRequest) returns (GetFriendListResponse);
+}

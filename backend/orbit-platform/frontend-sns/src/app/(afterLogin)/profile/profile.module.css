@@ -1,0 +1,448 @@
+.profilePage {
+    gap: var(--space-6);
+}
+
+.cover {
+    position: relative;
+    height: 180px;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(120deg, #1d9bf0 0%, #2dd4bf 55%, #f59e0b 100%);
+    overflow: hidden;
+}
+
+.cover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.35), transparent 45%),
+        radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.25), transparent 50%);
+}
+
+.cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(120deg, rgba(0, 0, 0, 0.08) 0%, transparent 40%),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.2), transparent 60%);
+}
+
+.header {
+    display: flex;
+    gap: var(--space-5);
+    align-items: flex-end;
+    margin-top: -70px;
+    position: relative;
+    z-index: 1;
+}
+
+.avatarWrap {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 6px solid white;
+    background: white;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.avatarImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatarFallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, #1d9bf0, #0ea5e9);
+}
+
+.headerBody {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.nameRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+}
+
+.displayName {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.username {
+    font-size: 14px;
+    color: rgb(83, 100, 113);
+}
+
+.bio {
+    font-size: 15px;
+    color: rgb(83, 100, 113);
+    max-width: 520px;
+}
+
+.actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.primaryButton,
+.secondaryButton {
+    border-radius: 999px;
+    padding: var(--space-2) var(--space-4);
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+
+.primaryButton {
+    background: rgb(29, 155, 240);
+    color: white;
+}
+
+.primaryButton:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.secondaryButton {
+    border: 1px solid rgb(207, 217, 222);
+    background: white;
+}
+
+.stats {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.tabBar {
+    display: flex;
+    gap: var(--space-3);
+    border-bottom: 1px solid rgb(229, 231, 235);
+    padding-bottom: var(--space-2);
+}
+
+.tabButton {
+    border: none;
+    background: transparent;
+    font-weight: 600;
+    font-size: 14px;
+    color: rgb(83, 100, 113);
+    padding: 6px 2px;
+    cursor: pointer;
+    position: relative;
+}
+
+.tabButtonActive {
+    color: rgb(15, 23, 42);
+}
+
+.tabButtonActive::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -9px;
+    height: 3px;
+    border-radius: 999px;
+    background: rgb(29, 155, 240);
+}
+
+.stat {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    font-size: 14px;
+}
+
+.statButton {
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+}
+
+.statButton:focus-visible {
+    outline: 2px solid rgba(29, 155, 240, 0.6);
+    outline-offset: 4px;
+    border-radius: 8px;
+}
+
+.statValue {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.statLabel {
+    color: rgb(83, 100, 113);
+}
+
+.cards {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.postsSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.listSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.listItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: 14px;
+    border: 1px solid rgb(239, 243, 244);
+    background: white;
+}
+
+.listAvatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: rgb(247, 249, 249);
+}
+
+.listAvatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.listAvatarFallback {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+    background: linear-gradient(135deg, #1d9bf0, #0ea5e9);
+}
+
+.listInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.listName {
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.listMeta {
+    font-size: 13px;
+    color: rgb(83, 100, 113);
+}
+
+.listBadge {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(29, 155, 240);
+    background: rgba(29, 155, 240, 0.12);
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+.requestActions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.primaryAction,
+.secondaryAction {
+    border-radius: 999px;
+    padding: 6px var(--space-3);
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.primaryAction {
+    background: rgb(29, 155, 240);
+    color: white;
+}
+
+.secondaryAction {
+    background: transparent;
+    border: 1px solid rgb(207, 217, 222);
+    color: rgb(15, 23, 42);
+}
+
+.loadMoreButton {
+    align-self: center;
+    padding: 10px var(--space-5);
+    border-radius: 999px;
+    border: 1px solid rgb(207, 217, 222);
+    background: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.emptyState {
+    padding: var(--space-6);
+    text-align: center;
+    font-size: 14px;
+    color: rgb(83, 100, 113);
+    border-radius: 16px;
+    border: 1px dashed rgb(221, 227, 233);
+}
+
+.card {
+    border-radius: var(--radius-lg);
+    border: 1px solid rgb(239, 243, 244);
+    padding: var(--space-4);
+    background: rgb(247, 249, 249);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.cardTitle {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.cardRow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cardLabel {
+    font-size: 12px;
+    color: rgb(83, 100, 113);
+}
+
+.cardValue {
+    font-size: 14px;
+}
+
+.textLink {
+    color: rgb(29, 155, 240);
+    font-size: 14px;
+}
+
+.textButton {
+    border: none;
+    background: transparent;
+    color: rgb(29, 155, 240);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+}
+
+.loading {
+    font-size: 14px;
+    color: rgb(83, 100, 113);
+}
+
+@media (max-width: 900px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-4);
+    }
+    .avatarWrap {
+        width: 110px;
+        height: 110px;
+    }
+    .nameRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+    .listItem {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .requestActions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .avatarWrap {
+        border-color: rgb(22, 24, 28);
+        background: rgb(22, 24, 28);
+    }
+    .username,
+    .bio,
+    .statLabel,
+    .cardLabel,
+    .loading {
+        color: rgb(139, 152, 165);
+    }
+    .listMeta {
+        color: rgb(139, 152, 165);
+    }
+    .secondaryButton {
+        background: transparent;
+        border-color: rgb(47, 51, 54);
+        color: white;
+    }
+    .secondaryAction {
+        border-color: rgb(47, 51, 54);
+        color: white;
+    }
+    .card {
+        background: rgb(22, 24, 28);
+        border-color: rgb(47, 51, 54);
+    }
+    .listItem {
+        background: rgb(22, 24, 28);
+        border-color: rgb(47, 51, 54);
+    }
+    .listAvatar {
+        background: rgb(22, 24, 28);
+    }
+    .tabBar {
+        border-bottom-color: rgb(47, 51, 54);
+    }
+    .tabButtonActive {
+        color: white;
+    }
+    .loadMoreButton {
+        background: transparent;
+        border-color: rgb(47, 51, 54);
+        color: white;
+    }
+    .emptyState {
+        border-color: rgb(47, 51, 54);
+        color: rgb(139, 152, 165);
+    }
+}

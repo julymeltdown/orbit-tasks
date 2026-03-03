@@ -1,0 +1,45 @@
+name: orbit-backend-ci
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/orbit-backend-ci.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/orbit-backend-ci.yml'
+
+jobs:
+  backend-build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - api-gateway
+          - identity-access-service
+          - profile-service
+          - team-service
+          - collaboration-service
+          - notification-service
+          - workgraph-service
+          - agile-ops-service
+          - schedule-intelligence-service
+          - deep-link-service
+          - integration-migration-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Build ${{ matrix.service }}
+        run: |
+          if [ -d "backend/orbit-platform/services/${{ matrix.service }}" ]; then
+            cd "backend/orbit-platform/services/${{ matrix.service }}"
+            ./gradlew test build
+          else
+            echo "Service ${{ matrix.service }} not scaffolded yet; failing intentionally"
+            exit 1
+          fi

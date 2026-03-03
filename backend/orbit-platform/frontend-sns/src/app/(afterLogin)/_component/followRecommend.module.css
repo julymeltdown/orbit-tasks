@@ -1,0 +1,75 @@
+.container {
+    padding: 12px 0;
+    height: 66px;
+    display: flex;
+}
+
+.userLogo {
+    width: 40px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(29, 155, 240);
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    object-fit: cover;
+}
+
+.userLogo, .userLogo img {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+}
+
+.userInfo {
+    flex: 1;
+}
+
+.title {
+    font-size: 15px;
+    font-weight: bold;
+    line-height: 20px;
+}
+
+.count {
+    color: rgb(83, 100, 113);
+    font-size: 13px;
+    line-height: 16px;
+}
+
+.followButtonSection {
+    width: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-size: 12px;
+    font-weight: bold;
+}
+.followButtonSection span {
+    color: rgb(29, 155, 240);
+}
+
+.followButtonSection button {
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    color: rgb(var(--background-end-rgb));
+    background: rgb(var(--foreground-rgb));
+    font-size: 14px;
+    font-weight: bold;
+    height: 32px;
+    border-radius: 16px;
+}
+.followButtonSection.followed button {
+    background: white;
+    color: black;
+    border: 1px solid grey;
+}
+.followButtonSection button:hover {
+    background-color: rgb(39,44,48);
+}
+.followButtonSection.followed button:hover {
+    background: lightgray;
+}

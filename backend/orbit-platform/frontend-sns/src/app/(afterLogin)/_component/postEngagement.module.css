@@ -1,0 +1,81 @@
+.engagementRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.likeButton {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.likeButtonActive {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #b91c1c;
+}
+
+.likeButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.likeIcon {
+  display: inline-flex;
+}
+
+.likeIcon svg {
+  display: block;
+  fill: currentColor;
+}
+
+.likeText {
+  font-weight: 600;
+}
+
+.likeCount {
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+}
+
+.replyCount {
+  font-size: 12px;
+  color: #64748b;
+}
+
+@media (max-width: 720px) {
+  .engagementRow {
+    gap: var(--space-3);
+  }
+
+  .likeButton {
+    padding: 5px var(--space-2);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .likeButton {
+    background: transparent;
+    border-color: rgba(148, 163, 184, 0.3);
+    color: #f8fafc;
+  }
+
+  .likeButtonActive {
+    background: rgba(248, 113, 113, 0.18);
+    border-color: rgba(248, 113, 113, 0.55);
+    color: #fecaca;
+  }
+
+  .replyCount {
+    color: #94a3b8;
+  }
+}

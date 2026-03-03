@@ -1,0 +1,25 @@
+services:
+  - name: api-gateway
+    type: bff
+  - name: identity-access-service
+    type: core
+  - name: profile-service
+    type: core
+  - name: team-service
+    type: core
+  - name: collaboration-service
+    type: core
+  - name: notification-service
+    type: core
+  - name: workgraph-service
+    type: core
+  - name: agile-ops-service
+    type: core
+  - name: schedule-intelligence-service
+    type: core
+  - name: deep-link-service
+    type: core
+  - name: integration-migration-service
+    type: integration
+  - name: platform-event-kit
+    type: shared

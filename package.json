@@ -1,0 +1,10 @@
+{
+  "name": "orbit-tasks-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "bootstrap:backend": "bash scripts/bootstrap-orbit-platform.sh",
+    "lint": "echo \"lint pipelines configured per workspace\"",
+    "test": "echo \"run service/frontend tests in subprojects\""
+  }
+}

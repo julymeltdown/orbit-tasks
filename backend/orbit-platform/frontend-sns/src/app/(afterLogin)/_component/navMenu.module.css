@@ -1,0 +1,34 @@
+.navPill {
+    display: inline-flex;
+    height: 50px;
+    padding: var(--space-3);
+    align-items: center;
+}
+.navPill:hover {
+    background-color: rgba(15,20,25, 0.1);
+    border-radius: 29px;
+}
+
+.navPill > div {
+    display: none;
+}
+
+@media all and (min-width: 1300px) {
+    .navPill > div {
+        margin-left: var(--space-5);
+        margin-right: var(--space-4);
+        font-size: 20px;
+        display: inline-block;
+    }
+}
+@media all and (max-width: 1023px) {
+    .navPill {
+        height: 44px;
+        padding: var(--space-2);
+    }
+}
+@media (prefers-color-scheme: dark) {
+    .navPill svg {
+        fill: white;
+    }
+}

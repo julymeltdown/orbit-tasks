@@ -347,3 +347,31 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - `api-gateway` tests: pass
 - frontend build: pass
 - US9 contract/integration tests: pass
+
+---
+
+## Phase 12 - US10 Governance and Data Controls (T135-T146)
+
+### Completed
+
+- Added US10 governance contract/integration tests
+- Added immutable audit migration `V2__audit_events.sql` in identity-access-service
+- Implemented shared `AuditSinkAdapter` in platform-event-kit
+- Implemented `RetentionPolicyScheduler`, `GovernanceAdminService`, and `AIControlPolicyEvaluator`
+- Added gateway admin controller `GovernanceAdminController`
+- Implemented frontend compliance page + audit explorer + policy forms + evidence export hook
+- Added `/admin/compliance` route and navigation link
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us10-governance.contract.test.ts tests/integration/us10-ai-policy-enforcement.test.ts
+```
+
+### Validation Result
+
+- `api-gateway` tests: pass
+- frontend build: pass
+- US10 contract/integration tests: pass

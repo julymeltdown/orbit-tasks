@@ -9,6 +9,7 @@ const navItems = [
   { to: "/sprint", label: "Sprint" },
   { to: "/insights", label: "Insights" },
   { to: "/portfolio", label: "Portfolio" },
+  { to: "/admin/compliance", label: "Admin" },
   { to: "/team", label: "Teams" },
   { to: "/profile", label: "Profile" },
   { to: "/inbox", label: "Inbox" }

@@ -13,6 +13,7 @@ import { InboxPage } from "@/pages/inbox/InboxPage";
 import { DeepLinkResolverPage } from "@/pages/deeplink/DeepLinkResolverPage";
 import { ScheduleInsightsPage } from "@/pages/insights/ScheduleInsightsPage";
 import { PortfolioOverviewPage } from "@/pages/portfolio/PortfolioOverviewPage";
+import { ComplianceDashboardPage } from "@/pages/admin/ComplianceDashboardPage";
 
 function isAuthenticated(): boolean {
   return Boolean(localStorage.getItem("orbit.session.accessToken"));
@@ -77,6 +78,7 @@ export const router = createBrowserRouter([
       { path: "sprint", element: <SprintWorkspacePage /> },
       { path: "insights", element: <ScheduleInsightsPage /> },
       { path: "portfolio", element: <PortfolioOverviewPage /> },
+      { path: "admin/compliance", element: <ComplianceDashboardPage /> },
       { path: "profile", element: <ProfileSettingsPage /> },
       { path: "team", element: <TeamManagementPage /> },
       { path: "inbox", element: <InboxPage /> }

@@ -276,18 +276,18 @@
 
 **Independent Test**: 민감 이벤트 수행 후 감사조회/정책위반 차단/보존 실행 이력이 확인되면 검증 완료.
 
-- [ ] T135 [P] [US10] Add governance contract tests for audit/retention/ai-control in `/home/lhs/dev/tasks/tests/contract/us10-governance.contract.test.ts`
-- [ ] T136 [P] [US10] Add integration tests for AI policy enforcement in `/home/lhs/dev/tasks/tests/integration/us10-ai-policy-enforcement.test.ts`
-- [ ] T137 [US10] Create immutable audit event schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/resources/db/migration/V2__audit_events.sql`
-- [ ] T138 [P] [US10] Implement shared audit sink adapter in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/audit/AuditSinkAdapter.java`
-- [ ] T139 [P] [US10] Implement retention policy entities and scheduler in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/application/service/RetentionPolicyScheduler.java`
-- [ ] T140 [P] [US10] Implement AI control policy entity and evaluator in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/AIControlPolicyEvaluator.java`
-- [ ] T141 [US10] Implement governance admin application service in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/application/service/GovernanceAdminService.java`
-- [ ] T142 [US10] Add governance admin endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/admin/GovernanceAdminController.java`
-- [ ] T143 [US10] Implement frontend admin compliance dashboard page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/admin/ComplianceDashboardPage.tsx`
-- [ ] T144 [P] [US10] Implement frontend audit event explorer in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/admin/AuditEventExplorer.tsx`
-- [ ] T145 [P] [US10] Implement frontend retention/AI-control policy forms in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/admin/PolicyControlForms.tsx`
-- [ ] T146 [US10] Implement governance evidence export action in `/home/lhs/dev/tasks/frontend/orbit-web/src/features/admin/hooks/useEvidenceExport.ts`
+- [X] T135 [P] [US10] Add governance contract tests for audit/retention/ai-control in `/home/lhs/dev/tasks/tests/contract/us10-governance.contract.test.ts`
+- [X] T136 [P] [US10] Add integration tests for AI policy enforcement in `/home/lhs/dev/tasks/tests/integration/us10-ai-policy-enforcement.test.ts`
+- [X] T137 [US10] Create immutable audit event schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/resources/db/migration/V2__audit_events.sql`
+- [X] T138 [P] [US10] Implement shared audit sink adapter in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/audit/AuditSinkAdapter.java`
+- [X] T139 [P] [US10] Implement retention policy entities and scheduler in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/application/service/RetentionPolicyScheduler.java`
+- [X] T140 [P] [US10] Implement AI control policy entity and evaluator in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/AIControlPolicyEvaluator.java`
+- [X] T141 [US10] Implement governance admin application service in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/application/service/GovernanceAdminService.java`
+- [X] T142 [US10] Add governance admin endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/admin/GovernanceAdminController.java`
+- [X] T143 [US10] Implement frontend admin compliance dashboard page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/admin/ComplianceDashboardPage.tsx`
+- [X] T144 [P] [US10] Implement frontend audit event explorer in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/admin/AuditEventExplorer.tsx`
+- [X] T145 [P] [US10] Implement frontend retention/AI-control policy forms in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/admin/PolicyControlForms.tsx`
+- [X] T146 [US10] Implement governance evidence export action in `/home/lhs/dev/tasks/frontend/orbit-web/src/features/admin/hooks/useEvidenceExport.ts`
 
 **Checkpoint**: US10 independently functional and testable.
 

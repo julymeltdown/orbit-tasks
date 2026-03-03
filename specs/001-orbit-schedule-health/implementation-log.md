@@ -319,3 +319,31 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - `api-gateway` tests: pass
 - frontend build: pass
 - US8 contract/integration tests: pass
+
+---
+
+## Phase 11 - US9 Portfolio Visibility and Executive Reporting (T125-T134)
+
+### Completed
+
+- Added US9 contract and escalation-ranking integration tests
+- Added `V2__portfolio_projection.sql` migration to schedule-intelligence-service
+- Implemented `PortfolioAggregationService` and `ExecutiveReportService`
+- Added gateway `PortfolioController` for overview/report endpoints
+- Implemented frontend `PortfolioOverviewPage`, `RiskDistributionWidget`, `EscalationCandidateTable`
+- Implemented monthly CSV export hook `usePortfolioExport`
+- Added `/portfolio` route and app-shell navigation entry
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us9-portfolio.contract.test.ts tests/integration/us9-escalation-ranking.test.ts
+```
+
+### Validation Result
+
+- `api-gateway` tests: pass
+- frontend build: pass
+- US9 contract/integration tests: pass

@@ -255,16 +255,16 @@
 
 **Independent Test**: 포트폴리오 대시보드에서 프로젝트 집계 지표와 리스크 순위가 표시되면 검증 완료.
 
-- [ ] T125 [P] [US9] Add portfolio dashboard contract tests in `/home/lhs/dev/tasks/tests/contract/us9-portfolio.contract.test.ts`
-- [ ] T126 [P] [US9] Add integration test for escalation candidate ranking in `/home/lhs/dev/tasks/tests/integration/us9-escalation-ranking.test.ts`
-- [ ] T127 [US9] Add portfolio projection schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/resources/db/migration/V2__portfolio_projection.sql`
-- [ ] T128 [P] [US9] Implement portfolio aggregation service in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/PortfolioAggregationService.java`
-- [ ] T129 [P] [US9] Implement monthly executive report generator in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/ExecutiveReportService.java`
-- [ ] T130 [US9] Add portfolio endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/PortfolioController.java`
-- [ ] T131 [US9] Implement frontend portfolio overview page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/portfolio/PortfolioOverviewPage.tsx`
-- [ ] T132 [P] [US9] Implement risk distribution widget in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/portfolio/RiskDistributionWidget.tsx`
-- [ ] T133 [P] [US9] Implement escalation candidate table component in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/portfolio/EscalationCandidateTable.tsx`
-- [ ] T134 [US9] Implement monthly report export action in `/home/lhs/dev/tasks/frontend/orbit-web/src/features/portfolio/hooks/usePortfolioExport.ts`
+- [X] T125 [P] [US9] Add portfolio dashboard contract tests in `/home/lhs/dev/tasks/tests/contract/us9-portfolio.contract.test.ts`
+- [X] T126 [P] [US9] Add integration test for escalation candidate ranking in `/home/lhs/dev/tasks/tests/integration/us9-escalation-ranking.test.ts`
+- [X] T127 [US9] Add portfolio projection schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/resources/db/migration/V2__portfolio_projection.sql`
+- [X] T128 [P] [US9] Implement portfolio aggregation service in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/PortfolioAggregationService.java`
+- [X] T129 [P] [US9] Implement monthly executive report generator in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/ExecutiveReportService.java`
+- [X] T130 [US9] Add portfolio endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/PortfolioController.java`
+- [X] T131 [US9] Implement frontend portfolio overview page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/portfolio/PortfolioOverviewPage.tsx`
+- [X] T132 [P] [US9] Implement risk distribution widget in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/portfolio/RiskDistributionWidget.tsx`
+- [X] T133 [P] [US9] Implement escalation candidate table component in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/portfolio/EscalationCandidateTable.tsx`
+- [X] T134 [US9] Implement monthly report export action in `/home/lhs/dev/tasks/frontend/orbit-web/src/features/portfolio/hooks/usePortfolioExport.ts`
 
 **Checkpoint**: US9 independently functional and testable.
 

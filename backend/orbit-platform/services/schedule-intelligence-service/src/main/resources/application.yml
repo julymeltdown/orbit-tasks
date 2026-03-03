@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: schedule-intelligence-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/schedule_intel_db}
+    username: ${DB_USERNAME:schedule_intel_user}
+    password: ${DB_PASSWORD:schedule_intel_pass}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+  grpc:
+    server:
+      port: ${GRPC_SERVER_PORT:9099}
+      reflection:
+        enabled: true
+
+orbit:
+  ai:
+    model: ${ORBIT_AI_MODEL:gpt-4.1-mini}
+    timeout-ms: ${ORBIT_AI_TIMEOUT_MS:8000}
+    fallback-confidence-threshold: ${ORBIT_AI_FALLBACK_THRESHOLD:0.55}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

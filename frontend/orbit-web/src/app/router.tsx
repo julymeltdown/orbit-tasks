@@ -11,6 +11,7 @@ import { WorkspaceEntryPage } from "@/pages/workspace/WorkspaceEntryPage";
 import { SprintWorkspacePage } from "@/pages/sprint/SprintWorkspacePage";
 import { InboxPage } from "@/pages/inbox/InboxPage";
 import { DeepLinkResolverPage } from "@/pages/deeplink/DeepLinkResolverPage";
+import { ScheduleInsightsPage } from "@/pages/insights/ScheduleInsightsPage";
 
 function isAuthenticated(): boolean {
   return Boolean(localStorage.getItem("orbit.session.accessToken"));
@@ -73,6 +74,7 @@ export const router = createBrowserRouter([
       { path: "projects/timeline", element: <TimelinePage /> },
       { path: "projects/table", element: <TablePage /> },
       { path: "sprint", element: <SprintWorkspacePage /> },
+      { path: "insights", element: <ScheduleInsightsPage /> },
       { path: "profile", element: <ProfileSettingsPage /> },
       { path: "team", element: <TeamManagementPage /> },
       { path: "inbox", element: <InboxPage /> }

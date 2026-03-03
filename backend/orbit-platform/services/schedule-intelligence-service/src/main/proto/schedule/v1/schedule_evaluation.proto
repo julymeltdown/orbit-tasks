@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package orbit.schedule.v1;
+
+option java_package = "com.orbit.schedule.v1";
+option java_multiple_files = true;
+
+service ScheduleEvaluation {
+  rpc Evaluate(EvaluateScheduleRequest) returns (EvaluateScheduleResponse);
+}
+
+message EvaluateScheduleRequest {
+  string workspace_id = 1;
+  string project_id = 2;
+  string sprint_id = 3;
+}
+
+message EvaluateScheduleResponse {
+  string health = 1;
+  double confidence = 2;
+}

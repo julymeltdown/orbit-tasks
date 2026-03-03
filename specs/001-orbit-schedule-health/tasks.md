@@ -230,20 +230,20 @@
 
 **Independent Test**: 평가 실행 시 건강도/리스크/권고/질문이 구조화되어 반환되고 AI 실패 시 폴백이 반환되어야 한다.
 
-- [ ] T111 [P] [US8] Add schedule evaluation contract tests in `/home/lhs/dev/tasks/tests/contract/us8-schedule-evaluation.contract.test.ts`
-- [ ] T112 [P] [US8] Add integration tests for fallback and confidence gating in `/home/lhs/dev/tasks/tests/integration/us8-ai-fallback-confidence.test.ts`
-- [ ] T113 [US8] Scaffold schedule-intelligence-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/build.gradle.kts`
-- [ ] T114 [P] [US8] Add evaluation/risk schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/resources/db/migration/V1__schedule_evaluation.sql`
-- [ ] T115 [P] [US8] Implement deterministic risk engine in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/DeterministicRiskEngine.java`
-- [ ] T116 [P] [US8] Implement evaluation result schema validator in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/EvaluationSchemaValidator.java`
-- [ ] T117 [P] [US8] Implement LLM gateway adapter with redaction hook in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/adapters/out/llm/OpenAiEvaluationClient.java`
-- [ ] T118 [US8] Implement evaluation orchestration service in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/ScheduleEvaluationService.java`
-- [ ] T119 [US8] Implement fallback response composer in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/FallbackAdviceService.java`
-- [ ] T120 [US8] Implement schedule-intelligence gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/adapters/in/grpc/ScheduleEvaluationGrpcService.java`
-- [ ] T121 [US8] Add evaluation endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/ScheduleEvaluationController.java`
-- [ ] T122 [P] [US8] Implement frontend AI coach side panel in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/insights/AICoachPanel.tsx`
-- [ ] T123 [P] [US8] Implement frontend evaluation result cards in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/insights/ScheduleHealthCards.tsx`
-- [ ] T124 [US8] Implement frontend evaluation action workflow (accept/edit/ignore) in `/home/lhs/dev/tasks/frontend/orbit-web/src/features/insights/hooks/useEvaluationActions.ts`
+- [X] T111 [P] [US8] Add schedule evaluation contract tests in `/home/lhs/dev/tasks/tests/contract/us8-schedule-evaluation.contract.test.ts`
+- [X] T112 [P] [US8] Add integration tests for fallback and confidence gating in `/home/lhs/dev/tasks/tests/integration/us8-ai-fallback-confidence.test.ts`
+- [X] T113 [US8] Scaffold schedule-intelligence-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/build.gradle.kts`
+- [X] T114 [P] [US8] Add evaluation/risk schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/resources/db/migration/V1__schedule_evaluation.sql`
+- [X] T115 [P] [US8] Implement deterministic risk engine in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/DeterministicRiskEngine.java`
+- [X] T116 [P] [US8] Implement evaluation result schema validator in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/EvaluationSchemaValidator.java`
+- [X] T117 [P] [US8] Implement LLM gateway adapter with redaction hook in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/adapters/out/llm/OpenAiEvaluationClient.java`
+- [X] T118 [US8] Implement evaluation orchestration service in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/ScheduleEvaluationService.java`
+- [X] T119 [US8] Implement fallback response composer in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/application/service/FallbackAdviceService.java`
+- [X] T120 [US8] Implement schedule-intelligence gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/adapters/in/grpc/ScheduleEvaluationGrpcService.java`
+- [X] T121 [US8] Add evaluation endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/ScheduleEvaluationController.java`
+- [X] T122 [P] [US8] Implement frontend AI coach side panel in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/insights/AICoachPanel.tsx`
+- [X] T123 [P] [US8] Implement frontend evaluation result cards in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/insights/ScheduleHealthCards.tsx`
+- [X] T124 [US8] Implement frontend evaluation action workflow (accept/edit/ignore) in `/home/lhs/dev/tasks/frontend/orbit-web/src/features/insights/hooks/useEvaluationActions.ts`
 
 **Checkpoint**: US8 independently functional and testable.
 

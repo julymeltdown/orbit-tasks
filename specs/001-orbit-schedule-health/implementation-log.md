@@ -292,3 +292,30 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - frontend build: pass
 - US7 contract test: pass
 - US7 E2E file added; Playwright execution deferred (runtime not installed in this phase)
+
+---
+
+## Phase 10 - US8 Schedule Evaluation and AI Coach (T111-T124)
+
+### Completed
+
+- Added US8 contract/integration tests for schedule evaluation and fallback confidence gating
+- Scaffolded `schedule-intelligence-service` with migration, proto, runtime config, and app bootstrap
+- Implemented deterministic risk engine, schema validator, LLM adapter, orchestration service, and fallback composer
+- Implemented schedule evaluation gRPC adapter and gateway `ScheduleEvaluationController`
+- Implemented frontend insight components (`AICoachPanel`, `ScheduleHealthCards`) and action hook
+- Added `ScheduleInsightsPage` and routed `/insights` in app shell
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us8-schedule-evaluation.contract.test.ts tests/integration/us8-ai-fallback-confidence.test.ts
+```
+
+### Validation Result
+
+- `api-gateway` tests: pass
+- frontend build: pass
+- US8 contract/integration tests: pass

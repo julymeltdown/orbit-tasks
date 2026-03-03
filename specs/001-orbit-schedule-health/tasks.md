@@ -96,16 +96,16 @@
 
 **Independent Test**: 프로필 업데이트 후 스레드/멘션/알림 UI에 최신 값이 반영되는지 확인한다.
 
-- [ ] T043 [P] [US2] Add profile API contract tests in `/home/lhs/dev/tasks/tests/contract/us2-profile.contract.test.ts`
-- [ ] T044 [P] [US2] Add integration test for profile-to-mention propagation in `/home/lhs/dev/tasks/tests/integration/us2-profile-propagation.test.ts`
-- [ ] T045 [US2] Add profile persistence migration for preferences/presence in `/home/lhs/dev/tasks/backend/orbit-platform/services/profile-service/src/main/resources/db/migration/V1__profile_presence_preferences.sql`
-- [ ] T046 [P] [US2] Implement JPA profile repository adapter in `/home/lhs/dev/tasks/backend/orbit-platform/services/profile-service/src/main/java/com/orbit/profile/adapters/out/persistence/ProfileJpaRepositoryAdapter.java`
-- [ ] T047 [P] [US2] Implement profile preference domain model in `/home/lhs/dev/tasks/backend/orbit-platform/services/profile-service/src/main/java/com/orbit/profile/domain/NotificationPreference.java`
-- [ ] T048 [US2] Implement profile application service for presence/settings in `/home/lhs/dev/tasks/backend/orbit-platform/services/profile-service/src/main/java/com/orbit/profile/application/service/ProfileSettingsService.java`
-- [ ] T049 [US2] Expose profile settings endpoints in gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/ProfileController.java`
-- [ ] T050 [US2] Implement frontend profile settings page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/profile/ProfileSettingsPage.tsx`
-- [ ] T051 [P] [US2] Implement presence badge component for collaboration surfaces in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/profile/PresenceBadge.tsx`
-- [ ] T052 [US2] Implement frontend profile store synchronization in `/home/lhs/dev/tasks/frontend/orbit-web/src/stores/profileStore.ts`
+- [X] T043 [P] [US2] Add profile API contract tests in `/home/lhs/dev/tasks/tests/contract/us2-profile.contract.test.ts`
+- [X] T044 [P] [US2] Add integration test for profile-to-mention propagation in `/home/lhs/dev/tasks/tests/integration/us2-profile-propagation.test.ts`
+- [X] T045 [US2] Add profile persistence migration for preferences/presence in `/home/lhs/dev/tasks/backend/orbit-platform/services/profile-service/src/main/resources/db/migration/V1__profile_presence_preferences.sql`
+- [X] T046 [P] [US2] Implement JPA profile repository adapter in `/home/lhs/dev/tasks/backend/orbit-platform/services/profile-service/src/main/java/com/orbit/profile/adapters/out/persistence/ProfileJpaRepositoryAdapter.java`
+- [X] T047 [P] [US2] Implement profile preference domain model in `/home/lhs/dev/tasks/backend/orbit-platform/services/profile-service/src/main/java/com/orbit/profile/domain/NotificationPreference.java`
+- [X] T048 [US2] Implement profile application service for presence/settings in `/home/lhs/dev/tasks/backend/orbit-platform/services/profile-service/src/main/java/com/orbit/profile/application/service/ProfileSettingsService.java`
+- [X] T049 [US2] Expose profile settings endpoints in gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/ProfileController.java`
+- [X] T050 [US2] Implement frontend profile settings page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/profile/ProfileSettingsPage.tsx`
+- [X] T051 [P] [US2] Implement presence badge component for collaboration surfaces in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/profile/PresenceBadge.tsx`
+- [X] T052 [US2] Implement frontend profile store synchronization in `/home/lhs/dev/tasks/frontend/orbit-web/src/stores/profileStore.ts`
 
 **Checkpoint**: US2 independently functional and testable.
 

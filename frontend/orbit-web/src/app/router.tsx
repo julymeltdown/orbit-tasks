@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate, createBrowserRouter } from "react-router-dom";
 import { AppShell } from "./AppShell";
 import { LoginPage } from "@/pages/auth/LoginPage";
+import { ProfileSettingsPage } from "@/pages/profile/ProfileSettingsPage";
 import { WorkspaceEntryPage } from "@/pages/workspace/WorkspaceEntryPage";
 
 function isAuthenticated(): boolean {
@@ -57,7 +58,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <OverviewPage /> },
       { path: "workspace/select", element: <WorkspaceEntryPage /> },
-      { path: "profile", element: <PlaceholderPage title="Profile Settings" /> },
+      { path: "profile", element: <ProfileSettingsPage /> },
       { path: "inbox", element: <PlaceholderPage title="Notification Inbox" /> }
     ]
   }

@@ -122,3 +122,32 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - frontend production build: pass
 - US1 contract test: pass
 - US1 E2E playwright test: file added, execution deferred (Playwright runtime not installed in this phase)
+
+---
+
+## Phase 4 - US2 Profile Management and Presence (T043-T052)
+
+### Completed
+
+- Added US2 contract test and profile propagation integration test
+- Added profile settings migration (`presence_status`, timezone, notification preference)
+- Implemented `ProfileJpaRepositoryAdapter`, `NotificationPreference`, and `ProfileSettingsService`
+- Extended gateway profile controller with `/api/profile/settings` GET/PATCH endpoints
+- Added frontend `ProfileSettingsPage`, `PresenceBadge`, and synchronized `profileStore` (Zustand)
+- Routed `/profile` to real settings page in guarded router
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/profile-service && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us2-profile.contract.test.ts tests/integration/us2-profile-propagation.test.ts
+```
+
+### Validation Result
+
+- `api-gateway` tests: pass
+- `profile-service` tests: pass
+- frontend build: pass
+- US2 contract/integration tests: pass

@@ -6,6 +6,8 @@ import com.example.gateway.application.dto.profile.ProfileBatchRequest;
 import com.example.gateway.application.dto.profile.ProfileBatchResponse;
 import com.example.gateway.application.dto.profile.ProfileResponse;
 import com.example.gateway.application.dto.profile.ProfileSearchResponse;
+import com.example.gateway.application.dto.profile.ProfileSettingsResponse;
+import com.example.gateway.application.dto.profile.ProfileSettingsUpdateRequest;
 import com.example.gateway.application.dto.profile.ProfileUpdateRequest;
 import com.example.gateway.application.service.ProfileGatewayService;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -97,6 +100,17 @@ public class ProfileController {
                                          JwtAuthenticationToken authentication) {
         enforceOwner(userId, authentication);
         return profileService.updateProfile(userId, request);
+    }
+
+    @GetMapping("/settings")
+    public ProfileSettingsResponse getSettings(JwtAuthenticationToken authentication) {
+        return profileService.getSettings(authentication.getToken().getSubject());
+    }
+
+    @PatchMapping("/settings")
+    public ProfileSettingsResponse updateSettings(@Valid @RequestBody ProfileSettingsUpdateRequest request,
+                                                  JwtAuthenticationToken authentication) {
+        return profileService.updateSettings(authentication.getToken().getSubject(), request);
     }
 
     private void enforceOwner(String userId, JwtAuthenticationToken authentication) {

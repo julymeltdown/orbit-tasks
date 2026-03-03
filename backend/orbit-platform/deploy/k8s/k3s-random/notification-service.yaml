@@ -21,18 +21,18 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: local
             - name: SERVER_PORT
-              value: "29718"
+              value: "25757"
             - name: GRPC_SERVER_PORT
-              value: "22259"
+              value: "21463"
             - name: AUTH_JWKS_URL
-              value: http://auth-service:25670/.well-known/jwks.json
+              value: http://auth-service:21937/.well-known/jwks.json
             - name: SECURITY_INTERNAL_SERVICE_TOKEN
               value: internal-service-token
           ports:
             - name: http
-              containerPort: 29718
+              containerPort: 25757
             - name: grpc
-              containerPort: 22259
+              containerPort: 21463
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -56,8 +56,8 @@ spec:
     app: notification-service
   ports:
     - name: http
-      port: 29718
+      port: 25757
       targetPort: http
     - name: grpc
-      port: 22259
+      port: 21463
       targetPort: grpc

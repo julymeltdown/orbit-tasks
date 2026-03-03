@@ -25,18 +25,18 @@ spec:
             - name: FRIEND_SEED_RESET
               value: "true"
             - name: SERVER_PORT
-              value: "26520"
+              value: "24611"
             - name: GRPC_SERVER_PORT
-              value: "24300"
+              value: "29921"
             - name: AUTH_JWKS_URL
-              value: http://auth-service:25670/.well-known/jwks.json
+              value: http://auth-service:21937/.well-known/jwks.json
             - name: SECURITY_INTERNAL_SERVICE_TOKEN
               value: internal-service-token
           ports:
             - name: http
-              containerPort: 26520
+              containerPort: 24611
             - name: grpc
-              containerPort: 24300
+              containerPort: 29921
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -60,8 +60,8 @@ spec:
     app: friend-service
   ports:
     - name: http
-      port: 26520
+      port: 24611
       targetPort: http
     - name: grpc
-      port: 24300
+      port: 29921
       targetPort: grpc

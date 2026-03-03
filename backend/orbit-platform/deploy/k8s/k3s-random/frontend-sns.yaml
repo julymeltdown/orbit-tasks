@@ -19,14 +19,14 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
-              value: "28973"
+              value: "28139"
             - name: NEXT_PUBLIC_API_BASE_URL
               value: /gateway
             - name: GATEWAY_PROXY_TARGET
-              value: http://api-gateway.boilerplate-random.svc.cluster.local:25429
+              value: http://api-gateway.boilerplate-random.svc.cluster.local:24271
           ports:
             - name: http
-              containerPort: 28973
+              containerPort: 28139
           readinessProbe:
             httpGet:
               path: /
@@ -51,6 +51,6 @@ spec:
     app: sns-frontend
   ports:
     - name: http
-      port: 28973
+      port: 28139
       targetPort: http
-      nodePort: 32612
+      nodePort: 32436

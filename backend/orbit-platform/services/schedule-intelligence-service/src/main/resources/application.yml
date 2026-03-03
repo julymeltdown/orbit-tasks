@@ -16,9 +16,13 @@ spring:
 
 orbit:
   ai:
-    model: ${ORBIT_AI_MODEL:gpt-4.1-mini}
-    timeout-ms: ${ORBIT_AI_TIMEOUT_MS:8000}
+    model: ${ORBIT_AI_MODEL:gpt-5.2-pro}
+    timeout-ms: ${ORBIT_AI_TIMEOUT_MS:45000}
     fallback-confidence-threshold: ${ORBIT_AI_FALLBACK_THRESHOLD:0.55}
+    openai:
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      api-key: ${OPENAI_API_KEY:${ORBIT_OPENAI_API_KEY:}}
+      store: ${OPENAI_STORE:false}
 
 management:
   endpoints:

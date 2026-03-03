@@ -9,7 +9,7 @@ public class EvaluationSchemaValidator {
 
     public ValidationResult validate(Map<String, Object> payload) {
         if (payload == null || payload.isEmpty()) {
-            return ValidationResult.invalid(List.of("payload is empty"));
+            return ValidationResult.failure(List.of("payload is empty"));
         }
 
         List<String> requiredFields = List.of("health", "top_risks", "questions", "confidence");
@@ -22,14 +22,14 @@ public class EvaluationSchemaValidator {
         if (confidence instanceof Number number) {
             double value = number.doubleValue();
             if (value < 0 || value > 1) {
-                return ValidationResult.invalid(append(errors, "confidence out of range"));
+                return ValidationResult.failure(append(errors, "confidence out of range"));
             }
         }
 
         if (!errors.isEmpty()) {
-            return ValidationResult.invalid(errors);
+            return ValidationResult.failure(errors);
         }
-        return ValidationResult.valid();
+        return ValidationResult.success();
     }
 
     private List<String> append(List<String> errors, String extra) {
@@ -37,11 +37,11 @@ public class EvaluationSchemaValidator {
     }
 
     public record ValidationResult(boolean valid, List<String> errors) {
-        static ValidationResult valid() {
+        static ValidationResult success() {
             return new ValidationResult(true, List.of());
         }
 
-        static ValidationResult invalid(List<String> errors) {
+        static ValidationResult failure(List<String> errors) {
             return new ValidationResult(false, errors == null ? List.of("invalid payload") : errors);
         }
     }

@@ -17,9 +17,10 @@ spec:
         - name: redis
           image: redis:7.2.4-alpine
           imagePullPolicy: IfNotPresent
+          command: ["redis-server", "--port", "23111"]
           ports:
             - name: redis
-              containerPort: 6379
+              containerPort: 23111
           resources:
             requests:
               cpu: 50m
@@ -38,5 +39,5 @@ spec:
     app: redis
   ports:
     - name: redis
-      port: 6379
+      port: 23111
       targetPort: redis

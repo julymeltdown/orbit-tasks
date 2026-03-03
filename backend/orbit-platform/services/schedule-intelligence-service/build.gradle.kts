@@ -27,6 +27,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.grpc:spring-grpc-spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("javax.annotation:javax.annotation-api:1.3.2")
     implementation("io.grpc:grpc-services")
     runtimeOnly("org.postgresql:postgresql")

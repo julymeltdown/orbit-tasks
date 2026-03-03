@@ -31,17 +31,17 @@ spec:
             - name: POST_PERSISTENCE_MODE
               value: "jpa"
             - name: REDIS_URL
-              value: redis://redis:6379
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://post-postgres:5432/post_db
-            - name: SPRING_DATASOURCE_USERNAME
+              value: redis://redis:23111
+            - name: DB_URL
+              value: jdbc:postgresql://post-postgres:25477/post_db
+            - name: DB_USERNAME
               value: post_user
-            - name: SPRING_DATASOURCE_PASSWORD
+            - name: DB_PASSWORD
               value: post_pass
             - name: POST_KAFKA_ENABLED
               value: "true"
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: kafka:9092
+              value: kafka:22391
             - name: JPA_DDL_AUTO
               value: "update"
             - name: POST_EVENTS_REPUBLISH_ENABLED
@@ -57,24 +57,24 @@ spec:
             - name: POST_REDIS_POST_TTL
               value: "PT12H"
             - name: SERVER_PORT
-              value: "28843"
+              value: "26809"
             - name: GRPC_SERVER_PORT
-              value: "29213"
+              value: "29567"
             - name: AUTH_JWKS_URL
-              value: http://auth-service:25670/.well-known/jwks.json
+              value: http://auth-service:21937/.well-known/jwks.json
             - name: POST_INTERNAL_SERVICE_TOKEN
               value: internal-service-token
             - name: PROFILE_GRPC_TARGET
-              value: static://profile-service:22536
+              value: static://profile-service:27183
             - name: FRIEND_GRPC_TARGET
-              value: static://friend-service:24300
+              value: static://friend-service:29921
             - name: NOTIFICATION_GRPC_TARGET
-              value: static://notification-service:22259
+              value: static://notification-service:21463
           ports:
             - name: http
-              containerPort: 28843
+              containerPort: 26809
             - name: grpc
-              containerPort: 29213
+              containerPort: 29567
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -98,8 +98,8 @@ spec:
     app: post-service
   ports:
     - name: http
-      port: 28843
+      port: 26809
       targetPort: http
     - name: grpc
-      port: 29213
+      port: 29567
       targetPort: grpc

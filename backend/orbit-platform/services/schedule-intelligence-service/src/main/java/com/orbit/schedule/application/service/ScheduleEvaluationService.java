@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,15 +14,19 @@ public class ScheduleEvaluationService {
     private final EvaluationSchemaValidator schemaValidator;
     private final OpenAiEvaluationClient aiClient;
     private final FallbackAdviceService fallbackAdviceService;
+    private final double fallbackConfidenceThreshold;
 
     public ScheduleEvaluationService(DeterministicRiskEngine riskEngine,
                                      EvaluationSchemaValidator schemaValidator,
                                      OpenAiEvaluationClient aiClient,
-                                     FallbackAdviceService fallbackAdviceService) {
+                                     FallbackAdviceService fallbackAdviceService,
+                                     @Value("${orbit.ai.fallback-confidence-threshold:0.55}")
+                                     double fallbackConfidenceThreshold) {
         this.riskEngine = riskEngine;
         this.schemaValidator = schemaValidator;
         this.aiClient = aiClient;
         this.fallbackAdviceService = fallbackAdviceService;
+        this.fallbackConfidenceThreshold = fallbackConfidenceThreshold;
     }
 
     public ScheduleEvaluation evaluate(UUID workspaceId,
@@ -43,9 +48,14 @@ public class ScheduleEvaluationService {
         context.put("blockedCount", metrics.blockedCount());
         context.put("atRiskCount", metrics.atRiskCount());
 
-        OpenAiEvaluationClient.LlmResult aiResult = aiClient.evaluate(
-                context,
-                new OpenAiEvaluationClient.RedactionPolicy("mask-pii", true));
+        OpenAiEvaluationClient.LlmResult aiResult;
+        try {
+            aiResult = aiClient.evaluate(
+                    context,
+                    new OpenAiEvaluationClient.RedactionPolicy("mask-pii", true));
+        } catch (RuntimeException ex) {
+            return fallbackAdviceService.fallback(deterministic, "llm_unavailable:" + ex.getMessage());
+        }
 
         EvaluationSchemaValidator.ValidationResult validation = schemaValidator.validate(aiResult.payload());
         if (!validation.valid()) {
@@ -67,7 +77,7 @@ public class ScheduleEvaluationService {
         List<String> questions = (List<String>) aiResult.payload().get("questions");
         double confidence = ((Number) aiResult.payload().get("confidence")).doubleValue();
 
-        if (confidence < 0.55) {
+        if (confidence < fallbackConfidenceThreshold) {
             return fallbackAdviceService.fallback(deterministic, "low_confidence");
         }
 

@@ -19,27 +19,27 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: GATEWAY_PORT
-              value: "25429"
+              value: "24271"
             - name: GATEWAY_AUTH_GRPC_TARGET
-              value: auth-service:20835
+              value: auth-service:28741
             - name: GATEWAY_JWT_PUBLIC_KEY_PEM
               valueFrom:
                 secretKeyRef:
                   name: auth-jwt
                   key: JWT_PUBLIC_KEY_PEM
             - name: GATEWAY_PROFILE_GRPC_TARGET
-              value: profile-service:22536
+              value: profile-service:27183
             - name: GATEWAY_FRIEND_GRPC_TARGET
-              value: friend-service:24300
+              value: friend-service:29921
             - name: GATEWAY_NOTIFICATION_GRPC_TARGET
-              value: notification-service:22259
+              value: notification-service:21463
             - name: GATEWAY_POST_GRPC_TARGET
-              value: post-service:29213
+              value: post-service:29567
             - name: GATEWAY_CORS_ALLOWED_ORIGINS
-              value: http://121.130.253.119:32612,http://121.130.253.119:32614
+              value: http://121.130.253.119:32436,http://121.130.253.119:32157
           ports:
             - name: http
-              containerPort: 25429
+              containerPort: 24271
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -64,6 +64,6 @@ spec:
     app: api-gateway
   ports:
     - name: http
-      port: 25429
+      port: 24271
       targetPort: http
-      nodePort: 32391
+      nodePort: 32157

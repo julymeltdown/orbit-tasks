@@ -1,0 +1,160 @@
+spring:
+  application:
+    name: workgraph-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/post_db}
+    username: ${DB_USERNAME:post_user}
+    password: ${DB_PASSWORD:post_pass}
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        type:
+          preferred_uuid_jdbc_type: UUID
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_JWKS_URL:http://localhost:8080/auth/jwks}
+  lifecycle:
+    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:30s}
+  grpc:
+    server:
+      port: ${GRPC_SERVER_PORT:9094}
+      reflection:
+        enabled: true
+      health:
+        enabled: true
+        actuator:
+          enabled: true
+          health-indicator-paths:
+            - db
+      shutdown-grace-period: ${GRPC_SERVER_SHUTDOWN_GRACE:30s}
+      keep-alive:
+        time: ${GRPC_SERVER_KEEPALIVE_TIME:2h}
+        timeout: ${GRPC_SERVER_KEEPALIVE_TIMEOUT:20s}
+        permit-time: ${GRPC_SERVER_KEEPALIVE_PERMIT_TIME:5m}
+        permit-without-calls: ${GRPC_SERVER_KEEPALIVE_WITHOUT_CALLS:false}
+      observation:
+        enabled: ${GRPC_SERVER_OBSERVATION_ENABLED:true}
+    client:
+      channels:
+        profile:
+          address: ${PROFILE_GRPC_TARGET:static://localhost:9091}
+        friend:
+          address: ${FRIEND_GRPC_TARGET:static://localhost:9092}
+        notification:
+          address: ${NOTIFICATION_GRPC_TARGET:static://localhost:9093}
+      default-channel:
+        address: ${GRPC_DEFAULT_CHANNEL:static://localhost:9090}
+        default-deadline: ${GRPC_CLIENT_DEFAULT_DEADLINE:5s}
+        enable-keep-alive: ${GRPC_CLIENT_KEEPALIVE_ENABLED:false}
+        keep-alive-time: ${GRPC_CLIENT_KEEPALIVE_TIME:5m}
+        keep-alive-timeout: ${GRPC_CLIENT_KEEPALIVE_TIMEOUT:20s}
+      observation:
+        enabled: ${GRPC_CLIENT_OBSERVATION_ENABLED:true}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        isolation.level: read_committed
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+
+server:
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    redis:
+      enabled: ${post.redis.enabled:false}
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{correlationId:-}]"
+
+post:
+  security:
+    internal:
+      service-token: ${POST_INTERNAL_SERVICE_TOKEN:}
+  persistence:
+    mode: ${POST_PERSISTENCE_MODE:jpa}
+  kafka:
+    enabled: ${POST_KAFKA_ENABLED:true}
+    retry:
+      max-attempts: ${POST_KAFKA_RETRY_MAX_ATTEMPTS:5}
+      initial-interval: ${POST_KAFKA_RETRY_INITIAL_INTERVAL_MS:500}
+      multiplier: ${POST_KAFKA_RETRY_MULTIPLIER:2.0}
+      max-interval: ${POST_KAFKA_RETRY_MAX_INTERVAL_MS:10000}
+  redis:
+    enabled: ${POST_REDIS_ENABLED:false}
+    feed:
+      max-size: ${POST_REDIS_FEED_MAX_SIZE:500}
+      ttl: ${POST_REDIS_FEED_TTL:PT6H}
+      key-prefix: ${POST_REDIS_FEED_KEY_PREFIX:post:feed:}
+    post:
+      ttl: ${POST_REDIS_POST_TTL:PT12H}
+      key-prefix: ${POST_REDIS_POST_KEY_PREFIX:post:cache:}
+  feed:
+    fanout-threshold: ${POST_FEED_FANOUT_THRESHOLD:0}
+  notification:
+    batch-size: ${POST_NOTIFICATION_BATCH_SIZE:200}
+  events:
+    internal-topic: ${POST_EVENTS_INTERNAL_TOPIC:post.internal-events}
+    external-topic: ${POST_EVENTS_EXTERNAL_TOPIC:post.external-events}
+    internal-dlt-topic: ${POST_EVENTS_INTERNAL_DLT_TOPIC:post.internal-events.dlt}
+    publish-record-group-id: ${POST_EVENTS_PUBLISH_RECORD_GROUP:post-event-publish-record}
+    external-group-id: ${POST_EVENTS_EXTERNAL_GROUP:post-event-external}
+    notification-group-id: ${POST_EVENTS_NOTIFICATION_GROUP:post-event-notification}
+    republish:
+      enabled: ${POST_EVENTS_REPUBLISH_ENABLED:true}
+      delay: ${POST_EVENTS_REPUBLISH_DELAY:PT5M}
+      interval: ${POST_EVENTS_REPUBLISH_INTERVAL:PT5M}
+      limit: ${POST_EVENTS_REPUBLISH_LIMIT:200}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: tls
+  grpc:
+    server:
+      ssl:
+        bundle: ${GRPC_SERVER_SSL_BUNDLE}
+        client-auth: ${GRPC_SERVER_SSL_CLIENT_AUTH:none}
+    client:
+      channels:
+        profile:
+          ssl:
+            bundle: ${PROFILE_GRPC_SSL_BUNDLE}
+        friend:
+          ssl:
+            bundle: ${FRIEND_GRPC_SSL_BUNDLE}
+        notification:
+          ssl:
+            bundle: ${NOTIFICATION_GRPC_SSL_BUNDLE}
+      default-channel:
+        ssl:
+          bundle: ${GRPC_CLIENT_SSL_BUNDLE}

@@ -180,3 +180,32 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - `api-gateway` tests: pass
 - frontend build: pass
 - US3 contract/integration tests: pass
+
+---
+
+## Phase 6 - US4 Workgraph and Multi-View Operations (T065-T076)
+
+### Completed
+
+- Added US4 contract and dependency cycle integration tests
+- Scaffolded `workgraph-service` and added work item/dependency migration
+- Implemented `WorkItem` aggregate, `DependencyCycleGuard`, `WorkgraphService`, and gRPC adapter
+- Added gateway `WorkItemController` for CRUD/status/dependency endpoints
+- Added frontend board/timeline/table pages and routed them under `/projects/*`
+- Updated app shell nav to expose board/timeline/table views
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us4-workgraph.contract.test.ts tests/integration/us4-dependency-cycle.test.ts
+```
+
+### Validation Result
+
+- `workgraph-service` tests: pass
+- `api-gateway` tests: pass
+- frontend build: pass
+- US4 contract/integration tests: pass

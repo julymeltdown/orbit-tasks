@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package workgraph.v1;
+
+option java_multiple_files = true;
+option java_package = "com.orbit.workgraph.v1";
+option java_outer_classname = "WorkgraphProto";
+
+message WorkItemMessage {
+  string work_item_id = 1;
+  string project_id = 2;
+  string type = 3;
+  string title = 4;
+  string status = 5;
+  string assignee = 6;
+  string start_at = 7;
+  string due_at = 8;
+  string priority = 9;
+}
+
+message CreateWorkItemRequest {
+  string project_id = 1;
+  string type = 2;
+  string title = 3;
+  string assignee = 4;
+  string start_at = 5;
+  string due_at = 6;
+  string priority = 7;
+}
+
+message CreateWorkItemResponse {
+  WorkItemMessage work_item = 1;
+}
+
+message UpdateWorkItemStatusRequest {
+  string work_item_id = 1;
+  string status = 2;
+}
+
+message UpdateWorkItemStatusResponse {
+  WorkItemMessage work_item = 1;
+}
+
+message AddDependencyRequest {
+  string from_work_item_id = 1;
+  string to_work_item_id = 2;
+}
+
+message AddDependencyResponse {
+  bool accepted = 1;
+}
+
+message ListWorkItemsRequest {}
+
+message ListWorkItemsResponse {
+  repeated WorkItemMessage work_items = 1;
+}
+
+service Workgraph {
+  rpc CreateWorkItem(CreateWorkItemRequest) returns (CreateWorkItemResponse);
+  rpc UpdateWorkItemStatus(UpdateWorkItemStatusRequest) returns (UpdateWorkItemStatusResponse);
+  rpc AddDependency(AddDependencyRequest) returns (AddDependencyResponse);
+  rpc ListWorkItems(ListWorkItemsRequest) returns (ListWorkItemsResponse);
+}

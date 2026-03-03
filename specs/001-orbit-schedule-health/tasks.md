@@ -140,18 +140,18 @@
 
 **Independent Test**: 하나의 Work Item 변경이 모든 뷰에 동기 반영되고 순환 의존성이 차단되는지 확인한다.
 
-- [ ] T065 [P] [US4] Add workgraph contract tests for CRUD/dependency in `/home/lhs/dev/tasks/tests/contract/us4-workgraph.contract.test.ts`
-- [ ] T066 [P] [US4] Add integration test for dependency cycle guard in `/home/lhs/dev/tasks/tests/integration/us4-dependency-cycle.test.ts`
-- [ ] T067 [US4] Scaffold workgraph-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/build.gradle.kts`
-- [ ] T068 [P] [US4] Add work item and dependency schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/src/main/resources/db/migration/V1__workgraph_core.sql`
-- [ ] T069 [P] [US4] Implement work item aggregate and state transition rules in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/src/main/java/com/orbit/workgraph/domain/WorkItem.java`
-- [ ] T070 [P] [US4] Implement dependency cycle validator in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/src/main/java/com/orbit/workgraph/domain/DependencyCycleGuard.java`
-- [ ] T071 [US4] Implement workgraph application service in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/src/main/java/com/orbit/workgraph/application/service/WorkgraphService.java`
-- [ ] T072 [US4] Implement workgraph gRPC endpoints in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/src/main/java/com/orbit/workgraph/adapters/in/grpc/WorkgraphGrpcService.java`
-- [ ] T073 [US4] Add work-item endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/WorkItemController.java`
-- [ ] T074 [US4] Implement kanban board page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/projects/BoardPage.tsx`
-- [ ] T075 [P] [US4] Implement timeline and calendar pages in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/projects/TimelinePage.tsx`
-- [ ] T076 [P] [US4] Implement table view page with shared filters in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/projects/TablePage.tsx`
+- [X] T065 [P] [US4] Add workgraph contract tests for CRUD/dependency in `/home/lhs/dev/tasks/tests/contract/us4-workgraph.contract.test.ts`
+- [X] T066 [P] [US4] Add integration test for dependency cycle guard in `/home/lhs/dev/tasks/tests/integration/us4-dependency-cycle.test.ts`
+- [X] T067 [US4] Scaffold workgraph-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/build.gradle.kts`
+- [X] T068 [P] [US4] Add work item and dependency schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/src/main/resources/db/migration/V1__workgraph_core.sql`
+- [X] T069 [P] [US4] Implement work item aggregate and state transition rules in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/src/main/java/com/orbit/workgraph/domain/WorkItem.java`
+- [X] T070 [P] [US4] Implement dependency cycle validator in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/src/main/java/com/orbit/workgraph/domain/DependencyCycleGuard.java`
+- [X] T071 [US4] Implement workgraph application service in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/src/main/java/com/orbit/workgraph/application/service/WorkgraphService.java`
+- [X] T072 [US4] Implement workgraph gRPC endpoints in `/home/lhs/dev/tasks/backend/orbit-platform/services/workgraph-service/src/main/java/com/orbit/workgraph/adapters/in/grpc/WorkgraphGrpcService.java`
+- [X] T073 [US4] Add work-item endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/WorkItemController.java`
+- [X] T074 [US4] Implement kanban board page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/projects/BoardPage.tsx`
+- [X] T075 [P] [US4] Implement timeline and calendar pages in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/projects/TimelinePage.tsx`
+- [X] T076 [P] [US4] Implement table view page with shared filters in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/projects/TablePage.tsx`
 
 **Checkpoint**: US4 independently functional and testable.
 

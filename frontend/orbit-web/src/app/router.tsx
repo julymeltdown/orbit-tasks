@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import { Navigate, createBrowserRouter } from "react-router-dom";
 import { AppShell } from "./AppShell";
 import { LoginPage } from "@/pages/auth/LoginPage";
+import { BoardPage } from "@/pages/projects/BoardPage";
+import { TablePage } from "@/pages/projects/TablePage";
+import { TimelinePage } from "@/pages/projects/TimelinePage";
 import { ProfileSettingsPage } from "@/pages/profile/ProfileSettingsPage";
 import { TeamManagementPage } from "@/pages/team/TeamManagementPage";
 import { WorkspaceEntryPage } from "@/pages/workspace/WorkspaceEntryPage";
@@ -59,6 +62,9 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <OverviewPage /> },
       { path: "workspace/select", element: <WorkspaceEntryPage /> },
+      { path: "projects/board", element: <BoardPage /> },
+      { path: "projects/timeline", element: <TimelinePage /> },
+      { path: "projects/table", element: <TablePage /> },
       { path: "profile", element: <ProfileSettingsPage /> },
       { path: "team", element: <TeamManagementPage /> },
       { path: "inbox", element: <PlaceholderPage title="Notification Inbox" /> }

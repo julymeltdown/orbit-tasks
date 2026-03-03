@@ -12,9 +12,12 @@ import com.example.gateway.application.dto.PasswordResetConfirmRequest;
 import com.example.gateway.application.dto.PasswordResetRequest;
 import com.example.gateway.application.dto.PasswordResetResponse;
 import com.example.gateway.application.dto.SignupResponse;
+import com.example.gateway.application.dto.WorkspaceClaimResponse;
 import com.example.gateway.application.port.out.AuthClientPort;
 import com.example.gateway.domain.IdentityProvider;
 import java.net.URI;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -73,5 +76,9 @@ public class AuthGatewayService {
                                                 OAuthLinkRequest request,
                                                 String userId) {
         return authClient.linkProvider(provider, request, userId);
+    }
+
+    public List<WorkspaceClaimResponse> listWorkspaceClaims(UUID userId) {
+        return authClient.listWorkspaceClaims(userId);
     }
 }

@@ -14,6 +14,9 @@ spring:
         auth:
           address: ${GATEWAY_AUTH_GRPC_TARGET:localhost:9090}
           negotiation-type: plaintext
+        identity:
+          address: ${GATEWAY_IDENTITY_GRPC_TARGET:localhost:9095}
+          negotiation-type: plaintext
         profile:
           address: ${GATEWAY_PROFILE_GRPC_TARGET:localhost:9091}
           negotiation-type: plaintext

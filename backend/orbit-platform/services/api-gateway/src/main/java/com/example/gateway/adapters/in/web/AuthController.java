@@ -10,10 +10,14 @@ import com.example.gateway.application.dto.PasswordResetConfirmRequest;
 import com.example.gateway.application.dto.PasswordResetRequest;
 import com.example.gateway.application.dto.PasswordResetResponse;
 import com.example.gateway.application.dto.SignupResponse;
+import com.example.gateway.application.dto.WorkspaceClaimResponse;
 import com.example.gateway.application.service.AuthGatewayService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -21,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -90,6 +95,11 @@ public class AuthController {
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
                 .build();
+    }
+
+    @GetMapping("/workspace-claims")
+    public List<WorkspaceClaimResponse> workspaceClaims(@RequestParam UUID userId) {
+        return authService.listWorkspaceClaims(userId);
     }
 
     private AuthResponse stripRefreshToken(AuthResponse response) {

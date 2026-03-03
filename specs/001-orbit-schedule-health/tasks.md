@@ -75,16 +75,16 @@
 
 **Independent Test**: 신규/기존 사용자 로그인 후 허용된 워크스페이스만 조회/진입 가능한지 확인한다.
 
-- [ ] T033 [P] [US1] Add auth gateway contract tests for login/refresh/logout in `/home/lhs/dev/tasks/tests/contract/us1-auth-gateway.contract.test.ts`
-- [ ] T034 [P] [US1] Add E2E login-to-workspace scenario in `/home/lhs/dev/tasks/tests/e2e/us1-login-workspace.spec.ts`
-- [ ] T035 [US1] Scaffold identity-access service from auth-service in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/build.gradle.kts`
-- [ ] T036 [P] [US1] Create workspace claim model and mapper in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/domain/WorkspaceClaim.java`
-- [ ] T037 [P] [US1] Implement session policy entity/repository in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/adapters/out/persistence/SessionPolicyEntity.java`
-- [ ] T038 [US1] Implement login + refresh + logout application service in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/application/service/SessionService.java`
-- [ ] T039 [US1] Implement identity gRPC API for workspace claims in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/adapters/in/grpc/IdentityGrpcService.java`
-- [ ] T040 [US1] Wire gateway auth controller to identity-access gRPC in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/AuthController.java`
-- [ ] T041 [US1] Implement frontend login page and session bootstrap in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/auth/LoginPage.tsx`
-- [ ] T042 [US1] Implement workspace landing selector page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/workspace/WorkspaceEntryPage.tsx`
+- [X] T033 [P] [US1] Add auth gateway contract tests for login/refresh/logout in `/home/lhs/dev/tasks/tests/contract/us1-auth-gateway.contract.test.ts`
+- [X] T034 [P] [US1] Add E2E login-to-workspace scenario in `/home/lhs/dev/tasks/tests/e2e/us1-login-workspace.spec.ts`
+- [X] T035 [US1] Scaffold identity-access service from auth-service in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/build.gradle.kts`
+- [X] T036 [P] [US1] Create workspace claim model and mapper in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/domain/WorkspaceClaim.java`
+- [X] T037 [P] [US1] Implement session policy entity/repository in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/adapters/out/persistence/SessionPolicyEntity.java`
+- [X] T038 [US1] Implement login + refresh + logout application service in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/application/service/SessionService.java`
+- [X] T039 [US1] Implement identity gRPC API for workspace claims in `/home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service/src/main/java/com/orbit/identity/adapters/in/grpc/IdentityGrpcService.java`
+- [X] T040 [US1] Wire gateway auth controller to identity-access gRPC in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/AuthController.java`
+- [X] T041 [US1] Implement frontend login page and session bootstrap in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/auth/LoginPage.tsx`
+- [X] T042 [US1] Implement workspace landing selector page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/workspace/WorkspaceEntryPage.tsx`
 
 **Checkpoint**: US1 independently functional and testable.
 

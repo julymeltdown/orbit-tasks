@@ -1,0 +1,147 @@
+spring:
+  application:
+    name: identity-access-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/auth_db}
+    username: ${DB_USERNAME:auth_user}
+    password: ${DB_PASSWORD:auth_pass}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        type:
+          preferred_uuid_jdbc_type: UUID
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${OAUTH_GOOGLE_CLIENT_ID:}
+            client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET:}
+            authorization-grant-type: authorization_code
+            scope: openid,profile,email
+            redirect-uri: ${OAUTH_GOOGLE_REDIRECT_URI:}
+          apple:
+            client-id: ${OAUTH_APPLE_CLIENT_ID:}
+            client-secret: ${OAUTH_APPLE_CLIENT_SECRET:}
+            authorization-grant-type: authorization_code
+            scope: name,email
+            redirect-uri: ${OAUTH_APPLE_REDIRECT_URI:}
+            client-authentication-method: ${OAUTH_APPLE_CLIENT_AUTH_METHOD:client_secret_post}
+        provider:
+          apple:
+            authorization-uri: ${OAUTH_APPLE_AUTH_URI:https://appleid.apple.com/auth/authorize}
+            token-uri: ${OAUTH_APPLE_TOKEN_URI:https://appleid.apple.com/auth/token}
+            jwk-set-uri: ${OAUTH_APPLE_JWK_SET_URI:https://appleid.apple.com/auth/keys}
+            user-info-uri: ${OAUTH_APPLE_USERINFO_URI:}
+  lifecycle:
+    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:30s}
+  grpc:
+    server:
+      port: ${GRPC_SERVER_PORT:9095}
+      reflection:
+        enabled: true
+      health:
+        enabled: true
+      shutdown-grace-period: ${GRPC_SERVER_SHUTDOWN_GRACE:30s}
+      keep-alive:
+        time: ${GRPC_SERVER_KEEPALIVE_TIME:2h}
+        timeout: ${GRPC_SERVER_KEEPALIVE_TIMEOUT:20s}
+        permit-time: ${GRPC_SERVER_KEEPALIVE_PERMIT_TIME:5m}
+        permit-without-calls: ${GRPC_SERVER_KEEPALIVE_WITHOUT_CALLS:false}
+      observation:
+        enabled: ${GRPC_SERVER_OBSERVATION_ENABLED:true}
+    client:
+      default-channel:
+        address: ${GRPC_DEFAULT_CHANNEL:static://localhost:9090}
+        default-deadline: ${GRPC_CLIENT_DEFAULT_DEADLINE:5s}
+        enable-keep-alive: ${GRPC_CLIENT_KEEPALIVE_ENABLED:false}
+        keep-alive-time: ${GRPC_CLIENT_KEEPALIVE_TIME:5m}
+        keep-alive-timeout: ${GRPC_CLIENT_KEEPALIVE_TIMEOUT:20s}
+      observation:
+        enabled: ${GRPC_CLIENT_OBSERVATION_ENABLED:true}
+
+jwt:
+  issuer: ${JWT_ISSUER:identity-access-service}
+  access-token-ttl: ${JWT_ACCESS_TTL:PT10M}
+  refresh-token-ttl: ${JWT_REFRESH_TTL:P14D}
+  key:
+    private: ${JWT_PRIVATE_KEY_PEM:}
+    public: ${JWT_PUBLIC_KEY_PEM:}
+
+smtp:
+  from: ${SMTP_FROM:no-reply@example.com}
+
+auth:
+  email:
+    allowed-domains: ${AUTH_EMAIL_ALLOWED_DOMAINS:}
+    blocked-domains: ${AUTH_EMAIL_BLOCKED_DOMAINS:}
+    verification:
+      ttl: ${AUTH_EMAIL_VERIFICATION_TTL:PT10M}
+      max-attempts: ${AUTH_EMAIL_VERIFICATION_MAX_ATTEMPTS:5}
+  password:
+    reset:
+      ttl: ${AUTH_PASSWORD_RESET_TTL:PT1H}
+      base-url: ${AUTH_PASSWORD_RESET_BASE_URL:http://localhost:3000/auth/reset}
+  redis:
+    scan-interval: ${AUTH_REDIS_SCAN_INTERVAL:PT5M}
+    scan-count: ${AUTH_REDIS_SCAN_COUNT:1000}
+    scan-throttle: ${AUTH_REDIS_SCAN_THROTTLE:PT0.05S}
+  oauth:
+    google:
+      redirect-uri: ${OAUTH_GOOGLE_REDIRECT_URI:}
+    apple:
+      redirect-uri: ${OAUTH_APPLE_REDIRECT_URI:}
+
+server:
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{correlationId:-}]"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: tls
+  grpc:
+    server:
+      ssl:
+        bundle: ${GRPC_SERVER_SSL_BUNDLE}
+        client-auth: ${GRPC_SERVER_SSL_CLIENT_AUTH:none}
+    client:
+      default-channel:
+        ssl:
+          bundle: ${GRPC_CLIENT_SSL_BUNDLE}

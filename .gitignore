@@ -7,7 +7,7 @@ coverage/
 # Java/Gradle
 .gradle/
 build/
-out/
+/out/
 target/
 *.class
 *.jar

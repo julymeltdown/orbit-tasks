@@ -90,3 +90,35 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
 
 - `platform-event-kit`: `BUILD SUCCESSFUL`
 - `orbit-web`: `vite build` succeeded with production bundle output in `dist/`
+
+---
+
+## Phase 3 - US1 Secure Login and Workspace Entry (T033-T042)
+
+### Completed
+
+- Added US1 contract test: `tests/contract/us1-auth-gateway.contract.test.ts`
+- Added US1 E2E scenario: `tests/e2e/us1-login-workspace.spec.ts`
+- Scaffolded `identity-access-service` from `auth-service`
+- Implemented workspace claim model, session policy persistence model, and session service
+- Implemented identity gRPC API (`GetWorkspaceClaims`)
+- Wired gateway auth path to identity-access gRPC via `AuthClient` + `AuthController`
+- Implemented frontend login page with session bootstrap storage
+- Implemented frontend workspace entry page with claim fetch and rendering
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/identity-access-service && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us1-auth-gateway.contract.test.ts
+```
+
+### Validation Result
+
+- `api-gateway` tests: pass
+- `identity-access-service` tests: pass
+- frontend production build: pass
+- US1 contract test: pass
+- US1 E2E playwright test: file added, execution deferred (Playwright runtime not installed in this phase)

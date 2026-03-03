@@ -15,6 +15,11 @@ routes:
     path: /auth/logout
     target: identity-access-service
     policySet: default-auth
+  - id: auth.workspace-claims
+    method: GET
+    path: /auth/workspace-claims
+    target: identity-access-service
+    policySet: workspace-user
   - id: profile.settings.get
     method: GET
     path: /profile/settings

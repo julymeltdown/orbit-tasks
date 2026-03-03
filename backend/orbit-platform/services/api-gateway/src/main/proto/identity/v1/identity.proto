@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package identity.v1;
+
+option java_multiple_files = true;
+option java_package = "com.orbit.identity.v1";
+option java_outer_classname = "IdentityProto";
+
+message GetWorkspaceClaimsRequest {
+  string user_id = 1;
+}
+
+message WorkspaceClaimMessage {
+  string workspace_id = 1;
+  string workspace_name = 2;
+  string role = 3;
+  bool default_workspace = 4;
+}
+
+message GetWorkspaceClaimsResponse {
+  repeated WorkspaceClaimMessage claims = 1;
+}
+
+service IdentityAccessService {
+  rpc GetWorkspaceClaims(GetWorkspaceClaimsRequest) returns (GetWorkspaceClaimsResponse);
+}

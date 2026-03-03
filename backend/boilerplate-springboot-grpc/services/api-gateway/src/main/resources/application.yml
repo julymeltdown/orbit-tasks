@@ -1,0 +1,98 @@
+server:
+  port: ${GATEWAY_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+  grpc:
+    server:
+      enabled: false
+    client:
+      default-channel:
+        negotiation-type: plaintext
+      channels:
+        auth:
+          address: ${GATEWAY_AUTH_GRPC_TARGET:localhost:9090}
+          negotiation-type: plaintext
+        profile:
+          address: ${GATEWAY_PROFILE_GRPC_TARGET:localhost:9091}
+          negotiation-type: plaintext
+        post:
+          address: ${GATEWAY_POST_GRPC_TARGET:localhost:9092}
+          negotiation-type: plaintext
+        friend:
+          address: ${GATEWAY_FRIEND_GRPC_TARGET:localhost:9093}
+          negotiation-type: plaintext
+        notification:
+          address: ${GATEWAY_NOTIFICATION_GRPC_TARGET:localhost:9094}
+          negotiation-type: plaintext
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+gateway:
+  jwt:
+    public-key: ${GATEWAY_JWT_PUBLIC_KEY_PEM:}
+    jwk-set-uri: ${GATEWAY_JWKS_URL:http://localhost:8081/.well-known/jwks.json}
+  auth:
+    refresh-cookie-name: ${GATEWAY_REFRESH_COOKIE:refresh_token}
+    refresh-cookie-domain: ${GATEWAY_REFRESH_COOKIE_DOMAIN:}
+    refresh-cookie-secure: ${GATEWAY_REFRESH_COOKIE_SECURE:false}
+    refresh-cookie-max-age: ${GATEWAY_REFRESH_COOKIE_MAX_AGE:P14D}
+  cors:
+    allowed-origins: ${GATEWAY_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  resilience:
+    timeout-ms: ${GATEWAY_RESILIENCE_TIMEOUT_MS:1000}
+    retry-max: ${GATEWAY_RESILIENCE_RETRY_MAX:2}
+    circuit-breaker-enabled: ${GATEWAY_RESILIENCE_CIRCUIT_BREAKER_ENABLED:true}
+  governance:
+    contracts-config: ${GATEWAY_CONTRACTS_CONFIG:classpath:contracts/route-contracts.yml}
+    policies-config: ${GATEWAY_POLICIES_CONFIG:classpath:contracts/policies.yml}
+    aggregation-config: ${GATEWAY_AGGREGATION_CONFIG:classpath:contracts/aggregation-recipes.yml}
+    client-profiles-config: ${GATEWAY_CLIENTS_CONFIG:classpath:contracts/client-profiles.yml}
+    policies:
+      - id: ${GATEWAY_DEFAULT_POLICY_ID:default}
+        name: ${GATEWAY_DEFAULT_POLICY_NAME:default}
+        rate-limit:
+          requests-per-minute: ${GATEWAY_RATE_LIMIT_RPM:600}
+          burst: ${GATEWAY_RATE_LIMIT_BURST:100}
+        resilience:
+          timeout-ms: ${GATEWAY_POLICY_TIMEOUT_MS:1000}
+          retry-max: ${GATEWAY_POLICY_RETRY_MAX:2}
+          circuit-breaker-enabled: ${GATEWAY_POLICY_CB_ENABLED:true}
+        rollout:
+          strategy: ${GATEWAY_ROLLOUT_STRATEGY:immediate}
+          percent: ${GATEWAY_ROLLOUT_PERCENT:100}
+        cache-policy: ${GATEWAY_CACHE_POLICY:default}
+    aggregation-recipes:
+      - id: ${GATEWAY_AGGREGATION_RECIPE_ID:feed-summary}
+        route-key: ${GATEWAY_AGGREGATION_ROUTE_KEY:feed-summary}
+        join-strategy: ${GATEWAY_AGGREGATION_JOIN_STRATEGY:merge}
+        timeout-ms: ${GATEWAY_AGGREGATION_TIMEOUT_MS:1000}
+        cache-policy: ${GATEWAY_AGGREGATION_CACHE_POLICY:default}
+        downstream-calls:
+          - service: ${GATEWAY_AGGREGATION_SERVICE:post}
+            path: ${GATEWAY_AGGREGATION_PATH:/grpc/post}
+            fields:
+              - ${GATEWAY_AGGREGATION_FIELD_1:id}
+              - ${GATEWAY_AGGREGATION_FIELD_2:content}
+    client-profiles:
+      - id: ${GATEWAY_CLIENT_PROFILE_ID:web-default}
+        client-type: ${GATEWAY_CLIENT_PROFILE_TYPE:web}
+        allowed-contracts:
+          - ${GATEWAY_CLIENT_ALLOWED_CONTRACT:feed-summary}
+        policy-set-id: ${GATEWAY_CLIENT_POLICY_ID:default}
+  telemetry:
+    enabled: ${GATEWAY_TELEMETRY_ENABLED:true}
+    include-headers: ${GATEWAY_TELEMETRY_HEADERS:X-Request-Id,X-Correlation-Id}
+    sample-rate: ${GATEWAY_TELEMETRY_SAMPLE_RATE:1.0}
+    buffer-limit: ${GATEWAY_TELEMETRY_BUFFER_LIMIT:10000}
+  aggregation:
+    cache-ttl: ${GATEWAY_AGGREGATION_CACHE_TTL:PT30S}

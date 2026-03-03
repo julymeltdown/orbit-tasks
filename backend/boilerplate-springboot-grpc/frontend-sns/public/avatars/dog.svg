@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Dog avatar">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f9d976"/>
+      <stop offset="100%" stop-color="#f39f86"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <circle cx="80" cy="92" r="26" fill="#f0d2b6"/>
+  <circle cx="176" cy="92" r="26" fill="#f0d2b6"/>
+  <rect x="64" y="84" width="128" height="128" rx="56" fill="#fff3e0"/>
+  <circle cx="104" cy="140" r="10" fill="#3b2f2f"/>
+  <circle cx="152" cy="140" r="10" fill="#3b2f2f"/>
+  <path d="M128 150l10 14-10 12-10-12z" fill="#7a4e2c"/>
+  <path d="M112 178c10 8 22 8 32 0" stroke="#3b2f2f" stroke-width="6" fill="none" stroke-linecap="round"/>
+</svg>

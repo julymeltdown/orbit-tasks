@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Owl avatar">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a1c4fd"/>
+      <stop offset="100%" stop-color="#c2e9fb"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <path d="M64 80h128v96c0 36-28 64-64 64s-64-28-64-64V80z" fill="#fffdf6"/>
+  <circle cx="96" cy="132" r="20" fill="#3b2f2f"/>
+  <circle cx="160" cy="132" r="20" fill="#3b2f2f"/>
+  <circle cx="96" cy="132" r="8" fill="#fffdf6"/>
+  <circle cx="160" cy="132" r="8" fill="#fffdf6"/>
+  <path d="M128 148l10 12-10 12-10-12z" fill="#f4b183"/>
+  <path d="M96 96l-20-20 24 8z" fill="#fffdf6"/>
+  <path d="M160 96l20-20-24 8z" fill="#fffdf6"/>
+</svg>

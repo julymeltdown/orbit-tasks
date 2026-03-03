@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Panda avatar">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#cfd9df"/>
+      <stop offset="100%" stop-color="#f1f1f1"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <circle cx="80" cy="88" r="24" fill="#2b2b2b"/>
+  <circle cx="176" cy="88" r="24" fill="#2b2b2b"/>
+  <rect x="56" y="80" width="144" height="144" rx="64" fill="#ffffff"/>
+  <ellipse cx="100" cy="142" rx="16" ry="20" fill="#2b2b2b"/>
+  <ellipse cx="156" cy="142" rx="16" ry="20" fill="#2b2b2b"/>
+  <circle cx="100" cy="142" r="6" fill="#ffffff"/>
+  <circle cx="156" cy="142" r="6" fill="#ffffff"/>
+  <path d="M128 156l10 12-10 10-10-10z" fill="#3b2f2f"/>
+  <path d="M112 184c10 8 22 8 32 0" stroke="#2b2b2b" stroke-width="6" fill="none" stroke-linecap="round"/>
+</svg>

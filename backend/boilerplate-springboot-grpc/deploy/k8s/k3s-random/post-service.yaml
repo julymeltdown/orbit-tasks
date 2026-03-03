@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: post-service
+  namespace: boilerplate-random
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: post-service
+  template:
+    metadata:
+      labels:
+        app: post-service
+    spec:
+      containers:
+        - name: post-service
+          image: ${POST_IMAGE}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: local
+            - name: POST_GRPC_STUB_ENABLED
+              value: "false"
+            - name: POST_SEED_ENABLED
+              value: "true"
+            - name: POST_SEED_RESET
+              value: "true"
+            - name: POST_REDIS_ENABLED
+              value: "true"
+            - name: POST_PERSISTENCE_MODE
+              value: "jpa"
+            - name: REDIS_URL
+              value: redis://redis:6379
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://post-postgres:5432/post_db
+            - name: SPRING_DATASOURCE_USERNAME
+              value: post_user
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: post_pass
+            - name: POST_KAFKA_ENABLED
+              value: "true"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+            - name: JPA_DDL_AUTO
+              value: "update"
+            - name: POST_EVENTS_REPUBLISH_ENABLED
+              value: "true"
+            - name: POST_EVENTS_REPUBLISH_INTERVAL
+              value: "PT5M"
+            - name: POST_EVENTS_REPUBLISH_DELAY
+              value: "PT5M"
+            - name: POST_REDIS_FEED_MAX_SIZE
+              value: "500"
+            - name: POST_REDIS_FEED_TTL
+              value: "PT6H"
+            - name: POST_REDIS_POST_TTL
+              value: "PT12H"
+            - name: SERVER_PORT
+              value: "28843"
+            - name: GRPC_SERVER_PORT
+              value: "29213"
+            - name: AUTH_JWKS_URL
+              value: http://auth-service:25670/.well-known/jwks.json
+            - name: POST_INTERNAL_SERVICE_TOKEN
+              value: internal-service-token
+            - name: PROFILE_GRPC_TARGET
+              value: static://profile-service:22536
+            - name: FRIEND_GRPC_TARGET
+              value: static://friend-service:24300
+            - name: NOTIFICATION_GRPC_TARGET
+              value: static://notification-service:22259
+          ports:
+            - name: http
+              containerPort: 28843
+            - name: grpc
+              containerPort: 29213
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: post-service
+  namespace: boilerplate-random
+spec:
+  selector:
+    app: post-service
+  ports:
+    - name: http
+      port: 28843
+      targetPort: http
+    - name: grpc
+      port: 29213
+      targetPort: grpc

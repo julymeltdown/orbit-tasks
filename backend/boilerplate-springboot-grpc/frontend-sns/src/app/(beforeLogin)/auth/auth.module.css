@@ -1,0 +1,357 @@
+.container {
+    min-height: 100dvh;
+    padding: var(--space-8);
+    background-color: rgb(var(--background-end-rgb));
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.header {
+    max-width: 960px;
+    margin: 0 auto var(--space-6);
+    width: 100%;
+}
+
+.header h1 {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.header p {
+    margin-top: var(--space-2);
+    color: rgb(83, 100, 113);
+}
+
+.shell {
+    width: 100%;
+    max-width: 1100px;
+    margin: auto;
+    display: grid;
+    gap: var(--space-8);
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: start;
+}
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.heroBadge {
+    align-self: flex-start;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgb(207, 217, 222);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.heroTitle {
+    font-size: 42px;
+    line-height: 1.15;
+    font-weight: bold;
+}
+
+.heroCopy {
+    font-size: 16px;
+    color: rgb(83, 100, 113);
+}
+
+.heroCard {
+    border-radius: var(--radius-lg);
+    border: 1px solid rgb(239, 243, 244);
+    background: rgb(247, 249, 249);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.heroCard h3 {
+    font-size: 16px;
+}
+
+.heroList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-left: var(--space-5);
+    color: rgb(83, 100, 113);
+    font-size: 14px;
+}
+
+.panelTitle {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.muted {
+    font-size: 14px;
+    color: rgb(83, 100, 113);
+}
+
+.stepper {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.step {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgb(207, 217, 222);
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(83, 100, 113);
+}
+
+.stepActive {
+    background: rgb(29, 155, 240);
+    border-color: rgb(29, 155, 240);
+    color: white;
+}
+
+.stepDone {
+    background: rgba(29, 155, 240, 0.1);
+    border-color: rgba(29, 155, 240, 0.3);
+    color: rgb(29, 155, 240);
+}
+
+.formStack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+}
+
+.buttonRow {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: space-between;
+    align-items: center;
+}
+
+.textLink {
+    color: rgb(29, 155, 240);
+    font-size: 14px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: rgb(83, 100, 113);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgb(207, 217, 222);
+}
+
+.oauthButton {
+    border: 1px solid rgb(207, 217, 222);
+    border-radius: 999px;
+    padding: 10px var(--space-4);
+    font-weight: 600;
+    background: white;
+    cursor: pointer;
+    width: 100%;
+}
+
+.linkRow {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    font-size: 14px;
+}
+
+.grid {
+    max-width: 960px;
+    margin: 0 auto;
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.panel {
+    border: 1px solid rgb(239, 243, 244);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    background: rgb(247, 249, 249);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.panel h2 {
+    font-size: 18px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: rgb(83, 100, 113);
+}
+
+.input {
+    border: 1px solid rgb(207, 217, 222);
+    border-radius: var(--radius-sm);
+    padding: 10px var(--space-3);
+    font-size: 15px;
+    background: transparent;
+}
+
+.button {
+    border: none;
+    border-radius: 999px;
+    background: rgb(29, 155, 240);
+    color: white;
+    font-weight: bold;
+    padding: 10px var(--space-4);
+    cursor: pointer;
+}
+
+.button:hover {
+    background: rgb(26, 140, 216);
+}
+.button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.buttonSecondary {
+    border: 1px solid rgb(207, 217, 222);
+    border-radius: 999px;
+    background: transparent;
+    padding: 10px var(--space-4);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.copy {
+    font-size: 13px;
+    color: rgb(83, 100, 113);
+}
+
+.hint {
+    font-size: 12px;
+    color: rgb(83, 100, 113);
+}
+
+.hintList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hintError {
+    color: rgb(239, 68, 68);
+}
+
+.hintSuccess {
+    color: rgb(29, 155, 240);
+}
+
+.output {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 12px;
+    overflow-x: auto;
+}
+
+.error {
+    color: rgb(239, 68, 68);
+    font-size: 12px;
+}
+
+@media all and (max-width: 900px) {
+    .container {
+        padding: var(--space-6) var(--space-4);
+    }
+    .shell {
+        grid-template-columns: 1fr;
+        margin: 0;
+    }
+    .heroTitle {
+        font-size: 32px;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .panel {
+        background: rgb(22, 24, 28);
+        border-color: rgb(47, 51, 54);
+        color: white;
+    }
+    .header p,
+    .label,
+    .copy {
+        color: rgb(139, 152, 165);
+    }
+    .input {
+        color: white;
+        border-color: rgb(47, 51, 54);
+    }
+    .output {
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+    }
+    .buttonSecondary {
+        border-color: rgb(47, 51, 54);
+        color: white;
+    }
+    .heroBadge,
+    .step,
+    .divider::before,
+    .divider::after,
+    .oauthButton {
+        border-color: rgb(47, 51, 54);
+    }
+    .heroCard {
+        background: rgb(22, 24, 28);
+        border-color: rgb(47, 51, 54);
+    }
+    .heroCopy,
+    .muted,
+    .heroList,
+    .divider,
+    .step {
+        color: rgb(139, 152, 165);
+    }
+    .oauthButton {
+        background: transparent;
+        color: white;
+    }
+    .hint {
+        color: rgb(139, 152, 165);
+    }
+}

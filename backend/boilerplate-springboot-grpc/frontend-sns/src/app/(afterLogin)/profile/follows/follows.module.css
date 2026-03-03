@@ -1,0 +1,255 @@
+.followPage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.backLink {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.profileRow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.08);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profileName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.profileHandle {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-3);
+  border-bottom: 1px solid rgb(229, 231, 235);
+  padding-bottom: 6px;
+}
+
+.tabButton {
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  font-size: 13px;
+  color: #64748b;
+  padding: 6px 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+.tabActive {
+  color: #0f172a;
+}
+
+.tabActive::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -7px;
+  height: 3px;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px var(--space-3);
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: #fff;
+}
+
+.avatarMini {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.08);
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+
+.avatarMini img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallbackMini {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+}
+
+.rowInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.rowName {
+  font-weight: 700;
+  font-size: 14px;
+  color: #0f172a;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.rowHandle {
+  font-size: 13px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowAction {
+  border-radius: 999px;
+  border: 1px solid rgb(203, 213, 225);
+  background: #fff;
+  padding: 6px var(--space-3);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rowAction:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.loading {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.empty {
+  padding: var(--space-5);
+  border-radius: 16px;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  color: #64748b;
+  font-size: 14px;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .row {
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+  }
+
+  .avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  .avatarMini {
+    width: 38px;
+    height: 38px;
+  }
+
+  .rowAction {
+    padding: 6px var(--space-2);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .row {
+    background: #0f172a;
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+
+  .profileName,
+  .rowName {
+    color: #f8fafc;
+  }
+
+  .profileHandle,
+  .rowHandle,
+  .loading {
+    color: #94a3b8;
+  }
+
+  .rowAction {
+    background: transparent;
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #f8fafc;
+  }
+
+  .tabActive {
+    color: #f8fafc;
+  }
+
+  .backLink {
+    color: #38bdf8;
+  }
+}

@@ -1,0 +1,56 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+}
+
+.textarea {
+    width: 100%;
+    border: 1px solid rgb(207, 217, 222);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) 10px;
+    font-size: 14px;
+    resize: vertical;
+    background: transparent;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.button {
+    border: none;
+    border-radius: 999px;
+    background: rgb(29, 155, 240);
+    color: #fff;
+    font-weight: bold;
+    padding: 6px var(--space-3);
+    cursor: pointer;
+}
+
+.button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.status {
+    font-size: 12px;
+    color: rgb(83, 100, 113);
+}
+
+.error {
+    color: rgb(239, 68, 68);
+    font-size: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .textarea {
+        color: white;
+        border-color: rgb(47, 51, 54);
+    }
+    .status {
+        color: rgb(139, 152, 165);
+    }
+}

@@ -1,0 +1,15 @@
+.git/
+.github/
+.gradle/
+**/.gradle/
+**/build/
+node_modules/
+**/dist/
+.idea/
+.vscode/
+.env*
+*.log
+*.tmp
+*.swp
+coverage/
+README*

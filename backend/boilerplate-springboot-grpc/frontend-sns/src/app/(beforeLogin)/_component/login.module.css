@@ -1,0 +1,148 @@
+.modalBackground {
+    width: 100vw;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.4);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+    .modalBackground {
+        background-color: rgba(91, 112, 131, 0.4);
+    }
+}
+
+.modal {
+    background-color: rgb(var(--background-end-rgb));
+    position: relative;
+    width: 100%;
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-8);
+}
+.modalHeader {
+    padding: var(--space-9) 0 var(--space-5);
+    font-size: 31px;
+    font-weight: bold;
+}
+@media all and (min-width: 687px) {
+    .modal {
+        top: 5%;
+        min-width: 600px;
+        max-width: 600px;
+        height: 450px;
+        padding: 0;
+    }
+    .modalHeader {
+        padding: var(--space-9) 80px var(--space-5);
+    }
+    .modalBody {
+        padding: 0 80px;
+    }
+}
+
+.modal form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.modalBody {
+    flex: 1;
+}
+
+.inputDiv {
+    display: flex;
+    flex-direction: column;
+    height: 56px;
+    position: relative;
+    margin: var(--space-3) 0;
+}
+.inputLabel {
+    width: 100%;
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    border: 1px solid rgb(207, 217, 222);
+    border-radius: 4px;
+    font-size: 13px;
+    height: 56px;
+    padding: 8px 8px 0;
+    color: rgb(83, 100, 113);
+}
+.inputLabel:focus-within {
+    color: red;
+}
+.input {
+    width: 100%;
+    border: none;
+    font-size: 17px;
+    margin-top: 16px;
+    padding: 12px 8px 8px;
+    outline: none;
+    background: transparent;
+}
+
+.modalFooter {
+    padding: var(--space-6) 80px;
+}
+
+.actionButton {
+    width: 100%;
+    height: 50px;
+    border-radius: 25px;
+    background-color: rgb(15, 20, 25);
+    color: white;
+    font-size: 17px;
+    cursor: pointer;
+    border: 1px solid white;
+}
+.actionButton:disabled {
+    opacity: 0.5;
+}
+.actionButton:hover {
+    background-color: rgb(39,44,48);
+}
+
+.closeButton {
+    width: 34px;
+    height: 34px;
+    border-radius: 17px;
+    border: none;
+    cursor: pointer;
+    background-color: #fff;
+    position: absolute;
+    top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.closeButton:hover {
+    background-color: rgba(15,20,25, 0.1);
+}
+@media all and (min-width: 687px) {
+    .closeButton {
+        left: 16px;
+    }
+}
+@media (prefers-color-scheme: dark) {
+    .closeButton {
+        background-color: black;
+    }
+    .closeButton svg {
+        fill: white;
+    }
+}
+
+.message {
+    color: red;
+    display: flex;
+    justify-content: center;
+    font-weight: bold;
+}

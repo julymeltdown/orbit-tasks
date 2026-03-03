@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: boilerplate-random
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: ${GATEWAY_IMAGE}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GATEWAY_PORT
+              value: "25429"
+            - name: GATEWAY_AUTH_GRPC_TARGET
+              value: auth-service:20835
+            - name: GATEWAY_JWT_PUBLIC_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: auth-jwt
+                  key: JWT_PUBLIC_KEY_PEM
+            - name: GATEWAY_PROFILE_GRPC_TARGET
+              value: profile-service:22536
+            - name: GATEWAY_FRIEND_GRPC_TARGET
+              value: friend-service:24300
+            - name: GATEWAY_NOTIFICATION_GRPC_TARGET
+              value: notification-service:22259
+            - name: GATEWAY_POST_GRPC_TARGET
+              value: post-service:29213
+            - name: GATEWAY_CORS_ALLOWED_ORIGINS
+              value: http://121.130.253.119:32612,http://121.130.253.119:32614
+          ports:
+            - name: http
+              containerPort: 25429
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: boilerplate-random
+spec:
+  type: NodePort
+  selector:
+    app: api-gateway
+  ports:
+    - name: http
+      port: 25429
+      targetPort: http
+      nodePort: 32391

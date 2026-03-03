@@ -1,0 +1,13 @@
+resources:
+  - namespace.yaml
+  - auth-jwt.yaml
+  - auth-service.yaml
+  - profile-service.yaml
+  - friend-service.yaml
+  - notification-service.yaml
+  - kafka.yaml
+  - redis.yaml
+  - post-postgres.yaml
+  - post-service.yaml
+  - api-gateway.yaml
+  - frontend-sns.yaml

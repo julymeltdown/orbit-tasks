@@ -163,18 +163,18 @@
 
 **Independent Test**: 스프린트 생성 → DSU 입력 → 블로커 구조화 → 액션 전환 흐름이 완결되면 검증 완료.
 
-- [ ] T077 [P] [US5] Add sprint/dsu contract tests in `/home/lhs/dev/tasks/tests/contract/us5-agile-loop.contract.test.ts`
-- [ ] T078 [P] [US5] Add DSU extraction integration tests in `/home/lhs/dev/tasks/tests/integration/us5-dsu-pipeline.test.ts`
-- [ ] T079 [US5] Scaffold agile-ops-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/build.gradle.kts`
-- [ ] T080 [P] [US5] Add sprint/backlog/dsu schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/resources/db/migration/V1__agile_ops.sql`
-- [ ] T081 [P] [US5] Implement sprint aggregate and lifecycle rules in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/java/com/orbit/agile/domain/Sprint.java`
-- [ ] T082 [P] [US5] Implement DSU domain model with raw/structured payload in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/java/com/orbit/agile/domain/DSUEntry.java`
-- [ ] T083 [US5] Implement backlog and sprint planning service in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/java/com/orbit/agile/application/service/SprintPlanningService.java`
-- [ ] T084 [US5] Implement DSU normalization service (rule-based first pass) in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/java/com/orbit/agile/application/service/DSUNormalizationService.java`
-- [ ] T085 [US5] Implement agile-ops gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/java/com/orbit/agile/adapters/in/grpc/AgileOpsGrpcService.java`
-- [ ] T086 [US5] Add sprint/backlog/dsu gateway endpoints in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/SprintController.java`
-- [ ] T087 [US5] Implement frontend sprint workspace page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/sprint/SprintWorkspacePage.tsx`
-- [ ] T088 [US5] Implement DSU submission and blocker summary panel in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/agile/DSUComposerPanel.tsx`
+- [X] T077 [P] [US5] Add sprint/dsu contract tests in `/home/lhs/dev/tasks/tests/contract/us5-agile-loop.contract.test.ts`
+- [X] T078 [P] [US5] Add DSU extraction integration tests in `/home/lhs/dev/tasks/tests/integration/us5-dsu-pipeline.test.ts`
+- [X] T079 [US5] Scaffold agile-ops-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/build.gradle.kts`
+- [X] T080 [P] [US5] Add sprint/backlog/dsu schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/resources/db/migration/V1__agile_ops.sql`
+- [X] T081 [P] [US5] Implement sprint aggregate and lifecycle rules in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/java/com/orbit/agile/domain/Sprint.java`
+- [X] T082 [P] [US5] Implement DSU domain model with raw/structured payload in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/java/com/orbit/agile/domain/DSUEntry.java`
+- [X] T083 [US5] Implement backlog and sprint planning service in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/java/com/orbit/agile/application/service/SprintPlanningService.java`
+- [X] T084 [US5] Implement DSU normalization service (rule-based first pass) in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/java/com/orbit/agile/application/service/DSUNormalizationService.java`
+- [X] T085 [US5] Implement agile-ops gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/agile-ops-service/src/main/java/com/orbit/agile/adapters/in/grpc/AgileOpsGrpcService.java`
+- [X] T086 [US5] Add sprint/backlog/dsu gateway endpoints in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/SprintController.java`
+- [X] T087 [US5] Implement frontend sprint workspace page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/sprint/SprintWorkspacePage.tsx`
+- [X] T088 [US5] Implement DSU submission and blocker summary panel in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/agile/DSUComposerPanel.tsx`
 
 **Checkpoint**: US5 independently functional and testable.
 

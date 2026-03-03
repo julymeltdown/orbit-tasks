@@ -209,3 +209,31 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - `api-gateway` tests: pass
 - frontend build: pass
 - US4 contract/integration tests: pass
+
+---
+
+## Phase 7 - US5 Sprint, Backlog, and DSU Loop (T077-T088)
+
+### Completed
+
+- Added US5 contract and DSU pipeline integration tests
+- Scaffolded `agile-ops-service` module with Gradle, app config, proto, and migration
+- Implemented sprint aggregate (`Sprint`), DSU domain (`DSUEntry`), planning service, and DSU normalization service
+- Implemented `AgileOpsGrpcService` entrypoint for DSU submit flow
+- Added gateway `SprintController` endpoints for sprint/backlog/dsu operations
+- Added frontend `SprintWorkspacePage` and `DSUComposerPanel`
+- Registered `/sprint` route and app-shell navigation entry
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us5-agile-loop.contract.test.ts tests/integration/us5-dsu-pipeline.test.ts
+```
+
+### Validation Result
+
+- `api-gateway` tests: pass
+- frontend build: pass
+- US5 contract/integration tests: pass

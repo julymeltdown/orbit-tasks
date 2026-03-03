@@ -6,6 +6,7 @@ const navItems = [
   { to: "/projects/board", label: "Board" },
   { to: "/projects/timeline", label: "Timeline" },
   { to: "/projects/table", label: "Table" },
+  { to: "/sprint", label: "Sprint" },
   { to: "/team", label: "Teams" },
   { to: "/profile", label: "Profile" },
   { to: "/inbox", label: "Inbox" }

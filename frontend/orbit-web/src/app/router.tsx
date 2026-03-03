@@ -3,6 +3,7 @@ import { Navigate, createBrowserRouter } from "react-router-dom";
 import { AppShell } from "./AppShell";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { ProfileSettingsPage } from "@/pages/profile/ProfileSettingsPage";
+import { TeamManagementPage } from "@/pages/team/TeamManagementPage";
 import { WorkspaceEntryPage } from "@/pages/workspace/WorkspaceEntryPage";
 
 function isAuthenticated(): boolean {
@@ -59,6 +60,7 @@ export const router = createBrowserRouter([
       { index: true, element: <OverviewPage /> },
       { path: "workspace/select", element: <WorkspaceEntryPage /> },
       { path: "profile", element: <ProfileSettingsPage /> },
+      { path: "team", element: <TeamManagementPage /> },
       { path: "inbox", element: <PlaceholderPage title="Notification Inbox" /> }
     ]
   }

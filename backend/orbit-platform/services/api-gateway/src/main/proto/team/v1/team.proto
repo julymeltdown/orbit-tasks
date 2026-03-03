@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package team.v1;
+
+option java_multiple_files = true;
+option java_package = "com.orbit.team.v1";
+option java_outer_classname = "TeamProto";
+
+message CreateTeamRequest {
+  string workspace_id = 1;
+  string name = 2;
+  string created_by = 3;
+}
+
+message CreateTeamResponse {
+  string team_id = 1;
+  string workspace_id = 2;
+  string name = 3;
+}
+
+message InviteMemberRequest {
+  string team_id = 1;
+  string user_id = 2;
+  string role = 3;
+  string invited_by = 4;
+}
+
+message InviteMemberResponse {
+  string membership_id = 1;
+  string team_id = 2;
+  string user_id = 3;
+  string role = 4;
+}
+
+message UpdateRoleRequest {
+  string team_id = 1;
+  string user_id = 2;
+  string role = 3;
+  string actor_role = 4;
+}
+
+message UpdateRoleResponse {
+  string membership_id = 1;
+  string role = 2;
+}
+
+message ListMembersRequest {
+  string team_id = 1;
+}
+
+message TeamMember {
+  string membership_id = 1;
+  string team_id = 2;
+  string user_id = 3;
+  string role = 4;
+}
+
+message ListMembersResponse {
+  repeated TeamMember members = 1;
+}
+
+service Team {
+  rpc CreateTeam(CreateTeamRequest) returns (CreateTeamResponse);
+  rpc InviteMember(InviteMemberRequest) returns (InviteMemberResponse);
+  rpc UpdateRole(UpdateRoleRequest) returns (UpdateRoleResponse);
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
+}

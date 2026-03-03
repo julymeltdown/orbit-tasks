@@ -117,18 +117,18 @@
 
 **Independent Test**: 팀 생성부터 멤버 초대, 역할 변경, 팀 단위 접근 제한까지 완료되면 검증 완료.
 
-- [ ] T053 [P] [US3] Add team lifecycle contract tests in `/home/lhs/dev/tasks/tests/contract/us3-team-lifecycle.contract.test.ts`
-- [ ] T054 [P] [US3] Add team role enforcement integration tests in `/home/lhs/dev/tasks/tests/integration/us3-team-rbac.test.ts`
-- [ ] T055 [US3] Scaffold new team-service gradle module in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/build.gradle.kts`
-- [ ] T056 [P] [US3] Add team/membership schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/src/main/resources/db/migration/V1__team_membership.sql`
-- [ ] T057 [P] [US3] Implement team aggregate domain model in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/src/main/java/com/orbit/team/domain/Team.java`
-- [ ] T058 [P] [US3] Implement membership/role binding entities in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/src/main/java/com/orbit/team/adapters/out/persistence/TeamMembershipEntity.java`
-- [ ] T059 [US3] Implement invitation and role update service in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/src/main/java/com/orbit/team/application/service/TeamLifecycleService.java`
-- [ ] T060 [US3] Implement team permission query gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/src/main/java/com/orbit/team/adapters/in/grpc/TeamGrpcService.java`
-- [ ] T061 [US3] Add team endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/TeamController.java`
-- [ ] T062 [US3] Implement frontend team management page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/team/TeamManagementPage.tsx`
-- [ ] T063 [P] [US3] Implement team directory panel component in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/team/TeamDirectoryPanel.tsx`
-- [ ] T064 [US3] Implement frontend team role mutation hooks in `/home/lhs/dev/tasks/frontend/orbit-web/src/features/team/hooks/useTeamRoleMutations.ts`
+- [X] T053 [P] [US3] Add team lifecycle contract tests in `/home/lhs/dev/tasks/tests/contract/us3-team-lifecycle.contract.test.ts`
+- [X] T054 [P] [US3] Add team role enforcement integration tests in `/home/lhs/dev/tasks/tests/integration/us3-team-rbac.test.ts`
+- [X] T055 [US3] Scaffold new team-service gradle module in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/build.gradle.kts`
+- [X] T056 [P] [US3] Add team/membership schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/src/main/resources/db/migration/V1__team_membership.sql`
+- [X] T057 [P] [US3] Implement team aggregate domain model in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/src/main/java/com/orbit/team/domain/Team.java`
+- [X] T058 [P] [US3] Implement membership/role binding entities in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/src/main/java/com/orbit/team/adapters/out/persistence/TeamMembershipEntity.java`
+- [X] T059 [US3] Implement invitation and role update service in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/src/main/java/com/orbit/team/application/service/TeamLifecycleService.java`
+- [X] T060 [US3] Implement team permission query gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/team-service/src/main/java/com/orbit/team/adapters/in/grpc/TeamGrpcService.java`
+- [X] T061 [US3] Add team endpoints to gateway in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/TeamController.java`
+- [X] T062 [US3] Implement frontend team management page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/team/TeamManagementPage.tsx`
+- [X] T063 [P] [US3] Implement team directory panel component in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/team/TeamDirectoryPanel.tsx`
+- [X] T064 [US3] Implement frontend team role mutation hooks in `/home/lhs/dev/tasks/frontend/orbit-web/src/features/team/hooks/useTeamRoleMutations.ts`
 
 **Checkpoint**: US3 independently functional and testable.
 

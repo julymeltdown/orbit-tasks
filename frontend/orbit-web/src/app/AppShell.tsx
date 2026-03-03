@@ -3,6 +3,7 @@ import { NavLink, Outlet } from "react-router-dom";
 const navItems = [
   { to: "/", label: "Overview" },
   { to: "/workspace/select", label: "Workspace" },
+  { to: "/team", label: "Teams" },
   { to: "/profile", label: "Profile" },
   { to: "/inbox", label: "Inbox" }
 ];

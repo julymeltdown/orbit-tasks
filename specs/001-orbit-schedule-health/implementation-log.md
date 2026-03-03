@@ -151,3 +151,32 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - `profile-service` tests: pass
 - frontend build: pass
 - US2 contract/integration tests: pass
+
+---
+
+## Phase 5 - US3 Team Lifecycle and Role Management (T053-T064)
+
+### Completed
+
+- Added US3 contract and RBAC integration tests
+- Scaffolded `team-service` from boilerplate and introduced dedicated team/membership migration
+- Implemented team domain, membership entity, lifecycle service, and gRPC Team API
+- Added gateway team endpoints (`create`, `invite`, `role update`, `list members`)
+- Added frontend team management page, directory panel, and role mutation hooks
+- Registered `/team` route in app shell
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/team-service && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us3-team-lifecycle.contract.test.ts tests/integration/us3-team-rbac.test.ts
+```
+
+### Validation Result
+
+- `team-service` tests: pass
+- `api-gateway` tests: pass
+- frontend build: pass
+- US3 contract/integration tests: pass

@@ -1,0 +1,87 @@
+spring:
+  application:
+    name: team-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/friend_db}
+    username: ${DB_USERNAME:friend_user}
+    password: ${DB_PASSWORD:friend_pass}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        type:
+          preferred_uuid_jdbc_type: UUID
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_JWKS_URL:http://localhost:8080/auth/jwks}
+  lifecycle:
+    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:30s}
+  grpc:
+    server:
+      port: ${GRPC_SERVER_PORT:9092}
+      reflection:
+        enabled: true
+      health:
+        enabled: true
+        actuator:
+          enabled: true
+          health-indicator-paths:
+            - db
+      shutdown-grace-period: ${GRPC_SERVER_SHUTDOWN_GRACE:30s}
+      keep-alive:
+        time: ${GRPC_SERVER_KEEPALIVE_TIME:2h}
+        timeout: ${GRPC_SERVER_KEEPALIVE_TIMEOUT:20s}
+        permit-time: ${GRPC_SERVER_KEEPALIVE_PERMIT_TIME:5m}
+        permit-without-calls: ${GRPC_SERVER_KEEPALIVE_WITHOUT_CALLS:false}
+      observation:
+        enabled: ${GRPC_SERVER_OBSERVATION_ENABLED:true}
+    client:
+      default-channel:
+        address: ${GRPC_DEFAULT_CHANNEL:static://localhost:9090}
+        default-deadline: ${GRPC_CLIENT_DEFAULT_DEADLINE:5s}
+        enable-keep-alive: ${GRPC_CLIENT_KEEPALIVE_ENABLED:false}
+        keep-alive-time: ${GRPC_CLIENT_KEEPALIVE_TIME:5m}
+        keep-alive-timeout: ${GRPC_CLIENT_KEEPALIVE_TIMEOUT:20s}
+      observation:
+        enabled: ${GRPC_CLIENT_OBSERVATION_ENABLED:true}
+
+server:
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{correlationId:-}]"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: tls
+  grpc:
+    server:
+      ssl:
+        bundle: ${GRPC_SERVER_SSL_BUNDLE}
+        client-auth: ${GRPC_SERVER_SSL_CLIENT_AUTH:none}
+    client:
+      default-channel:
+        ssl:
+          bundle: ${GRPC_CLIENT_SSL_BUNDLE}

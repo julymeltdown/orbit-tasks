@@ -3,9 +3,7 @@
 import { ReactNode, useEffect } from "react";
 import style from "@/app/(afterLogin)/layout.module.css";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import ZLogo from "../../../public/zlogo.png";
 import NavMenu from "@/app/(afterLogin)/_component/NavMenu";
 import LogoutButton from "@/app/(afterLogin)/_component/LogoutButton";
 import RightSearchZone from "@/app/(afterLogin)/_component/RightSearchZone";
@@ -51,7 +49,7 @@ export default function AfterLoginLayout({ children }: Props) {
                   <div className={style.leftSectionFixed}>
                     <Link className={style.logo} href="/home">
                       <div className={style.logoPill}>
-                        <Image src={ZLogo} alt="Z logo" width={40} height={40} />
+                        <span className={style.logoText}>O</span>
                       </div>
                     </Link>
                     <nav>

@@ -24,7 +24,7 @@ npm run lint
 ## Environment
 
 Required in production/build environments:
-- `NEXT_PUBLIC_API_BASE_URL` (example: `https://<domain>/gateway`)
+- `NEXT_PUBLIC_API_BASE_URL` (example: `https://tasksapi.infinitefallcult.trade`)
 
 Optional:
 - `GATEWAY_PROXY_TARGET` (used by deployment manifests)

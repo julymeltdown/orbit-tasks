@@ -56,9 +56,19 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    border: 1px solid rgba(56, 138, 255, 0.4);
+    background: linear-gradient(145deg, rgba(8, 70, 205, 0.45), rgba(6, 31, 103, 0.4));
 }
 .logoPill:hover {
     background-color: rgba(15,20,25, 0.1);
+}
+
+.logoText {
+    font-size: 22px;
+    line-height: 1;
+    font-weight: 900;
+    color: #9ec0ff;
+    letter-spacing: -0.04em;
 }
 
 .postButton {

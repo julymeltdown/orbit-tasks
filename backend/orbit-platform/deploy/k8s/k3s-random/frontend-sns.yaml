@@ -21,9 +21,9 @@ spec:
             - name: PORT
               value: "28139"
             - name: NEXT_PUBLIC_API_BASE_URL
-              value: /gateway
+              value: https://tasksapi.infinitefallcult.trade
             - name: GATEWAY_PROXY_TARGET
-              value: http://api-gateway.boilerplate-random.svc.cluster.local:24271
+              value: https://tasksapi.infinitefallcult.trade
           ports:
             - name: http
               containerPort: 28139

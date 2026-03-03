@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const gatewayTarget =
   process.env.GATEWAY_PROXY_TARGET ||
-  "http://api-gateway.boilerplate-random.svc.cluster.local:25429";
+  "https://tasksapi.infinitefallcult.trade";
 
 const nextConfig = {
   output: "standalone",

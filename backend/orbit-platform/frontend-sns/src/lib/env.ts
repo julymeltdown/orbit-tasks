@@ -1,4 +1,5 @@
-const buildTimeBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/gateway";
+const buildTimeBase =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://tasksapi.infinitefallcult.trade";
 
 const resolveApiBase = () => {
   if (typeof window === "undefined") {

@@ -49,9 +49,9 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource(
             @Value("${gateway.cors.allowed-origins}") String origins) {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(parseOrigins(origins));
+        configuration.setAllowedOriginPatterns(parseOrigins(origins));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

@@ -50,7 +50,7 @@ gateway:
     refresh-cookie-secure: ${GATEWAY_REFRESH_COOKIE_SECURE:false}
     refresh-cookie-max-age: ${GATEWAY_REFRESH_COOKIE_MAX_AGE:P14D}
   cors:
-    allowed-origins: ${GATEWAY_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    allowed-origins: ${GATEWAY_CORS_ALLOWED_ORIGINS:https://*.infinitefallcult.trade,http://localhost:5174,https://localhost:5174}
   resilience:
     timeout-ms: ${GATEWAY_RESILIENCE_TIMEOUT_MS:800}
     retry-max: ${GATEWAY_RESILIENCE_RETRY_MAX:1}

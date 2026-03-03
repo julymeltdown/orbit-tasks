@@ -1,0 +1,99 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap");
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background: radial-gradient(circle at 50% -30%, rgba(0, 102, 255, 0.12), transparent 42%), var(--orbit-bg);
+  color: var(--orbit-text);
+}
+
+.orbit-panel {
+  border: 1px solid var(--orbit-border);
+  background: linear-gradient(165deg, color-mix(in oklab, var(--orbit-surface-1) 90%, white 10%), var(--orbit-surface-2));
+  box-shadow: var(--orbit-shadow-1);
+}
+
+[data-theme="dark"] .orbit-panel {
+  background: linear-gradient(165deg, color-mix(in oklab, var(--orbit-surface-1) 82%, black 18%), var(--orbit-surface-2));
+}
+
+.orbit-card {
+  border: 1px solid var(--orbit-border);
+  background: var(--orbit-surface-1);
+  box-shadow: var(--orbit-shadow-1);
+}
+
+.orbit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--orbit-accent);
+  background: var(--orbit-accent);
+  color: #ffffff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  line-height: 1;
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+
+.orbit-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px var(--orbit-accent), 0 0 24px color-mix(in srgb, var(--orbit-accent-glow) 45%, transparent);
+}
+
+.orbit-button:active {
+  transform: translateY(0);
+}
+
+.orbit-button--ghost {
+  border-color: var(--orbit-border);
+  background: var(--orbit-surface-2);
+  color: var(--orbit-text);
+}
+
+.orbit-input {
+  width: 100%;
+  border: 1px solid var(--orbit-border);
+  background: var(--orbit-surface-1);
+  color: var(--orbit-text);
+  padding: 12px 14px;
+  font-size: 14px;
+}
+
+.orbit-input:focus {
+  outline: none;
+  border-color: var(--orbit-accent);
+  box-shadow: 0 0 0 1px var(--orbit-accent);
+}
+
+.orbit-heading-xl {
+  font-size: clamp(2rem, 4vw, 4.5rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  line-height: 0.9;
+}
+
+.orbit-neon-line {
+  display: inline-block;
+  width: 64px;
+  height: 2px;
+  background: var(--orbit-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--orbit-accent-glow) 50%, transparent);
+}

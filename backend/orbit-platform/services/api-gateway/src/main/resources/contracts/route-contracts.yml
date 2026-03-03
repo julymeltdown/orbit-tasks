@@ -1,0 +1,52 @@
+version: 1
+routes:
+  - id: auth.login
+    method: POST
+    path: /auth/login
+    target: identity-access-service
+    policySet: default-auth
+  - id: auth.refresh
+    method: POST
+    path: /auth/refresh
+    target: identity-access-service
+    policySet: default-auth
+  - id: auth.logout
+    method: POST
+    path: /auth/logout
+    target: identity-access-service
+    policySet: default-auth
+  - id: profile.settings.get
+    method: GET
+    path: /profile/settings
+    target: profile-service
+    policySet: workspace-user
+  - id: profile.settings.patch
+    method: PATCH
+    path: /profile/settings
+    target: profile-service
+    policySet: workspace-user
+  - id: team.memberships
+    method: GET
+    path: /teams/{teamId}/memberships
+    target: team-service
+    policySet: workspace-admin
+  - id: thread.messages
+    method: GET
+    path: /threads/{threadId}/messages
+    target: collaboration-service
+    policySet: workspace-user
+  - id: thread.reply
+    method: POST
+    path: /threads/{threadId}/messages
+    target: collaboration-service
+    policySet: workspace-user
+  - id: deeplink.resolve
+    method: GET
+    path: /dl/{token}
+    target: deep-link-service
+    policySet: public-bounce
+  - id: schedule.evaluate
+    method: POST
+    path: /insights/schedule-evaluations
+    target: schedule-intelligence-service
+    policySet: workspace-manager

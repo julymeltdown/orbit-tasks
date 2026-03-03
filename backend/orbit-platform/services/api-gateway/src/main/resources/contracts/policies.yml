@@ -1,0 +1,36 @@
+version: 1
+policySets:
+  - id: default-auth
+    authRequired: false
+    rateLimitRpm: 120
+    burst: 30
+    timeoutMs: 1500
+  - id: public-bounce
+    authRequired: false
+    rateLimitRpm: 180
+    burst: 60
+    timeoutMs: 1000
+  - id: workspace-user
+    authRequired: true
+    requiredRoles:
+      - WORKSPACE_MEMBER
+      - TEAM_MEMBER
+    rateLimitRpm: 600
+    burst: 120
+    timeoutMs: 1000
+  - id: workspace-manager
+    authRequired: true
+    requiredRoles:
+      - WORKSPACE_ADMIN
+      - PROGRAM_MANAGER
+      - TEAM_LEAD
+    rateLimitRpm: 360
+    burst: 80
+    timeoutMs: 1400
+  - id: workspace-admin
+    authRequired: true
+    requiredRoles:
+      - WORKSPACE_ADMIN
+    rateLimitRpm: 180
+    burst: 40
+    timeoutMs: 1500

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbit.local/contracts/events/event-envelope.schema.json",
+  "title": "Orbit Event Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "eventType",
+    "eventVersion",
+    "occurredAt",
+    "producer",
+    "workspaceId",
+    "correlationId",
+    "payload"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{2,127}$"
+    },
+    "eventVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{1,63}$"
+    },
+    "workspaceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "teamId": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "actorId": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "correlationId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128
+    },
+    "causationId": {
+      "type": ["string", "null"],
+      "minLength": 8,
+      "maxLength": 128
+    },
+    "idempotencyKey": {
+      "type": ["string", "null"],
+      "minLength": 8,
+      "maxLength": 128
+    },
+    "schemaRef": {
+      "type": ["string", "null"]
+    },
+    "payload": {
+      "type": "object"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean", "null"]
+      }
+    }
+  }
+}

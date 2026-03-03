@@ -44,26 +44,26 @@
 
 **⚠️ CRITICAL**: 이 단계 완료 전에는 사용자 스토리 개발을 시작하지 않는다.
 
-- [ ] T013 Create backend architecture decision record for service boundaries in `/home/lhs/dev/tasks/backend/orbit-platform/docs/adr/0001-service-boundaries.md`
-- [ ] T014 [P] Create event envelope schema in `/home/lhs/dev/tasks/backend/orbit-platform/contracts/events/event-envelope.schema.json`
-- [ ] T015 [P] Create topic naming convention spec in `/home/lhs/dev/tasks/backend/orbit-platform/contracts/events/topic-conventions.md`
-- [ ] T016 Create platform outbox shared module gradle project in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/build.gradle.kts`
-- [ ] T017 [P] Implement shared outbox entity base class in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/outbox/OutboxEventEntity.java`
-- [ ] T018 [P] Implement shared outbox publisher port in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/outbox/OutboxPublisherPort.java`
-- [ ] T019 [P] Implement shared replay scheduler abstraction in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/replay/ReplayScheduler.java`
-- [ ] T020 Create backend common authz interceptor library in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/security/WorkspaceAuthorizationInterceptor.java`
-- [ ] T021 [P] Create common audit event interface in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/audit/AuditEvent.java`
-- [ ] T022 [P] Create common correlation ID filter/interceptor in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/trace/CorrelationContext.java`
-- [ ] T023 Create orbit gateway route contract bootstrap file in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/resources/contracts/route-contracts.yml`
-- [ ] T024 [P] Create orbit gateway policy set bootstrap file in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/resources/contracts/policies.yml`
-- [ ] T025 [P] Create orbit gateway aggregation recipes file in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/resources/contracts/aggregation-recipes.yml`
-- [ ] T026 Create frontend design token file in `/home/lhs/dev/tasks/frontend/orbit-web/src/design/tokens.css`
-- [ ] T027 [P] Create frontend tailwind preset with light/dark neon-blue tokens in `/home/lhs/dev/tasks/frontend/orbit-web/src/design/tailwind.preset.ts`
-- [ ] T028 [P] Create frontend primitives stylesheet (sharp corners, panel/card/button) in `/home/lhs/dev/tasks/frontend/orbit-web/src/design/primitives.css`
-- [ ] T029 [P] Create responsive shell grid stylesheet in `/home/lhs/dev/tasks/frontend/orbit-web/src/design/layout.css`
-- [ ] T030 Create frontend app shell component in `/home/lhs/dev/tasks/frontend/orbit-web/src/app/AppShell.tsx`
-- [ ] T031 Create frontend route map and guarded router in `/home/lhs/dev/tasks/frontend/orbit-web/src/app/router.tsx`
-- [ ] T032 Create shared API client + error normalization layer in `/home/lhs/dev/tasks/frontend/orbit-web/src/lib/http/client.ts`
+- [X] T013 Create backend architecture decision record for service boundaries in `/home/lhs/dev/tasks/backend/orbit-platform/docs/adr/0001-service-boundaries.md`
+- [X] T014 [P] Create event envelope schema in `/home/lhs/dev/tasks/backend/orbit-platform/contracts/events/event-envelope.schema.json`
+- [X] T015 [P] Create topic naming convention spec in `/home/lhs/dev/tasks/backend/orbit-platform/contracts/events/topic-conventions.md`
+- [X] T016 Create platform outbox shared module gradle project in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/build.gradle.kts`
+- [X] T017 [P] Implement shared outbox entity base class in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/outbox/OutboxEventEntity.java`
+- [X] T018 [P] Implement shared outbox publisher port in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/outbox/OutboxPublisherPort.java`
+- [X] T019 [P] Implement shared replay scheduler abstraction in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/replay/ReplayScheduler.java`
+- [X] T020 Create backend common authz interceptor library in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/security/WorkspaceAuthorizationInterceptor.java`
+- [X] T021 [P] Create common audit event interface in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/audit/AuditEvent.java`
+- [X] T022 [P] Create common correlation ID filter/interceptor in `/home/lhs/dev/tasks/backend/orbit-platform/services/platform-event-kit/src/main/java/com/orbit/eventkit/trace/CorrelationContext.java`
+- [X] T023 Create orbit gateway route contract bootstrap file in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/resources/contracts/route-contracts.yml`
+- [X] T024 [P] Create orbit gateway policy set bootstrap file in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/resources/contracts/policies.yml`
+- [X] T025 [P] Create orbit gateway aggregation recipes file in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/resources/contracts/aggregation-recipes.yml`
+- [X] T026 Create frontend design token file in `/home/lhs/dev/tasks/frontend/orbit-web/src/design/tokens.css`
+- [X] T027 [P] Create frontend tailwind preset with light/dark neon-blue tokens in `/home/lhs/dev/tasks/frontend/orbit-web/src/design/tailwind.preset.ts`
+- [X] T028 [P] Create frontend primitives stylesheet (sharp corners, panel/card/button) in `/home/lhs/dev/tasks/frontend/orbit-web/src/design/primitives.css`
+- [X] T029 [P] Create responsive shell grid stylesheet in `/home/lhs/dev/tasks/frontend/orbit-web/src/design/layout.css`
+- [X] T030 Create frontend app shell component in `/home/lhs/dev/tasks/frontend/orbit-web/src/app/AppShell.tsx`
+- [X] T031 Create frontend route map and guarded router in `/home/lhs/dev/tasks/frontend/orbit-web/src/app/router.tsx`
+- [X] T032 Create shared API client + error normalization layer in `/home/lhs/dev/tasks/frontend/orbit-web/src/lib/http/client.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can begin.
 

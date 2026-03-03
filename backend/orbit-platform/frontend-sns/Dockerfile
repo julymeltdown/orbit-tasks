@@ -7,9 +7,9 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_API_BASE_URL=https://tasksapi.infinitefallcult.trade
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
-ARG GATEWAY_PROXY_TARGET
+ARG GATEWAY_PROXY_TARGET=https://tasksapi.infinitefallcult.trade
 ENV GATEWAY_PROXY_TARGET=$GATEWAY_PROXY_TARGET
 RUN npm run build
 

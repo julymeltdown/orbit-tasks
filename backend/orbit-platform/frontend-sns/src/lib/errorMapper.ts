@@ -32,8 +32,20 @@ const MESSAGE_MAP: Array<{ contains: string; message: string }> = [
 
 export function resolveErrorMessage(error: unknown): string {
   const rawMessage = error instanceof Error ? error.message : "요청 처리 중 오류가 발생했습니다.";
-  const matched = MESSAGE_MAP.find((item) => rawMessage.includes(item.contains));
-  return matched?.message ?? rawMessage;
+  const normalized = normalizeRawMessage(rawMessage);
+  const matched = MESSAGE_MAP.find((item) => normalized.includes(item.contains));
+  return matched?.message ?? normalized;
+}
+
+function normalizeRawMessage(message: string) {
+  // Some upstream failures return an HTML error page as plain text.
+  if (/<html[\s>]/i.test(message) || /<!doctype html>/i.test(message)) {
+    return "API 응답 형식이 올바르지 않습니다. API 도메인 및 CORS 설정을 확인해 주세요.";
+  }
+  if (message.includes("This page does not exist. Try another route.")) {
+    return "요청 경로를 찾지 못했습니다. API 베이스 URL 설정을 확인해 주세요.";
+  }
+  return message;
 }
 
 export function alertForError(error: unknown) {

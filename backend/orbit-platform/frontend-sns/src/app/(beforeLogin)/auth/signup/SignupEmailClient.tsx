@@ -100,12 +100,7 @@ export default function SignupEmailClient({ initialEmail = "" }: SignupEmailClie
         <section className={styles.panel}>
           <div className={styles.panelTitle}>Email signup</div>
           <p className={styles.muted}>We will check if this email is available.</p>
-          <form
-            onSubmit={handleNext}
-            method="GET"
-            action="/auth/signup/password"
-            className={styles.formStack}
-          >
+          <form onSubmit={handleNext} className={styles.formStack}>
             <label className={styles.label}>
               Email
               <input

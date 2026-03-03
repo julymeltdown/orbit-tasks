@@ -186,18 +186,18 @@
 
 **Independent Test**: Work Item 내 스레드 생성, 멘션, 인박스 알림 도달/읽음 처리 흐름이 독립 동작해야 한다.
 
-- [ ] T089 [P] [US6] Add collaboration contract tests for thread/mention/inbox in `/home/lhs/dev/tasks/tests/contract/us6-collaboration.contract.test.ts`
-- [ ] T090 [P] [US6] Add mention-to-inbox latency integration test in `/home/lhs/dev/tasks/tests/integration/us6-mention-inbox-latency.test.ts`
-- [ ] T091 [US6] Scaffold collaboration-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/build.gradle.kts`
-- [ ] T092 [P] [US6] Add thread/message/mention schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/src/main/resources/db/migration/V1__collaboration_core.sql`
-- [ ] T093 [P] [US6] Implement thread aggregate and status transitions in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/src/main/java/com/orbit/collaboration/domain/Thread.java`
-- [ ] T094 [P] [US6] Implement mention parser and explicit mention command model in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/src/main/java/com/orbit/collaboration/domain/Mention.java`
-- [ ] T095 [US6] Implement collaboration application service in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/src/main/java/com/orbit/collaboration/application/service/ThreadService.java`
-- [ ] T096 [US6] Implement collaboration gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/src/main/java/com/orbit/collaboration/adapters/in/grpc/CollaborationGrpcService.java`
-- [ ] T097 [US6] Extend notification-service fan-out rules for mentions/threads in `/home/lhs/dev/tasks/backend/orbit-platform/services/notification-service/src/main/java/com/orbit/notification/application/service/NotificationFanoutService.java`
-- [ ] T098 [US6] Add thread/mention gateway endpoints in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/ThreadController.java`
-- [ ] T099 [US6] Implement frontend thread panel in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/collaboration/ThreadPanel.tsx`
-- [ ] T100 [US6] Implement frontend notification inbox page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/inbox/InboxPage.tsx`
+- [X] T089 [P] [US6] Add collaboration contract tests for thread/mention/inbox in `/home/lhs/dev/tasks/tests/contract/us6-collaboration.contract.test.ts`
+- [X] T090 [P] [US6] Add mention-to-inbox latency integration test in `/home/lhs/dev/tasks/tests/integration/us6-mention-inbox-latency.test.ts`
+- [X] T091 [US6] Scaffold collaboration-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/build.gradle.kts`
+- [X] T092 [P] [US6] Add thread/message/mention schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/src/main/resources/db/migration/V1__collaboration_core.sql`
+- [X] T093 [P] [US6] Implement thread aggregate and status transitions in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/src/main/java/com/orbit/collaboration/domain/Thread.java`
+- [X] T094 [P] [US6] Implement mention parser and explicit mention command model in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/src/main/java/com/orbit/collaboration/domain/Mention.java`
+- [X] T095 [US6] Implement collaboration application service in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/src/main/java/com/orbit/collaboration/application/service/ThreadService.java`
+- [X] T096 [US6] Implement collaboration gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/collaboration-service/src/main/java/com/orbit/collaboration/adapters/in/grpc/CollaborationGrpcService.java`
+- [X] T097 [US6] Extend notification-service fan-out rules for mentions/threads in `/home/lhs/dev/tasks/backend/orbit-platform/services/notification-service/src/main/java/com/orbit/notification/application/service/NotificationFanoutService.java`
+- [X] T098 [US6] Add thread/mention gateway endpoints in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/ThreadController.java`
+- [X] T099 [US6] Implement frontend thread panel in `/home/lhs/dev/tasks/frontend/orbit-web/src/components/collaboration/ThreadPanel.tsx`
+- [X] T100 [US6] Implement frontend notification inbox page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/inbox/InboxPage.tsx`
 
 **Checkpoint**: US6 independently functional and testable.
 

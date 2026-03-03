@@ -237,3 +237,31 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - `api-gateway` tests: pass
 - frontend build: pass
 - US5 contract/integration tests: pass
+
+---
+
+## Phase 8 - US6 Collaboration Thread, Mention, Inbox (T089-T100)
+
+### Completed
+
+- Added US6 contract and mention latency integration tests
+- Scaffolded `collaboration-service` with migration, proto, and app/runtime config
+- Implemented collaboration domain (`Thread`, `Mention`) and application service (`ThreadService`)
+- Implemented `CollaborationGrpcService` and gateway `ThreadController`
+- Extended notification-service fanout logic in `NotificationFanoutService`
+- Implemented frontend `ThreadPanel` and `InboxPage`
+- Routed `/inbox` to concrete collaboration inbox UI
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us6-collaboration.contract.test.ts tests/integration/us6-mention-inbox-latency.test.ts
+```
+
+### Validation Result
+
+- `api-gateway` tests: pass
+- frontend build: pass
+- US6 contract/integration tests: pass

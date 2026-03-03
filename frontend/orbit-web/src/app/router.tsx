@@ -9,6 +9,7 @@ import { ProfileSettingsPage } from "@/pages/profile/ProfileSettingsPage";
 import { TeamManagementPage } from "@/pages/team/TeamManagementPage";
 import { WorkspaceEntryPage } from "@/pages/workspace/WorkspaceEntryPage";
 import { SprintWorkspacePage } from "@/pages/sprint/SprintWorkspacePage";
+import { InboxPage } from "@/pages/inbox/InboxPage";
 
 function isAuthenticated(): boolean {
   return Boolean(localStorage.getItem("orbit.session.accessToken"));
@@ -69,7 +70,7 @@ export const router = createBrowserRouter([
       { path: "sprint", element: <SprintWorkspacePage /> },
       { path: "profile", element: <ProfileSettingsPage /> },
       { path: "team", element: <TeamManagementPage /> },
-      { path: "inbox", element: <PlaceholderPage title="Notification Inbox" /> }
+      { path: "inbox", element: <InboxPage /> }
     ]
   }
 ]);

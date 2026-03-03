@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: collaboration-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/collaboration_db}
+    username: ${DB_USERNAME:collab_user}
+    password: ${DB_PASSWORD:collab_pass}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+  grpc:
+    server:
+      port: ${GRPC_SERVER_PORT:9097}
+      reflection:
+        enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

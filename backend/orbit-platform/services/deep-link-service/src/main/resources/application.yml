@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: deep-link-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/deep_link_db}
+    username: ${DB_USERNAME:deep_link_user}
+    password: ${DB_PASSWORD:deep_link_pass}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+  grpc:
+    server:
+      port: ${GRPC_SERVER_PORT:9098}
+      reflection:
+        enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

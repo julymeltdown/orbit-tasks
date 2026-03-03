@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package orbit.deeplink.v1;
+
+option java_package = "com.orbit.deeplink.v1";
+option java_multiple_files = true;
+
+service DeepLink {
+  rpc Resolve(ResolveDeepLinkRequest) returns (ResolveDeepLinkResponse);
+}
+
+message ResolveDeepLinkRequest {
+  string token = 1;
+  string actor_id = 2;
+}
+
+message ResolveDeepLinkResponse {
+  string status = 1;
+  string target_path = 2;
+}

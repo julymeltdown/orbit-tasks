@@ -265,3 +265,30 @@ cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tas
 - `api-gateway` tests: pass
 - frontend build: pass
 - US6 contract/integration tests: pass
+
+---
+
+## Phase 9 - US7 Deep Link Auth Bounce (T101-T110)
+
+### Completed
+
+- Added US7 deep-link contract test and E2E auth-bounce spec file
+- Scaffolded `deep-link-service` with migration/proto/domain/service/grpc adapter
+- Added gateway `DeepLinkController` with issue/resolve and `/dl/{token}` bounce endpoint
+- Added frontend `DeepLinkResolverPage` and post-login intent utility `restoreIntent`
+- Wired deep-link route into router and integrated login return-to resolver
+
+### Validation Evidence
+
+```bash
+cd /home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway && ./gradlew test --no-daemon
+cd /home/lhs/dev/tasks/frontend/orbit-web && npm run build
+cd /home/lhs/dev/tasks/frontend/orbit-web && npx vitest --root /home/lhs/dev/tasks run tests/contract/us7-deeplink.contract.test.ts
+```
+
+### Validation Result
+
+- `api-gateway` tests: pass
+- frontend build: pass
+- US7 contract test: pass
+- US7 E2E file added; Playwright execution deferred (runtime not installed in this phase)

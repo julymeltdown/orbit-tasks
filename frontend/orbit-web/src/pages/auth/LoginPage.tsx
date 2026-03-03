@@ -1,6 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { request } from "@/lib/http/client";
+import { resolveReturnTo } from "@/lib/routing/restoreIntent";
 
 interface LoginResponse {
   userId: string;
@@ -38,7 +39,7 @@ export function LoginPage() {
       localStorage.setItem("orbit.session.tokenType", result.tokenType);
       localStorage.setItem("orbit.session.expiresIn", String(result.expiresIn));
 
-      navigate(returnTo, { replace: true });
+      navigate(resolveReturnTo(returnTo), { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Login failed");
     } finally {

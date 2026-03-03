@@ -209,16 +209,16 @@
 
 **Independent Test**: 로그인 상태별 딥링크 진입/재인증 복귀/권한 차단이 일관 동작해야 한다.
 
-- [ ] T101 [P] [US7] Add deep-link routing contract tests in `/home/lhs/dev/tasks/tests/contract/us7-deeplink.contract.test.ts`
-- [ ] T102 [P] [US7] Add E2E deep-link auth-bounce scenario in `/home/lhs/dev/tasks/tests/e2e/us7-deeplink-auth-bounce.spec.ts`
-- [ ] T103 [US7] Scaffold deep-link-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/deep-link-service/build.gradle.kts`
-- [ ] T104 [P] [US7] Add deep-link token schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/deep-link-service/src/main/resources/db/migration/V1__deep_link_tokens.sql`
-- [ ] T105 [P] [US7] Implement deep-link aggregate and TTL policy in `/home/lhs/dev/tasks/backend/orbit-platform/services/deep-link-service/src/main/java/com/orbit/deeplink/domain/DeepLinkToken.java`
-- [ ] T106 [US7] Implement deep-link resolution service with authz checks in `/home/lhs/dev/tasks/backend/orbit-platform/services/deep-link-service/src/main/java/com/orbit/deeplink/application/service/DeepLinkResolutionService.java`
-- [ ] T107 [US7] Implement deep-link gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/deep-link-service/src/main/java/com/orbit/deeplink/adapters/in/grpc/DeepLinkGrpcService.java`
-- [ ] T108 [US7] Add `/dl/{token}` gateway endpoint and bounce handling in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/DeepLinkController.java`
-- [ ] T109 [US7] Implement frontend deep-link resolver page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/deeplink/DeepLinkResolverPage.tsx`
-- [ ] T110 [US7] Implement frontend post-login return resolver utility in `/home/lhs/dev/tasks/frontend/orbit-web/src/lib/routing/restoreIntent.ts`
+- [X] T101 [P] [US7] Add deep-link routing contract tests in `/home/lhs/dev/tasks/tests/contract/us7-deeplink.contract.test.ts`
+- [X] T102 [P] [US7] Add E2E deep-link auth-bounce scenario in `/home/lhs/dev/tasks/tests/e2e/us7-deeplink-auth-bounce.spec.ts`
+- [X] T103 [US7] Scaffold deep-link-service module in `/home/lhs/dev/tasks/backend/orbit-platform/services/deep-link-service/build.gradle.kts`
+- [X] T104 [P] [US7] Add deep-link token schema migration in `/home/lhs/dev/tasks/backend/orbit-platform/services/deep-link-service/src/main/resources/db/migration/V1__deep_link_tokens.sql`
+- [X] T105 [P] [US7] Implement deep-link aggregate and TTL policy in `/home/lhs/dev/tasks/backend/orbit-platform/services/deep-link-service/src/main/java/com/orbit/deeplink/domain/DeepLinkToken.java`
+- [X] T106 [US7] Implement deep-link resolution service with authz checks in `/home/lhs/dev/tasks/backend/orbit-platform/services/deep-link-service/src/main/java/com/orbit/deeplink/application/service/DeepLinkResolutionService.java`
+- [X] T107 [US7] Implement deep-link gRPC API in `/home/lhs/dev/tasks/backend/orbit-platform/services/deep-link-service/src/main/java/com/orbit/deeplink/adapters/in/grpc/DeepLinkGrpcService.java`
+- [X] T108 [US7] Add `/dl/{token}` gateway endpoint and bounce handling in `/home/lhs/dev/tasks/backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/DeepLinkController.java`
+- [X] T109 [US7] Implement frontend deep-link resolver page in `/home/lhs/dev/tasks/frontend/orbit-web/src/pages/deeplink/DeepLinkResolverPage.tsx`
+- [X] T110 [US7] Implement frontend post-login return resolver utility in `/home/lhs/dev/tasks/frontend/orbit-web/src/lib/routing/restoreIntent.ts`
 
 **Checkpoint**: US7 independently functional and testable.
 

@@ -10,6 +10,7 @@ import { TeamManagementPage } from "@/pages/team/TeamManagementPage";
 import { WorkspaceEntryPage } from "@/pages/workspace/WorkspaceEntryPage";
 import { SprintWorkspacePage } from "@/pages/sprint/SprintWorkspacePage";
 import { InboxPage } from "@/pages/inbox/InboxPage";
+import { DeepLinkResolverPage } from "@/pages/deeplink/DeepLinkResolverPage";
 
 function isAuthenticated(): boolean {
   return Boolean(localStorage.getItem("orbit.session.accessToken"));
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />
+  },
+  {
+    path: "/dl/:token",
+    element: <DeepLinkResolverPage />
   },
   {
     path: "/",

@@ -1,7 +1,9 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export function WorkspaceEntryPage() {
+  const navigate = useNavigate();
   const claims = useWorkspaceStore((state) => state.claims);
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const loading = useWorkspaceStore((state) => state.loading);
@@ -13,6 +15,11 @@ export function WorkspaceEntryPage() {
   useEffect(() => {
     loadClaims().catch(() => undefined);
   }, [loadClaims]);
+
+  function useWorkspaceAndOpenBoard(workspaceId: string) {
+    setActiveWorkspace(workspaceId);
+    navigate("/app/projects/board");
+  }
 
   return (
     <section style={{ display: "grid", gap: 14 }}>
@@ -34,13 +41,25 @@ export function WorkspaceEntryPage() {
           </p>
         )}
 
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/projects/board")}>
+            Open Kanban
+          </button>
+          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/projects/timeline")}>
+            Open Timeline
+          </button>
+          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/inbox")}>
+            Open Inbox
+          </button>
+        </div>
+
         {!loading && !error && (
           <div style={{ display: "grid", gap: 10 }}>
             {claims.map((claim) => (
               <div
                 key={claim.workspaceId}
                 className="orbit-panel orbit-animate-card"
-                style={{ padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                style={{ padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}
               >
                 <div>
                   <strong>{claim.workspaceName}</strong>
@@ -48,22 +67,27 @@ export function WorkspaceEntryPage() {
                     {claim.workspaceId.slice(0, 8)}...
                   </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
+                <div style={{ textAlign: "right", marginLeft: "auto" }}>
                   <div style={{ fontSize: 12, fontWeight: 700 }}>{claim.role}</div>
                   {claim.defaultWorkspace && (
                     <div style={{ fontSize: 11, color: "var(--orbit-accent)", textTransform: "uppercase" }}>
                       Default
                     </div>
                   )}
-                  <button
-                    className={`orbit-button ${activeWorkspaceId === claim.workspaceId ? "orbit-button--ghost" : ""}`}
-                    type="button"
-                    style={{ marginTop: 8 }}
-                    onClick={() => setActiveWorkspace(claim.workspaceId)}
-                    disabled={activeWorkspaceId === claim.workspaceId}
-                  >
-                    {activeWorkspaceId === claim.workspaceId ? "Selected" : "Use Workspace"}
-                  </button>
+                  <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                    <button
+                      className={`orbit-button ${activeWorkspaceId === claim.workspaceId ? "orbit-button--ghost" : ""}`}
+                      type="button"
+                      onClick={() => useWorkspaceAndOpenBoard(claim.workspaceId)}
+                    >
+                      {activeWorkspaceId === claim.workspaceId ? "Open Board" : "Use & Open"}
+                    </button>
+                    {activeWorkspaceId === claim.workspaceId ? (
+                      <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/inbox")}>
+                        Open Inbox
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             ))}

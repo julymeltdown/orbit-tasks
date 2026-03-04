@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface RetentionRuleInput {
   dataset: string;
@@ -16,16 +16,38 @@ interface AIControlInput {
 interface Props {
   onSaveRetention: (input: RetentionRuleInput) => Promise<void>;
   onSaveAIControl: (input: AIControlInput) => Promise<void>;
+  initialRetention?: RetentionRuleInput | null;
+  initialAiControl?: AIControlInput | null;
 }
 
-export function PolicyControlForms({ onSaveRetention, onSaveAIControl }: Props) {
-  const [dataset, setDataset] = useState("dsu_entries");
-  const [retentionDays, setRetentionDays] = useState(365);
-  const [hardDelete, setHardDelete] = useState(false);
-  const [requireStoreFalse, setRequireStoreFalse] = useState(true);
-  const [maskPii, setMaskPii] = useState(true);
-  const [maxTokensPerCall, setMaxTokensPerCall] = useState(4000);
-  const [enabled, setEnabled] = useState(true);
+export function PolicyControlForms({ onSaveRetention, onSaveAIControl, initialRetention = null, initialAiControl = null }: Props) {
+  const [dataset, setDataset] = useState(initialRetention?.dataset ?? "dsu_entries");
+  const [retentionDays, setRetentionDays] = useState(initialRetention?.retentionDays ?? 365);
+  const [hardDelete, setHardDelete] = useState(initialRetention?.hardDelete ?? false);
+  const [requireStoreFalse, setRequireStoreFalse] = useState(initialAiControl?.requireStoreFalse ?? true);
+  const [maskPii, setMaskPii] = useState(initialAiControl?.maskPii ?? true);
+  const [maxTokensPerCall, setMaxTokensPerCall] = useState(initialAiControl?.maxTokensPerCall ?? 4000);
+  const [enabled, setEnabled] = useState(initialAiControl?.enabled ?? true);
+
+  useEffect(() => {
+    if (!initialRetention) return;
+    setDataset(initialRetention.dataset);
+    setRetentionDays(initialRetention.retentionDays);
+    setHardDelete(initialRetention.hardDelete);
+  }, [initialRetention?.dataset, initialRetention?.retentionDays, initialRetention?.hardDelete]);
+
+  useEffect(() => {
+    if (!initialAiControl) return;
+    setRequireStoreFalse(initialAiControl.requireStoreFalse);
+    setMaskPii(initialAiControl.maskPii);
+    setMaxTokensPerCall(initialAiControl.maxTokensPerCall);
+    setEnabled(initialAiControl.enabled);
+  }, [
+    initialAiControl?.requireStoreFalse,
+    initialAiControl?.maskPii,
+    initialAiControl?.maxTokensPerCall,
+    initialAiControl?.enabled
+  ]);
 
   return (
     <article className="orbit-card" style={{ padding: 16, display: "grid", gap: 12 }}>

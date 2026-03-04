@@ -3,6 +3,7 @@ import { request } from "@/lib/http/client";
 import { RiskDistributionWidget } from "@/components/portfolio/RiskDistributionWidget";
 import { EscalationCandidateTable } from "@/components/portfolio/EscalationCandidateTable";
 import { usePortfolioExport } from "@/features/portfolio/hooks/usePortfolioExport";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 interface Overview {
   workspaceId: string;
@@ -21,19 +22,25 @@ interface Overview {
 }
 
 export function PortfolioOverviewPage() {
+  const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [csvPreview, setCsvPreview] = useState<string>("");
+  const [portfolioId, setPortfolioId] = useState("55555555-5555-5555-5555-555555555555");
   const { exportMonthly } = usePortfolioExport();
 
   async function loadOverview() {
+    if (!workspaceId) {
+      setError("Select workspace first");
+      return;
+    }
     setError(null);
     try {
       const next = await request<Overview>("/api/portfolio/overview", {
         method: "POST",
         body: {
-          workspaceId: "11111111-1111-1111-1111-111111111111",
-          portfolioId: "55555555-5555-5555-5555-555555555555",
+          workspaceId,
+          portfolioId,
           periodStart: "2026-03-01",
           periodEnd: "2026-03-31",
           projects: [
@@ -51,7 +58,7 @@ export function PortfolioOverviewPage() {
 
   async function exportCsv() {
     try {
-      const csv = await exportMonthly("55555555-5555-5555-5555-555555555555");
+      const csv = await exportMonthly(portfolioId);
       setCsvPreview(csv);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to export monthly report");
@@ -63,7 +70,8 @@ export function PortfolioOverviewPage() {
       <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Portfolio Overview</h2>
         <p style={{ color: "var(--orbit-text-subtle)" }}>Executive visibility for health trend and escalation targets.</p>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 8 }}>
+          <input className="orbit-input" value={portfolioId} onChange={(event) => setPortfolioId(event.target.value)} />
           <button className="orbit-button" type="button" onClick={loadOverview}>
             Load Overview
           </button>

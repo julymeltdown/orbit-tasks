@@ -21,6 +21,7 @@ import { PortfolioOverviewPage } from "@/pages/portfolio/PortfolioOverviewPage";
 import { ComplianceDashboardPage } from "@/pages/admin/ComplianceDashboardPage";
 import { ImportWizardPage } from "@/pages/integrations/ImportWizardPage";
 import { fetchProfileCompletion } from "@/lib/auth/profileCompletion";
+import { request } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/authStore";
 
 function SessionLoading() {
@@ -106,6 +107,15 @@ function LegacyRedirect({ to }: { to: string }) {
 }
 
 function AppOverviewPage() {
+  const [payload, setPayload] = React.useState<Record<string, unknown> | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    request<{ payload: Record<string, unknown> }>("/api/aggregate/my-work-home")
+      .then((response) => setPayload(response.payload))
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load aggregate overview"));
+  }, []);
+
   return (
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 8", padding: 20 }}>
@@ -113,6 +123,16 @@ function AppOverviewPage() {
         <p style={{ color: "var(--orbit-text-subtle)" }}>
           워크스페이스·보드·타임라인·협업 인박스가 연결된 운영 대시보드입니다.
         </p>
+        {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
+        {payload ? (
+          <pre className="orbit-panel" style={{ padding: 12, margin: 0, fontSize: 12, whiteSpace: "pre-wrap" }}>
+            {JSON.stringify(payload, null, 2)}
+          </pre>
+        ) : (
+          <div className="orbit-panel" style={{ padding: 12 }}>
+            Loading aggregate recipe <code>my-work-home</code>...
+          </div>
+        )}
       </article>
       <article className="orbit-card" style={{ gridColumn: "span 4", padding: 20 }}>
         <h3 style={{ marginTop: 0 }}>Health</h3>

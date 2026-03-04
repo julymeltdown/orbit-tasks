@@ -3,6 +3,8 @@ import { request } from "@/lib/http/client";
 import { AICoachPanel } from "@/components/insights/AICoachPanel";
 import { ScheduleHealthCards } from "@/components/insights/ScheduleHealthCards";
 import { useEvaluationActions } from "@/features/insights/hooks/useEvaluationActions";
+import { useProjectStore } from "@/stores/projectStore";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 interface Evaluation {
   evaluationId: string;
@@ -21,26 +23,37 @@ interface Evaluation {
 }
 
 export function ScheduleInsightsPage() {
+  const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [remainingStoryPoints, setRemainingStoryPoints] = useState(21);
+  const [availableCapacitySp, setAvailableCapacitySp] = useState(18);
+  const [blockedCount, setBlockedCount] = useState(1);
+  const [atRiskCount, setAtRiskCount] = useState(1);
+  const [simulateAiFailure, setSimulateAiFailure] = useState(false);
   const { submitAction } = useEvaluationActions();
 
   async function runEvaluation() {
+    if (!workspaceId) {
+      setError("Select workspace first");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const next = await request<Evaluation>("/api/insights/schedule-evaluations", {
         method: "POST",
         body: {
-          workspaceId: "11111111-1111-1111-1111-111111111111",
-          projectId: "22222222-2222-2222-2222-222222222222",
-          sprintId: "44444444-4444-4444-4444-444444444444",
-          remainingStoryPoints: 21,
-          availableCapacitySp: 18,
-          blockedCount: 1,
-          atRiskCount: 1,
-          simulateAiFailure: false
+          workspaceId,
+          projectId,
+          sprintId: "",
+          remainingStoryPoints,
+          availableCapacitySp,
+          blockedCount,
+          atRiskCount,
+          simulateAiFailure
         }
       });
       setEvaluation(next);
@@ -71,6 +84,44 @@ export function ScheduleInsightsPage() {
         <p style={{ color: "var(--orbit-text-subtle)" }}>
           Deterministic engine + AI structured output with fallback governance.
         </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 8 }}>
+          <input
+            className="orbit-input"
+            type="number"
+            min={0}
+            value={remainingStoryPoints}
+            onChange={(event) => setRemainingStoryPoints(Number(event.target.value))}
+            placeholder="Remaining SP"
+          />
+          <input
+            className="orbit-input"
+            type="number"
+            min={0}
+            value={availableCapacitySp}
+            onChange={(event) => setAvailableCapacitySp(Number(event.target.value))}
+            placeholder="Capacity SP"
+          />
+          <input
+            className="orbit-input"
+            type="number"
+            min={0}
+            value={blockedCount}
+            onChange={(event) => setBlockedCount(Number(event.target.value))}
+            placeholder="Blocked"
+          />
+          <input
+            className="orbit-input"
+            type="number"
+            min={0}
+            value={atRiskCount}
+            onChange={(event) => setAtRiskCount(Number(event.target.value))}
+            placeholder="At Risk"
+          />
+          <label style={{ display: "flex", alignItems: "center", gap: 8, paddingInline: 4 }}>
+            <input type="checkbox" checked={simulateAiFailure} onChange={(event) => setSimulateAiFailure(event.target.checked)} />
+            Simulate AI fallback
+          </label>
+        </div>
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
       </article>
 

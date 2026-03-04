@@ -37,7 +37,7 @@ kubectl apply -k deploy/k8s/k3s-random
 
 ## Important Ports (current manifest values)
 
-- Frontend NodePort: `32543`
+- Frontend NodePort: `32436`
 - API Gateway NodePort: `32157`
 
 Cluster-internal services expose both HTTP and gRPC where applicable.

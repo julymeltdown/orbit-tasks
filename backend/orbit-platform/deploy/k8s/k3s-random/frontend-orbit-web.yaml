@@ -44,7 +44,6 @@ spec:
     app: orbit-web
   ports:
     - name: http
-      port: 28647
+      port: 28139
       targetPort: http
-      nodePort: 32543
-
+      nodePort: 32436

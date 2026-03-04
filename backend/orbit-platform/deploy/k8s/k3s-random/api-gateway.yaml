@@ -36,7 +36,7 @@ spec:
             - name: GATEWAY_POST_GRPC_TARGET
               value: post-service:29567
             - name: GATEWAY_CORS_ALLOWED_ORIGINS
-              value: https://*.infinitefallcult.trade,https://infinitefallcult.trade,https://tasksapi.infinitefallcult.trade,http://121.130.253.119:32543,http://localhost:*,https://localhost:*
+              value: https://*.infinitefallcult.trade,https://infinitefallcult.trade,https://tasksapi.infinitefallcult.trade,http://121.130.253.119:32436,http://localhost:*,https://localhost:*
           ports:
             - name: http
               containerPort: 24271

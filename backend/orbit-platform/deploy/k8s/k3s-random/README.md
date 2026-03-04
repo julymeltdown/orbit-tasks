@@ -9,7 +9,7 @@ Last updated: 2026-02-19
 This directory contains a full k3s deployment set for:
 - auth/profile/friend/notification/post services
 - api-gateway
-- frontend-sns
+- orbit-web (task management frontend)
 - kafka
 - redis
 - dedicated `post-postgres`
@@ -37,7 +37,7 @@ kubectl apply -k deploy/k8s/k3s-random
 
 ## Important Ports (current manifest values)
 
-- Frontend NodePort: `32436`
+- Frontend NodePort: `32543`
 - API Gateway NodePort: `32157`
 
 Cluster-internal services expose both HTTP and gRPC where applicable.

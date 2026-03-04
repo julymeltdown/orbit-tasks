@@ -1,6 +1,6 @@
 # boilerplate-springboot-grpc
 
-Spring Boot 4 + Spring gRPC 기반 마이크로서비스와 JWT 인증, API Gateway(BFF), Next.js 프론트엔드로 구성된 저장소입니다.
+Spring Boot 4 + Spring gRPC 기반 마이크로서비스와 JWT 인증, API Gateway(BFF), Orbit Web(Tasks UI) 프론트엔드로 구성된 저장소입니다.
 
 최종 업데이트: 2026-02-19
 
@@ -14,7 +14,7 @@ Spring Boot 4 + Spring gRPC 기반 마이크로서비스와 JWT 인증, API Gate
 | `services/notification-service` | gRPC | 인메모리 저장소 | 알림 생성/조회 |
 | `services/post-service` | gRPC + admin REST(`/admin/events/replay`) | 기본 `post.persistence.mode=jpa` (PostgreSQL, `local`은 H2) | 피드/검색/트렌딩, 좋아요, Outbox+Kafka |
 | `services/api-gateway` | REST | 별도 도메인 DB 없음 | BFF, JWT 검증, 하위 gRPC 오케스트레이션 |
-| `frontend-sns` | Next.js 웹 | N/A | 게이트웨이 REST 호출 |
+| `frontend/orbit-web` | Vite + React 웹 | N/A | 게이트웨이 REST 호출 |
 
 ## 저장소 구조
 
@@ -27,7 +27,8 @@ Spring Boot 4 + Spring gRPC 기반 마이크로서비스와 JWT 인증, API Gate
 │   ├── notification-service/
 │   ├── post-service/
 │   └── profile-service/
-├── frontend-sns/
+├── frontend/
+│   └── orbit-web/
 ├── deploy/k8s/
 ├── docs/
 ├── specs/                 # 계약(contracts) 및 관련 산출물
@@ -55,7 +56,7 @@ cd services/api-gateway && ./gradlew bootRun
 프론트 실행:
 
 ```bash
-cd frontend-sns
+cd frontend/orbit-web
 npm install
 npm run dev
 ```

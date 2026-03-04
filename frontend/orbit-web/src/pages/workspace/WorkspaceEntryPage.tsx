@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { request } from "@/lib/http/client";
+import { useAuthStore } from "@/stores/authStore";
 
 interface WorkspaceClaim {
   workspaceId: string;
@@ -9,12 +10,12 @@ interface WorkspaceClaim {
 }
 
 export function WorkspaceEntryPage() {
+  const userId = useAuthStore((state) => state.userId);
   const [claims, setClaims] = useState<WorkspaceClaim[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const userId = localStorage.getItem("orbit.session.userId");
     if (!userId) {
       setError("Missing user session");
       setIsLoading(false);
@@ -25,7 +26,7 @@ export function WorkspaceEntryPage() {
       .then((data) => setClaims(data))
       .catch((e) => setError(e instanceof Error ? e.message : "Cannot load workspace claims"))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [userId]);
 
   return (
     <section className="orbit-shell__content-grid">

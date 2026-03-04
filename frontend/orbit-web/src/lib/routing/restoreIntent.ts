@@ -12,7 +12,7 @@ export function consumeIntent(): string | null {
   return value;
 }
 
-export function resolveReturnTo(explicitReturnTo?: string | null, fallback = "/workspace/select") {
+export function resolveReturnTo(explicitReturnTo?: string | null, fallback = "/app/workspace/select") {
   if (explicitReturnTo && explicitReturnTo.startsWith("/")) {
     return explicitReturnTo;
   }

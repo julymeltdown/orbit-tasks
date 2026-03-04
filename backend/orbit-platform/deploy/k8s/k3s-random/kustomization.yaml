@@ -10,4 +10,4 @@ resources:
   - post-postgres.yaml
   - post-service.yaml
   - api-gateway.yaml
-  - frontend-sns.yaml
+  - frontend-orbit-web.yaml

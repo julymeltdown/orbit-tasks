@@ -1,22 +1,38 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
+import { request } from "@/lib/http/client";
+import { useAuthStore } from "@/stores/authStore";
 
 const navItems = [
-  { to: "/", label: "Overview" },
-  { to: "/workspace/select", label: "Workspace" },
-  { to: "/projects/board", label: "Board" },
-  { to: "/projects/timeline", label: "Timeline" },
-  { to: "/projects/table", label: "Table" },
-  { to: "/sprint", label: "Sprint" },
-  { to: "/insights", label: "Insights" },
-  { to: "/portfolio", label: "Portfolio" },
-  { to: "/admin/compliance", label: "Admin" },
-  { to: "/integrations/import", label: "Integrations" },
-  { to: "/team", label: "Teams" },
-  { to: "/profile", label: "Profile" },
-  { to: "/inbox", label: "Inbox" }
+  { to: "/app", label: "Overview" },
+  { to: "/app/workspace/select", label: "Workspace" },
+  { to: "/app/projects/board", label: "Board" },
+  { to: "/app/projects/timeline", label: "Timeline" },
+  { to: "/app/projects/table", label: "Table" },
+  { to: "/app/sprint", label: "Sprint" },
+  { to: "/app/insights", label: "Insights" },
+  { to: "/app/portfolio", label: "Portfolio" },
+  { to: "/app/admin/compliance", label: "Admin" },
+  { to: "/app/integrations/import", label: "Integrations" },
+  { to: "/app/team", label: "Teams" },
+  { to: "/app/profile", label: "Profile" },
+  { to: "/app/inbox", label: "Inbox" }
 ];
 
 export function AppShell() {
+  const navigate = useNavigate();
+  const clearSession = useAuthStore((state) => state.clearSession);
+
+  async function signOut() {
+    try {
+      await request<void>("/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore logout network failures and clear local session regardless.
+    }
+    clearSession();
+    navigate("/login", { replace: true });
+  }
+
   return (
     <div className="orbit-shell">
       <header className="orbit-shell__top">
@@ -24,9 +40,15 @@ export function AppShell() {
           <strong style={{ fontSize: 20, letterSpacing: "-0.03em" }}>ORBIT</strong>
           <span className="orbit-neon-line" />
         </div>
-        <button className="orbit-button" type="button">
-          New Work Item
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <ThemeToggleButton variant="shell" />
+          <button className="orbit-button orbit-button--ghost" type="button" onClick={signOut}>
+            Sign Out
+          </button>
+          <button className="orbit-button" type="button">
+            New Work Item
+          </button>
+        </div>
       </header>
 
       <aside className="orbit-shell__side">

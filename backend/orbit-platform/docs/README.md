@@ -18,7 +18,7 @@ This folder contains only actively maintained documents.
 - `README.md`
 - `README.ko.md`
 - `TEST_ACCOUNTS.md`
-- `frontend-sns/README.md`
+- `../frontend/orbit-web/README.md`
 - `services/*/README.md`
 - `services/*/README.ko.md`
 

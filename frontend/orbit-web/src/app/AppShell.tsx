@@ -7,17 +7,33 @@ import { useAuthStore } from "@/stores/authStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 const topNavItems = [
-  { to: "/app", label: "Home" },
-  { to: "/app/projects/board", label: "Work" },
+  { to: "/app", label: "Overview" },
+  { to: "/app/projects/board", label: "Kanban" },
+  { to: "/app/projects/timeline", label: "Timeline" },
   { to: "/app/sprint", label: "Sprint" },
-  { to: "/app/inbox", label: "Collab" },
-  { to: "/app/portfolio", label: "Portfolio" },
+  { to: "/app/inbox", label: "Inbox" },
   { to: "/app/profile", label: "Settings" }
 ];
 
+const allAppPageItems = [
+  { to: "/app", label: "Overview" },
+  { to: "/app/workspace/select", label: "Workspace" },
+  { to: "/app/projects/board", label: "Kanban Board" },
+  { to: "/app/projects/timeline", label: "Timeline" },
+  { to: "/app/projects/table", label: "Table" },
+  { to: "/app/sprint", label: "Sprint" },
+  { to: "/app/insights", label: "Insights" },
+  { to: "/app/inbox", label: "Inbox" },
+  { to: "/app/team", label: "Team" },
+  { to: "/app/portfolio", label: "Portfolio" },
+  { to: "/app/profile", label: "Profile" },
+  { to: "/app/admin/compliance", label: "Admin" },
+  { to: "/app/integrations/import", label: "Integrations" }
+];
+
 const groupedSecondaryNav = {
-  Home: [{ to: "/app/workspace/select", label: "Workspace" }],
-  Work: [
+  Overview: [{ to: "/app/workspace/select", label: "Workspace" }],
+  Kanban: [
     { to: "/app/projects/board", label: "Board" },
     { to: "/app/projects/timeline", label: "Timeline" },
     { to: "/app/projects/table", label: "Table" }
@@ -26,7 +42,7 @@ const groupedSecondaryNav = {
     { to: "/app/sprint", label: "Sprint" },
     { to: "/app/insights", label: "Insights" }
   ],
-  Collab: [
+  Inbox: [
     { to: "/app/inbox", label: "Inbox" },
     { to: "/app/team", label: "Teams" }
   ],
@@ -71,9 +87,9 @@ export function AppShell() {
 
   const activeGroup = useMemo(() => {
     const pathname = location.pathname;
-    if (pathname.startsWith("/app/projects")) return "Work";
+    if (pathname.startsWith("/app/projects")) return "Kanban";
     if (pathname.startsWith("/app/sprint") || pathname.startsWith("/app/insights")) return "Sprint";
-    if (pathname.startsWith("/app/inbox") || pathname.startsWith("/app/team")) return "Collab";
+    if (pathname.startsWith("/app/inbox") || pathname.startsWith("/app/team")) return "Inbox";
     if (pathname.startsWith("/app/portfolio")) return "Portfolio";
     if (
       pathname.startsWith("/app/profile") ||
@@ -83,7 +99,7 @@ export function AppShell() {
     ) {
       return "Settings";
     }
-    return "Home";
+    return "Overview";
   }, [location.pathname]);
 
   const secondaryNav = groupedSecondaryNav[activeGroup];
@@ -169,6 +185,22 @@ export function AppShell() {
           <p className="orbit-side-subnav__title">{activeGroup}</p>
           <div className="orbit-side-subnav__links">
             {secondaryNav.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) => `orbit-side-link orbit-side-link--sub${isActive ? " is-active" : ""}`}
+                onClick={() => setMobileNavOpen(false)}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+        </div>
+
+        <div className="orbit-side-allpages">
+          <p className="orbit-side-subnav__title">All Pages</p>
+          <div className="orbit-side-allpages__links">
+            {allAppPageItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

@@ -33,7 +33,7 @@ export function WorkspaceEntryPage() {
           setClaims([
             {
               workspaceId: userId,
-              workspaceName: "Default Workspace",
+              workspaceName: "My Workspace",
               role: "WORKSPACE_MEMBER",
               defaultWorkspace: true
             }
@@ -52,7 +52,7 @@ export function WorkspaceEntryPage() {
       <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Select a workspace</h2>
         <p style={{ color: "var(--orbit-text-subtle)" }}>
-          Workspace scope and role come from identity-access service claims.
+          Choose your workspace by name. Roles are synced from identity claims.
         </p>
 
         {isLoading && <p style={{ color: "var(--orbit-text-subtle)" }}>Loading workspace claims...</p>}
@@ -77,7 +77,6 @@ export function WorkspaceEntryPage() {
               >
                 <div>
                   <strong>{claim.workspaceName}</strong>
-                  <p style={{ margin: "6px 0 0", color: "var(--orbit-text-subtle)" }}>{claim.workspaceId}</p>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 12, fontWeight: 700 }}>{claim.role}</div>

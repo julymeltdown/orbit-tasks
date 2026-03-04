@@ -39,6 +39,7 @@ public class AuthClient implements AuthClientPort {
         var response = stub.signupEmail(com.example.auth.v1.SignupEmailRequest.newBuilder()
                 .setEmail(request.email())
                 .setPassword(request.password())
+                .setWorkspaceName(request.workspaceName())
                 .build());
         return new SignupResponse(UUID.fromString(response.getUserId()), response.getStatus());
     }

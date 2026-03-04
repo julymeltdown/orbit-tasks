@@ -89,7 +89,7 @@ class AuthEmailFlowTestcontainersIT {
 
         String userId = RestAssured.given()
                 .contentType("application/json")
-                .body(Map.of("email", email, "password", password))
+                .body(Map.of("email", email, "password", password, "workspaceName", "QA Mobile"))
                 .when()
                 .post("/auth/email/signup")
                 .then()

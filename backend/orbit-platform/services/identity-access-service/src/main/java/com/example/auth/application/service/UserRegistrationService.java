@@ -44,6 +44,10 @@ public class UserRegistrationService {
     }
 
     public UUID registerEmail(String email, String rawPassword) {
+        return registerEmail(email, rawPassword, "Default Workspace");
+    }
+
+    public UUID registerEmail(String email, String rawPassword, String workspaceName) {
         String normalizedEmail = normalize(email);
         if (!emailValidator.isValid(normalizedEmail)) {
             throw new IllegalArgumentException("Invalid email format or domain");
@@ -64,7 +68,7 @@ public class UserRegistrationService {
         userRepository.save(user);
 
         identityService.linkEmailIdentity(userId, normalizedEmail, false);
-        workspaceProvisioningService.ensureDefaultWorkspace(userId);
+        workspaceProvisioningService.ensureDefaultWorkspace(userId, normalizeWorkspaceName(workspaceName));
 
         verificationService.createVerification(normalizedEmail, userId);
         return userId;
@@ -125,5 +129,13 @@ public class UserRegistrationService {
 
     private String normalize(String email) {
         return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeWorkspaceName(String workspaceName) {
+        String normalized = workspaceName == null ? "" : workspaceName.trim();
+        if (normalized.isEmpty()) {
+            return "Default Workspace";
+        }
+        return normalized;
     }
 }

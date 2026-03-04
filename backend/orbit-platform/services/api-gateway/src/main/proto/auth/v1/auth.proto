@@ -16,6 +16,7 @@ enum IdentityProvider {
 message SignupEmailRequest {
   string email = 1;
   string password = 2;
+  string workspace_name = 3;
 }
 
 message VerifyEmailRequest {
@@ -119,4 +120,3 @@ service AuthService {
   rpc OAuthCallback(OAuthCallbackRequest) returns (AuthResponse);
   rpc LinkOAuthProvider(LinkOAuthProviderRequest) returns (LinkedProvidersResponse);
 }
-

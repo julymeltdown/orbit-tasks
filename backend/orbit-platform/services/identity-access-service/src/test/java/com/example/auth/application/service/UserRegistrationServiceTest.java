@@ -174,6 +174,36 @@ class UserRegistrationServiceTest {
 
         UUID userId = service.registerEmail("new-user@example.com", "Password123!");
 
-        verify(workspaceProvisioningService).ensureDefaultWorkspace(userId);
+        verify(workspaceProvisioningService).ensureDefaultWorkspace(userId, "Default Workspace");
+    }
+
+    @Test
+    void appliesWorkspaceNameProvidedDuringSignup() {
+        UserRepositoryPort userRepository = mock(UserRepositoryPort.class);
+        UserIdentityService identityService = mock(UserIdentityService.class);
+        EmailVerificationService verificationService = mock(EmailVerificationService.class);
+        EmailValidator emailValidator = mock(EmailValidator.class);
+        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+        WorkspaceProvisioningService workspaceProvisioningService = mock(WorkspaceProvisioningService.class);
+
+        when(emailValidator.isValid("workspace-user@example.com")).thenReturn(true);
+        when(identityService.findByProviderAndEmail(IdentityProvider.EMAIL, "workspace-user@example.com"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByPrimaryEmail("workspace-user@example.com")).thenReturn(Optional.empty());
+        when(identityService.findByEmail("workspace-user@example.com")).thenReturn(List.of());
+        when(passwordEncoder.encode("Password123!")).thenReturn("encoded");
+
+        UserRegistrationService service = new UserRegistrationService(
+                userRepository,
+                identityService,
+                verificationService,
+                emailValidator,
+                passwordEncoder,
+                workspaceProvisioningService,
+                Clock.systemUTC());
+
+        UUID userId = service.registerEmail("workspace-user@example.com", "Password123!", "Design Ops");
+
+        verify(workspaceProvisioningService).ensureDefaultWorkspace(userId, "Design Ops");
     }
 }

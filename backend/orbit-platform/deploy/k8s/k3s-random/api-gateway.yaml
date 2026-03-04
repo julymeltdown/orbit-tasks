@@ -22,6 +22,8 @@ spec:
               value: "24271"
             - name: GATEWAY_AUTH_GRPC_TARGET
               value: auth-service:28741
+            - name: GATEWAY_IDENTITY_GRPC_TARGET
+              value: auth-service:28741
             - name: GATEWAY_JWT_PUBLIC_KEY_PEM
               valueFrom:
                 secretKeyRef:

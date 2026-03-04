@@ -54,7 +54,7 @@ public class AuthController {
     @PostMapping("/email/signup")
     public SignupResponse signup(@Valid @RequestBody EmailSignupRequest request) {
         return new SignupResponse(
-                registrationService.registerEmail(request.email(), request.password()),
+                registrationService.registerEmail(request.email(), request.password(), request.workspaceName()),
                 "PENDING_VERIFICATION");
     }
 

@@ -13,6 +13,7 @@ export function SignupPasswordPage() {
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [workspaceName, setWorkspaceName] = useState("My Workspace");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,6 +36,10 @@ export function SignupPasswordPage() {
     const hasNumber = /[0-9]/.test(password);
     return lengthOk && hasLetter && hasNumber;
   }, [password]);
+  const workspaceNameValid = useMemo(() => {
+    const normalized = workspaceName.trim();
+    return normalized.length >= 2 && normalized.length <= 60;
+  }, [workspaceName]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,13 +48,17 @@ export function SignupPasswordPage() {
       setError("비밀번호는 8~128자, 영문/숫자를 포함해야 합니다.");
       return;
     }
+    if (!workspaceNameValid) {
+      setError("워크스페이스 이름은 2~60자로 입력해 주세요.");
+      return;
+    }
 
     setIsLoading(true);
     try {
       await request<SignupResponse>("/auth/email/signup", {
         method: "POST",
         skipAuth: true,
-        body: { email, password }
+        body: { email, password, workspaceName: workspaceName.trim() }
       });
       navigate(`/verify?email=${encodeURIComponent(email)}`, { replace: true });
     } catch (e) {
@@ -101,6 +110,24 @@ export function SignupPasswordPage() {
               />
             </label>
 
+            <label className="orbit-auth-field">
+              <span>Workspace Name</span>
+              <input
+                className="orbit-input"
+                type="text"
+                value={workspaceName}
+                onChange={(event) => setWorkspaceName(event.target.value)}
+                placeholder="ex) Product Delivery"
+                minLength={2}
+                maxLength={60}
+                required
+              />
+            </label>
+
+            {workspaceName.trim().length > 0 && workspaceNameValid && (
+              <p className="orbit-auth-success">워크스페이스 이름이 설정됩니다.</p>
+            )}
+
             {password.length > 0 && passwordValid && (
               <p className="orbit-auth-success">사용 가능한 비밀번호 형식입니다.</p>
             )}
@@ -115,7 +142,7 @@ export function SignupPasswordPage() {
               <Link className="orbit-auth-link" to="/signup">
                 이메일 다시 입력
               </Link>
-              <button className="orbit-button" type="submit" disabled={isLoading || !passwordValid}>
+              <button className="orbit-button" type="submit" disabled={isLoading || !passwordValid || !workspaceNameValid}>
                 {isLoading ? "Creating..." : "Send Verify Code"}
               </button>
             </div>

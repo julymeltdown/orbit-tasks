@@ -74,7 +74,10 @@ public class AuthGrpcService extends AuthServiceGrpc.AuthServiceImplBase {
     @Override
     public void signupEmail(SignupEmailRequest request, StreamObserver<SignupResponse> responseObserver) {
         try {
-            UUID userId = registrationService.registerEmail(request.getEmail(), request.getPassword());
+            UUID userId = registrationService.registerEmail(
+                    request.getEmail(),
+                    request.getPassword(),
+                    request.getWorkspaceName());
             responseObserver.onNext(SignupResponse.newBuilder()
                     .setUserId(userId.toString())
                     .setStatus("PENDING_VERIFICATION")

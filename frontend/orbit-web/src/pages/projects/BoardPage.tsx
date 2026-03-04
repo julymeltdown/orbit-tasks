@@ -1,17 +1,27 @@
 export function BoardPage() {
   return (
-    <section className="orbit-shell__content-grid">
-      <article className="orbit-card" style={{ gridColumn: "span 4", padding: 16 }}>
-        <h3 style={{ marginTop: 0 }}>Backlog</h3>
-        <div className="orbit-panel" style={{ padding: 12 }}>Define dependency graph schema</div>
+    <section className="orbit-board" aria-label="Kanban board">
+      <article className="orbit-card orbit-board__lane">
+        <h3 className="orbit-board__title">Backlog</h3>
+        <div className="orbit-board__cards">
+          <div className="orbit-panel" style={{ padding: 12 }}>Define dependency graph schema</div>
+          <div className="orbit-panel" style={{ padding: 12 }}>Triage @mentions backlog</div>
+          <div className="orbit-panel" style={{ padding: 12 }}>Plan sprint spillover</div>
+        </div>
       </article>
-      <article className="orbit-card" style={{ gridColumn: "span 4", padding: 16 }}>
-        <h3 style={{ marginTop: 0 }}>In Progress</h3>
-        <div className="orbit-panel" style={{ padding: 12 }}>Implement cycle guard</div>
+      <article className="orbit-card orbit-board__lane">
+        <h3 className="orbit-board__title">In Progress</h3>
+        <div className="orbit-board__cards">
+          <div className="orbit-panel" style={{ padding: 12 }}>Implement cycle guard</div>
+          <div className="orbit-panel" style={{ padding: 12 }}>Thread mention notification fanout</div>
+        </div>
       </article>
-      <article className="orbit-card" style={{ gridColumn: "span 4", padding: 16 }}>
-        <h3 style={{ marginTop: 0 }}>Done</h3>
-        <div className="orbit-panel" style={{ padding: 12 }}>Ship board baseline</div>
+      <article className="orbit-card orbit-board__lane">
+        <h3 className="orbit-board__title">Done</h3>
+        <div className="orbit-board__cards">
+          <div className="orbit-panel" style={{ padding: 12 }}>Ship board baseline</div>
+          <div className="orbit-panel" style={{ padding: 12 }}>Deep link resolver</div>
+        </div>
       </article>
     </section>
   );

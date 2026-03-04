@@ -42,4 +42,18 @@ class WorkspaceProvisioningServiceTest {
         assertThat(claims).hasSize(1);
         assertThat(secondWorkspace).isEqualTo(firstWorkspace);
     }
+
+    @Test
+    void storesProvidedWorkspaceNameWhenCreatingDefaultWorkspace() {
+        SessionPolicyRepository repository = new SessionPolicyRepository(
+                Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC));
+        WorkspaceProvisioningService service = new WorkspaceProvisioningService(repository);
+        UUID userId = UUID.randomUUID();
+
+        service.ensureDefaultWorkspace(userId, "Mobile Delivery");
+
+        var claims = repository.findAllByUserIdAndEnabledTrueOrderByDefaultWorkspaceDescUpdatedAtDesc(userId);
+        assertThat(claims).hasSize(1);
+        assertThat(claims.get(0).getWorkspaceName()).isEqualTo("Mobile Delivery");
+    }
 }

@@ -17,12 +17,25 @@ public class WorkspaceProvisioningService {
     }
 
     public UUID ensureDefaultWorkspace(UUID userId) {
+        return ensureDefaultWorkspace(userId, DEFAULT_WORKSPACE_NAME);
+    }
+
+    public UUID ensureDefaultWorkspace(UUID userId, String workspaceName) {
         UUID workspaceId = UUID.nameUUIDFromBytes(("workspace:" + userId).getBytes(StandardCharsets.UTF_8));
+        String normalizedName = normalizeWorkspaceName(workspaceName);
         sessionPolicyRepository.ensureDefaultWorkspace(
                 userId,
                 workspaceId,
-                DEFAULT_WORKSPACE_NAME,
+                normalizedName,
                 DEFAULT_ROLE);
         return workspaceId;
+    }
+
+    private String normalizeWorkspaceName(String workspaceName) {
+        String normalized = workspaceName == null ? "" : workspaceName.trim();
+        if (normalized.isEmpty()) {
+            return DEFAULT_WORKSPACE_NAME;
+        }
+        return normalized;
     }
 }

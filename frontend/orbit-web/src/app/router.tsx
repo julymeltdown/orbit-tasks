@@ -1,5 +1,5 @@
 import React, { type ReactNode } from "react";
-import { Navigate, createBrowserRouter, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, createBrowserRouter, useLocation } from "react-router-dom";
 import { AppShell } from "./AppShell";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { SignupEmailPage } from "@/pages/auth/SignupEmailPage";
@@ -20,8 +20,8 @@ import { ScheduleInsightsPage } from "@/pages/insights/ScheduleInsightsPage";
 import { PortfolioOverviewPage } from "@/pages/portfolio/PortfolioOverviewPage";
 import { ComplianceDashboardPage } from "@/pages/admin/ComplianceDashboardPage";
 import { ImportWizardPage } from "@/pages/integrations/ImportWizardPage";
+import { OperationsHubPage } from "@/pages/overview/OperationsHubPage";
 import { fetchProfileCompletion } from "@/lib/auth/profileCompletion";
-import { request } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/authStore";
 
 function SessionLoading() {
@@ -106,114 +106,6 @@ function LegacyRedirect({ to }: { to: string }) {
   return <Navigate replace to={to} />;
 }
 
-function AppOverviewPage() {
-  const navigate = useNavigate();
-  const [payload, setPayload] = React.useState<Record<string, unknown> | null>(null);
-  const [recipeKey, setRecipeKey] = React.useState<string>("my-work-home");
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    let cancelled = false;
-
-    async function loadOverview() {
-      const routeKeys = ["my-work-home", "feed-summary", "schedule-health-overview"];
-      let lastError: string | null = null;
-
-      setLoading(true);
-      setError(null);
-      setPayload(null);
-
-      for (const key of routeKeys) {
-        try {
-          const response = await request<{ routeKey?: string; payload: Record<string, unknown> }>(`/api/aggregate/${key}`);
-          if (cancelled) {
-            return;
-          }
-          setPayload(response.payload);
-          setRecipeKey(response.routeKey ?? key);
-          setLoading(false);
-          return;
-        } catch (e) {
-          const message = e instanceof Error ? e.message : "Failed to load aggregate overview";
-          lastError = message;
-          if (!/aggregation recipe not found/i.test(message)) {
-            break;
-          }
-        }
-      }
-
-      if (!cancelled) {
-        setError(lastError ?? "Failed to load aggregate overview");
-        setLoading(false);
-      }
-    }
-
-    loadOverview().catch((e) => {
-      if (!cancelled) {
-        setError(e instanceof Error ? e.message : "Failed to load aggregate overview");
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return (
-    <section className="orbit-shell__content-grid">
-      <article className="orbit-card" style={{ gridColumn: "span 8", padding: 20 }}>
-        <h2 style={{ marginTop: 0 }}>Schedule Operations</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>
-          워크스페이스·보드·타임라인·협업 인박스로 바로 이동할 수 있는 작업 허브입니다.
-        </p>
-        <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))" }}>
-          <button className="orbit-button" type="button" onClick={() => navigate("/app/projects/board")}>
-            Open Kanban
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/projects/timeline")}>
-            Open Timeline
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/projects/table")}>
-            Open Table
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint")}>
-            Open Sprint
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/inbox")}>
-            Open Inbox
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/workspace/select")}>
-            Change Workspace
-          </button>
-        </div>
-      </article>
-      <article className="orbit-card" style={{ gridColumn: "span 4", padding: 20 }}>
-        <h3 style={{ marginTop: 0 }}>System Status</h3>
-        <p style={{ marginBottom: 8, color: "var(--orbit-text-subtle)" }}>
-          집계/인박스/보드 연동 상태를 확인합니다.
-        </p>
-        {loading ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>Checking backend connectivity...</p> : null}
-        {!loading && payload ? (
-          <>
-            <p style={{ margin: "0 0 6px", fontSize: 30, fontWeight: 900 }}>Connected</p>
-            <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
-              Active recipe: <code>{recipeKey}</code>
-            </p>
-          </>
-        ) : null}
-        {!loading && !payload ? (
-          <>
-            <p style={{ margin: "0 0 6px", fontSize: 30, fontWeight: 900, color: "var(--orbit-danger)" }}>Attention</p>
-            <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>{error ?? "Aggregation temporarily unavailable."}</p>
-          </>
-        ) : null}
-      </article>
-    </section>
-  );
-}
-
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -273,7 +165,7 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <AppOverviewPage /> },
+      { index: true, element: <OperationsHubPage /> },
       { path: "workspace/select", element: <WorkspaceEntryPage /> },
       { path: "projects/board", element: <BoardPage /> },
       { path: "projects/timeline", element: <TimelinePage /> },

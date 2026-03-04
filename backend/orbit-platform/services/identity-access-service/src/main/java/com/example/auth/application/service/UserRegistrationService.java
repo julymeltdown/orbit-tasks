@@ -7,6 +7,7 @@ import com.example.auth.domain.IdentityProvider;
 import com.example.auth.domain.User;
 import com.example.auth.domain.UserIdentity;
 import com.example.auth.domain.UserStatus;
+import com.orbit.identity.application.service.WorkspaceProvisioningService;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -23,6 +24,7 @@ public class UserRegistrationService {
     private final EmailVerificationService verificationService;
     private final EmailValidator emailValidator;
     private final PasswordEncoder passwordEncoder;
+    private final WorkspaceProvisioningService workspaceProvisioningService;
     private final Clock clock;
 
     public UserRegistrationService(UserRepositoryPort userRepository,
@@ -30,12 +32,14 @@ public class UserRegistrationService {
                                    EmailVerificationService verificationService,
                                    EmailValidator emailValidator,
                                    PasswordEncoder passwordEncoder,
+                                   WorkspaceProvisioningService workspaceProvisioningService,
                                    Clock clock) {
         this.userRepository = userRepository;
         this.identityService = identityService;
         this.verificationService = verificationService;
         this.emailValidator = emailValidator;
         this.passwordEncoder = passwordEncoder;
+        this.workspaceProvisioningService = workspaceProvisioningService;
         this.clock = clock;
     }
 
@@ -60,6 +64,7 @@ public class UserRegistrationService {
         userRepository.save(user);
 
         identityService.linkEmailIdentity(userId, normalizedEmail, false);
+        workspaceProvisioningService.ensureDefaultWorkspace(userId);
 
         verificationService.createVerification(normalizedEmail, userId);
         return userId;

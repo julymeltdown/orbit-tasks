@@ -32,6 +32,24 @@ public class SessionPolicyRepository {
         store.add(entity);
     }
 
+    public void ensureDefaultWorkspace(UUID userId, UUID workspaceId, String workspaceName, String role) {
+        boolean exists = store.stream()
+                .anyMatch(policy -> policy.getUserId().equals(userId)
+                        && policy.isEnabled()
+                        && policy.isDefaultWorkspace());
+        if (exists) {
+            return;
+        }
+        store.add(new SessionPolicyEntity(
+                userId,
+                workspaceId,
+                workspaceName,
+                role,
+                true,
+                true,
+                Instant.now(clock)));
+    }
+
     public void seed(UUID userId, UUID workspaceId, String workspaceName, String role, boolean defaultWorkspace) {
         store.add(new SessionPolicyEntity(
                 userId,

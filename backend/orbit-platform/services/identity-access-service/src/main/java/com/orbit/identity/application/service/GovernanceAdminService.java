@@ -1,6 +1,6 @@
 package com.orbit.identity.application.service;
 
-import com.orbit.eventkit.audit.AuditSinkAdapter;
+import com.orbit.identity.audit.AuditSinkAdapter;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;

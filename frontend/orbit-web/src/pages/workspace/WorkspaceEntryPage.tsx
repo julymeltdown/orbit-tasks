@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { request } from "@/lib/http/client";
+import { HttpError, request } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/authStore";
 
 interface WorkspaceClaim {
@@ -13,6 +13,7 @@ export function WorkspaceEntryPage() {
   const userId = useAuthStore((state) => state.userId);
   const [claims, setClaims] = useState<WorkspaceClaim[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,8 +24,26 @@ export function WorkspaceEntryPage() {
     }
 
     request<WorkspaceClaim[]>(`/auth/workspace-claims?userId=${encodeURIComponent(userId)}`)
-      .then((data) => setClaims(data))
-      .catch((e) => setError(e instanceof Error ? e.message : "Cannot load workspace claims"))
+      .then((data) => {
+        setClaims(data);
+        setFallbackNotice(null);
+      })
+      .catch((e) => {
+        if (e instanceof HttpError && e.status === 503) {
+          setClaims([
+            {
+              workspaceId: userId,
+              workspaceName: "Default Workspace",
+              role: "WORKSPACE_MEMBER",
+              defaultWorkspace: true
+            }
+          ]);
+          setFallbackNotice("Identity claims service is temporarily unavailable. Showing default workspace.");
+          setError(null);
+          return;
+        }
+        setError(e instanceof Error ? e.message : "Cannot load workspace claims");
+      })
       .finally(() => setIsLoading(false));
   }, [userId]);
 
@@ -40,6 +59,11 @@ export function WorkspaceEntryPage() {
         {error && (
           <p role="alert" style={{ color: "var(--orbit-danger)" }}>
             {error}
+          </p>
+        )}
+        {fallbackNotice && (
+          <p role="status" style={{ color: "var(--orbit-text-subtle)" }}>
+            {fallbackNotice}
           </p>
         )}
 

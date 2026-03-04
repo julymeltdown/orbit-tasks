@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import { request } from "@/lib/http/client";
@@ -22,6 +23,7 @@ const navItems = [
 export function AppShell() {
   const navigate = useNavigate();
   const clearSession = useAuthStore((state) => state.clearSession);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   async function signOut() {
     try {
@@ -31,6 +33,7 @@ export function AppShell() {
     }
     clearSession();
     navigate("/login", { replace: true });
+    setMobileNavOpen(false);
   }
 
   return (
@@ -40,24 +43,47 @@ export function AppShell() {
           <strong style={{ fontSize: 20, letterSpacing: "-0.03em" }}>ORBIT</strong>
           <span className="orbit-neon-line" />
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="orbit-shell__top-actions">
+          <button
+            className="orbit-button orbit-button--ghost orbit-mobile-menu-button"
+            type="button"
+            onClick={() => setMobileNavOpen((value) => !value)}
+            aria-expanded={mobileNavOpen}
+            aria-controls="orbit-side-nav"
+          >
+            {mobileNavOpen ? "Close" : "Menu"}
+          </button>
+
+          <div className="orbit-desktop-actions">
+            <ThemeToggleButton variant="shell" />
+            <button className="orbit-button orbit-button--ghost" type="button" onClick={signOut}>
+              Sign Out
+            </button>
+            <button className="orbit-button" type="button">
+              New Work Item
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <aside className={`orbit-shell__side${mobileNavOpen ? " is-open" : ""}`}>
+        <div className="orbit-mobile-side-actions">
           <ThemeToggleButton variant="shell" />
           <button className="orbit-button orbit-button--ghost" type="button" onClick={signOut}>
             Sign Out
           </button>
-          <button className="orbit-button" type="button">
+          <button className="orbit-button" type="button" onClick={() => setMobileNavOpen(false)}>
             New Work Item
           </button>
         </div>
-      </header>
 
-      <aside className="orbit-shell__side">
-        <nav className="orbit-side-nav" aria-label="Primary navigation">
+        <nav id="orbit-side-nav" className="orbit-side-nav" aria-label="Primary navigation">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) => `orbit-side-link${isActive ? " is-active" : ""}`}
+              onClick={() => setMobileNavOpen(false)}
             >
               {item.label}
             </NavLink>

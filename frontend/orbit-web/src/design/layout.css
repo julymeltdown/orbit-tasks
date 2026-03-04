@@ -20,6 +20,22 @@
   z-index: 30;
 }
 
+.orbit-shell__top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.orbit-desktop-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.orbit-mobile-menu-button {
+  display: none;
+}
+
 .orbit-shell__side {
   border-right: 1px solid var(--orbit-border);
   background: var(--orbit-surface-1);
@@ -77,6 +93,10 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orbit-accent) 45%, transparent);
 }
 
+.orbit-mobile-side-actions {
+  display: none;
+}
+
 @media (max-width: 1280px) {
   .orbit-shell {
     grid-template-columns: 214px 1fr 300px;
@@ -96,19 +116,34 @@
 @media (max-width: 768px) {
   .orbit-shell {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto 1fr;
   }
 
   .orbit-shell__top {
     grid-column: 1;
+    padding: 12px;
   }
 
   .orbit-shell__side {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
     grid-column: 1;
     border-right: none;
-    border-bottom: 1px solid var(--orbit-border);
-    padding: 10px 12px;
-    overflow: visible;
+    border-top: 1px solid var(--orbit-border);
+    border-bottom: none;
+    padding: 12px;
+    background: color-mix(in oklab, var(--orbit-bg) 94%, transparent);
+    backdrop-filter: blur(8px);
+    overflow: auto;
+  }
+
+  .orbit-shell__side.is-open {
+    display: block;
   }
 
   .orbit-shell__content {
@@ -116,17 +151,36 @@
     padding: 12px;
   }
 
-  .orbit-side-nav {
+  .orbit-mobile-menu-button {
+    display: inline-flex;
+  }
+
+  .orbit-desktop-actions {
+    display: none;
+  }
+
+  .orbit-mobile-side-actions {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .orbit-mobile-side-actions > * {
+    width: 100%;
+  }
+
+  .orbit-side-nav {
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 8px;
     padding: 0;
   }
 
   .orbit-side-link {
-    justify-content: center;
+    justify-content: flex-start;
     min-height: 38px;
-    padding: 8px;
-    font-size: 11px;
+    padding: 10px;
+    font-size: 12px;
   }
 }

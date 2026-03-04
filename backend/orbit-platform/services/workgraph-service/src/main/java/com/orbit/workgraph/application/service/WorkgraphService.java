@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class WorkgraphService {
+    public static final String DEPENDENCY_CYCLE_ERROR_CODE = "dependency_cycle_detected";
+
     private final Clock clock;
     private final DependencyCycleGuard cycleGuard = new DependencyCycleGuard();
     private final Map<UUID, WorkItem> workItems = new ConcurrentHashMap<>();
@@ -47,7 +49,7 @@ public class WorkgraphService {
     public void addDependency(UUID from, UUID to) {
         DependencyCycleGuard.DependencyEdge edge = new DependencyCycleGuard.DependencyEdge(from, to);
         if (cycleGuard.wouldCreateCycle(dependencies, edge)) {
-            throw new IllegalArgumentException("Dependency cycle detected");
+            throw new DependencyCycleViolationException(DEPENDENCY_CYCLE_ERROR_CODE, "Dependency cycle detected");
         }
         dependencies.add(edge);
     }
@@ -70,5 +72,18 @@ public class WorkgraphService {
 
     public Instant now() {
         return Instant.now(clock);
+    }
+
+    public static class DependencyCycleViolationException extends IllegalArgumentException {
+        private final String code;
+
+        public DependencyCycleViolationException(String code, String message) {
+            super(message);
+            this.code = code;
+        }
+
+        public String code() {
+            return code;
+        }
     }
 }

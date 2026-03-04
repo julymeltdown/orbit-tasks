@@ -2,67 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import { FloatingAgentWidget } from "@/components/insights/FloatingAgentWidget";
+import { useFocusContainment } from "@/components/common/useFocusContainment";
 import { request } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/authStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-
-const topNavItems = [
-  { to: "/app", label: "Overview" },
-  { to: "/app/projects/board", label: "Kanban" },
-  { to: "/app/projects/timeline", label: "Timeline" },
-  { to: "/app/sprint", label: "Sprint" },
-  { to: "/app/inbox", label: "Inbox" },
-  { to: "/app/profile", label: "Settings" }
-];
-
-const allAppPageItems = [
-  { to: "/app", label: "Overview" },
-  { to: "/app/workspace/select", label: "Workspace" },
-  { to: "/app/projects/board", label: "Kanban Board" },
-  { to: "/app/projects/timeline", label: "Timeline" },
-  { to: "/app/projects/table", label: "Table" },
-  { to: "/app/sprint", label: "Sprint" },
-  { to: "/app/insights", label: "Insights" },
-  { to: "/app/inbox", label: "Inbox" },
-  { to: "/app/team", label: "Team" },
-  { to: "/app/portfolio", label: "Portfolio" },
-  { to: "/app/profile", label: "Profile" },
-  { to: "/app/admin/compliance", label: "Admin" },
-  { to: "/app/integrations/import", label: "Integrations" }
-];
-
-const groupedSecondaryNav = {
-  Overview: [{ to: "/app/workspace/select", label: "Workspace" }],
-  Kanban: [
-    { to: "/app/projects/board", label: "Board" },
-    { to: "/app/projects/timeline", label: "Timeline" },
-    { to: "/app/projects/table", label: "Table" }
-  ],
-  Sprint: [
-    { to: "/app/sprint", label: "Sprint" },
-    { to: "/app/insights", label: "Insights" }
-  ],
-  Inbox: [
-    { to: "/app/inbox", label: "Inbox" },
-    { to: "/app/team", label: "Teams" }
-  ],
-  Portfolio: [{ to: "/app/portfolio", label: "Overview" }],
-  Settings: [
-    { to: "/app/profile", label: "Profile" },
-    { to: "/app/admin/compliance", label: "Admin" },
-    { to: "/app/integrations/import", label: "Integrations" },
-    { to: "/app/workspace/select", label: "Workspace" }
-  ]
-} as const;
-
-const legacyDirectLinks = [
-  { to: "/app", label: "Overview" },
-  { to: "/app/projects/board", label: "Work" },
-  { to: "/app/sprint", label: "Sprint" },
-  { to: "/app/inbox", label: "Collab" },
-  { to: "/app/portfolio", label: "Portfolio" },
-  { to: "/app/profile", label: "Settings" }
-];
+import {
+  canAccessNavItem,
+  projectViewNavigation,
+  resolveScopeLabel,
+  scopeNavigation
+} from "@/app/navigationModel";
 
 export function AppShell() {
   const location = useLocation();
@@ -72,6 +21,7 @@ export function AppShell() {
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const loadClaims = useWorkspaceStore((state) => state.loadClaims);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const menuRef = useFocusContainment(mobileNavOpen);
 
   useEffect(() => {
     loadClaims().catch(() => undefined);
@@ -81,34 +31,24 @@ export function AppShell() {
     setMobileNavOpen(false);
   }, [location.pathname, location.search]);
 
-  const activeWorkspaceName = useMemo(() => {
-    return claims.find((claim) => claim.workspaceId === activeWorkspaceId)?.workspaceName ?? "No Workspace";
+  const activeWorkspace = useMemo(() => {
+    return claims.find((claim) => claim.workspaceId === activeWorkspaceId) ?? null;
   }, [claims, activeWorkspaceId]);
 
-  const activeGroup = useMemo(() => {
-    const pathname = location.pathname;
-    if (pathname.startsWith("/app/projects")) return "Kanban";
-    if (pathname.startsWith("/app/sprint") || pathname.startsWith("/app/insights")) return "Sprint";
-    if (pathname.startsWith("/app/inbox") || pathname.startsWith("/app/team")) return "Inbox";
-    if (pathname.startsWith("/app/portfolio")) return "Portfolio";
-    if (
-      pathname.startsWith("/app/profile") ||
-      pathname.startsWith("/app/admin") ||
-      pathname.startsWith("/app/integrations") ||
-      pathname.startsWith("/app/workspace")
-    ) {
-      return "Settings";
-    }
-    return "Overview";
-  }, [location.pathname]);
-
-  const secondaryNav = groupedSecondaryNav[activeGroup];
+  const activeWorkspaceName = activeWorkspace?.workspaceName ?? "No Workspace";
+  const activeRole = activeWorkspace?.role ?? null;
+  const scopeLabel = resolveScopeLabel(location.pathname);
+  const visibleScopeNav = useMemo(
+    () => scopeNavigation.filter((item) => canAccessNavItem(activeRole, item)),
+    [activeRole]
+  );
+  const showProjectViews = location.pathname.startsWith("/app/projects");
 
   async function signOut() {
     try {
       await request<void>("/auth/logout", { method: "POST" });
     } catch {
-      // Ignore logout network failures and clear local session regardless.
+      // Clear local session even when network logout fails.
     }
     clearSession();
     navigate("/login", { replace: true });
@@ -117,8 +57,12 @@ export function AppShell() {
 
   return (
     <div className="orbit-shell">
-      <header className="orbit-shell__top">
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <a href="#main-content" className="orbit-skip-link">
+        Skip to content
+      </a>
+
+      <header className="orbit-shell__top" role="banner">
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <strong style={{ fontSize: 20, letterSpacing: "-0.03em" }}>ORBIT</strong>
           <span className="orbit-neon-line" />
           <button
@@ -129,7 +73,9 @@ export function AppShell() {
           >
             {activeWorkspaceName}
           </button>
+          <span className="orbit-shell__scope-label">{scopeLabel}</span>
         </div>
+
         <div className="orbit-shell__top-actions">
           <button
             className="orbit-button orbit-button--ghost orbit-mobile-menu-button"
@@ -141,97 +87,56 @@ export function AppShell() {
             {mobileNavOpen ? "Close" : "Menu"}
           </button>
 
-          <div className="orbit-mobile-actions">
-            <ThemeToggleButton variant="shell" />
-            <button className="orbit-button orbit-button--ghost" type="button" onClick={signOut}>
-              Out
-            </button>
-          </div>
-
-          <div className="orbit-desktop-actions">
-            <ThemeToggleButton variant="shell" />
-            <button className="orbit-button orbit-button--ghost" type="button" onClick={signOut}>
-              Sign Out
-            </button>
-            <button className="orbit-button" type="button" onClick={() => navigate("/app/projects/table")}>
-              New Work Item
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <aside className={`orbit-shell__side${mobileNavOpen ? " is-open" : ""}`}>
-        <div className="orbit-mobile-side-actions">
           <ThemeToggleButton variant="shell" />
           <button className="orbit-button orbit-button--ghost" type="button" onClick={signOut}>
             Sign Out
           </button>
+          <button className="orbit-button orbit-desktop-only" type="button" onClick={() => navigate("/app/projects/board")}>
+            New Work Item
+          </button>
         </div>
+      </header>
 
-        <nav id="orbit-side-nav" className="orbit-side-nav" aria-label="Primary navigation">
-          {topNavItems.map((item) => (
+      <aside
+        className={`orbit-shell__side${mobileNavOpen ? " is-open" : ""}`}
+        id="orbit-side-nav"
+        aria-label="Global navigation"
+        ref={menuRef as any}
+      >
+        <nav className="orbit-side-nav" aria-label="Scope navigation">
+          {visibleScopeNav.map((item) => (
             <NavLink
-              key={item.to}
+              key={item.id}
               to={item.to}
               className={({ isActive }) => `orbit-side-link${isActive ? " is-active" : ""}`}
-              onClick={() => setMobileNavOpen(false)}
             >
               {item.label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="orbit-side-subnav">
-          <p className="orbit-side-subnav__title">{activeGroup}</p>
-          <div className="orbit-side-subnav__links">
-            {secondaryNav.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => `orbit-side-link orbit-side-link--sub${isActive ? " is-active" : ""}`}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                {item.label}
-              </NavLink>
-            ))}
+        {showProjectViews ? (
+          <div className="orbit-side-subnav">
+            <p className="orbit-side-subnav__title">Project Views</p>
+            <div className="orbit-side-subnav__links">
+              {projectViewNavigation.map((view) => (
+                <NavLink
+                  key={view.id}
+                  to={view.to}
+                  className={({ isActive }) => `orbit-side-link orbit-side-link--sub${isActive ? " is-active" : ""}`}
+                >
+                  {view.label}
+                </NavLink>
+              ))}
+            </div>
           </div>
-        </div>
-
-        <div className="orbit-side-allpages">
-          <p className="orbit-side-subnav__title">All Pages</p>
-          <div className="orbit-side-allpages__links">
-            {allAppPageItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => `orbit-side-link orbit-side-link--sub${isActive ? " is-active" : ""}`}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
-        </div>
+        ) : null}
       </aside>
 
-      <main className="orbit-shell__content">
+      <main id="main-content" className="orbit-shell__content" role="main" tabIndex={-1}>
         <Outlet />
       </main>
 
-      <aside className="orbit-shell__rail">
-        <div className="orbit-panel" style={{ padding: 14 }}>
-          <p style={{ marginTop: 0, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            Orbit Intelligence
-          </p>
-          <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {legacyDirectLinks.map((item) => (
-              <NavLink key={item.to} to={item.to} className="orbit-link-button" style={{ fontSize: 10, padding: "8px 10px" }}>
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
-        </div>
-      </aside>
       <FloatingAgentWidget />
     </div>
   );

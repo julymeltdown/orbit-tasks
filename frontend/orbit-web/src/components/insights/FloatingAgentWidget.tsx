@@ -3,6 +3,7 @@ import { request } from "@/lib/http/client";
 import { useProjectStore } from "@/stores/projectStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useEvaluationActions } from "@/features/insights/hooks/useEvaluationActions";
+import { useFocusContainment } from "@/components/common/useFocusContainment";
 
 const OPEN_KEY = "orbit.ai.widget.open";
 
@@ -53,6 +54,7 @@ export function FloatingAgentWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const panelRef = useFocusContainment(open);
 
   const unreadHints = useMemo(() => {
     return evaluation?.questions.length ?? 0;
@@ -131,7 +133,7 @@ export function FloatingAgentWidget() {
   return (
     <div className={`orbit-ai-widget${open ? " is-open" : ""}`} aria-live="polite">
       {open ? (
-        <section className="orbit-ai-widget__panel orbit-animate-card">
+        <section className="orbit-ai-widget__panel orbit-animate-card" ref={panelRef as any}>
           <header className="orbit-ai-widget__header">
             <strong>Orbit Agent</strong>
             <button className="orbit-button orbit-button--ghost" type="button" onClick={toggle}>

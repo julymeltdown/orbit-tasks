@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +18,30 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/portfolio")
 public class PortfolioController {
+    private final Map<String, List<PortfolioListItem>> portfolioByWorkspace = new ConcurrentHashMap<>();
+
+    @GetMapping("/list")
+    public List<PortfolioListItem> list(@RequestParam String workspaceId) {
+        return portfolioByWorkspace.computeIfAbsent(workspaceId, ignored -> List.of(
+                new PortfolioListItem("portfolio-core", "Core Delivery Portfolio", "ACTIVE", 8, LocalDate.now().toString()),
+                new PortfolioListItem("portfolio-ramp", "Growth & Expansion", "ACTIVE", 5, LocalDate.now().minusDays(2).toString()),
+                new PortfolioListItem("portfolio-legacy", "Legacy Modernization", "ARCHIVED", 12, LocalDate.now().minusDays(30).toString())
+        ));
+    }
+
+    @PostMapping("/list")
+    public PortfolioListItem create(@Valid @RequestBody CreatePortfolioRequest request) {
+        PortfolioListItem created = new PortfolioListItem(
+                UUID.randomUUID().toString(),
+                request.name(),
+                "ACTIVE",
+                0,
+                LocalDate.now().toString());
+        List<PortfolioListItem> next = new java.util.ArrayList<>(portfolioByWorkspace.getOrDefault(request.workspaceId(), List.of()));
+        next.add(0, created);
+        portfolioByWorkspace.put(request.workspaceId(), next);
+        return created;
+    }
 
     @PostMapping("/overview")
     public PortfolioOverviewResponse overview(@Valid @RequestBody PortfolioOverviewRequest request) {
@@ -83,5 +110,17 @@ public class PortfolioController {
     }
 
     public record MonthlyReportResponse(String portfolioId, LocalDate month, String headline, String csv) {
+    }
+
+    public record PortfolioListItem(
+            String portfolioId,
+            String name,
+            String status,
+            int projectCount,
+            String updatedAt
+    ) {
+    }
+
+    public record CreatePortfolioRequest(@NotBlank String workspaceId, @NotBlank String name) {
     }
 }

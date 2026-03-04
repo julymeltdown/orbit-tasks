@@ -33,7 +33,17 @@ export function EscalationCandidateTable({ candidates }: Props) {
                 <td>{candidate.riskScore.toFixed(1)}</td>
                 <td>{candidate.blockerCount}</td>
                 <td>{candidate.owner}</td>
-                <td>{candidate.recommendation}</td>
+                <td>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span>{candidate.recommendation}</span>
+                    <a
+                      className="orbit-link-button orbit-link-button--tab"
+                      href={`/app/projects/timeline?project=${encodeURIComponent(candidate.projectId)}`}
+                    >
+                      Open
+                    </a>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

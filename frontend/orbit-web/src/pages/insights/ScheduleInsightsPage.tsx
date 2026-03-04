@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { request } from "@/lib/http/client";
 import { AICoachPanel } from "@/components/insights/AICoachPanel";
 import { ScheduleHealthCards } from "@/components/insights/ScheduleHealthCards";
@@ -23,6 +24,7 @@ interface Evaluation {
 }
 
 export function ScheduleInsightsPage() {
+  const location = useLocation();
   const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
@@ -81,6 +83,9 @@ export function ScheduleInsightsPage() {
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Schedule Intelligence</h2>
+        <p style={{ marginTop: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
+          Context · {location.pathname} · workspace {workspaceId ?? "not-selected"}
+        </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 8 }}>
           <input
             className="orbit-input"

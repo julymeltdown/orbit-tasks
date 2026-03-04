@@ -10,6 +10,8 @@ import { LandingPage } from "@/pages/public/LandingPage";
 import { BoardPage } from "@/pages/projects/BoardPage";
 import { TablePage } from "@/pages/projects/TablePage";
 import { TimelinePage } from "@/pages/projects/TimelinePage";
+import { CalendarPage } from "@/pages/projects/CalendarPage";
+import { DashboardPage } from "@/pages/projects/DashboardPage";
 import { ProfileSettingsPage } from "@/pages/profile/ProfileSettingsPage";
 import { TeamManagementPage } from "@/pages/team/TeamManagementPage";
 import { WorkspaceEntryPage } from "@/pages/workspace/WorkspaceEntryPage";
@@ -23,6 +25,7 @@ import { ImportWizardPage } from "@/pages/integrations/ImportWizardPage";
 import { OperationsHubPage } from "@/pages/overview/OperationsHubPage";
 import { fetchProfileCompletion } from "@/lib/auth/profileCompletion";
 import { useAuthStore } from "@/stores/authStore";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 function SessionLoading() {
   return (
@@ -106,6 +109,24 @@ function LegacyRedirect({ to }: { to: string }) {
   return <Navigate replace to={to} />;
 }
 
+function RequireAdmin({ children }: { children: ReactNode }) {
+  const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const claims = useWorkspaceStore((state) => state.claims);
+  const role = claims.find((claim) => claim.workspaceId === activeWorkspaceId)?.role;
+  if (role !== "WORKSPACE_ADMIN") {
+    return (
+      <div className="orbit-panel" style={{ maxWidth: 620, margin: "16vh auto", padding: 24 }}>
+        <h2 style={{ marginTop: 0 }}>Admin Access Required</h2>
+        <p style={{ marginBottom: 16, color: "var(--orbit-text-subtle)" }}>
+          This section is available only for workspace administrators.
+        </p>
+        <Navigate replace to="/app" />
+      </div>
+    );
+  }
+  return <>{children}</>;
+}
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -170,10 +191,19 @@ export const router = createBrowserRouter([
       { path: "projects/board", element: <BoardPage /> },
       { path: "projects/timeline", element: <TimelinePage /> },
       { path: "projects/table", element: <TablePage /> },
+      { path: "projects/calendar", element: <CalendarPage /> },
+      { path: "projects/dashboard", element: <DashboardPage /> },
       { path: "sprint", element: <SprintWorkspacePage /> },
       { path: "insights", element: <ScheduleInsightsPage /> },
       { path: "portfolio", element: <PortfolioOverviewPage /> },
-      { path: "admin/compliance", element: <ComplianceDashboardPage /> },
+      {
+        path: "admin/compliance",
+        element: (
+          <RequireAdmin>
+            <ComplianceDashboardPage />
+          </RequireAdmin>
+        )
+      },
       { path: "integrations/import", element: <ImportWizardPage /> },
       { path: "profile", element: <ProfileSettingsPage /> },
       { path: "team", element: <TeamManagementPage /> },
@@ -195,6 +225,14 @@ export const router = createBrowserRouter([
   {
     path: "/projects/timeline",
     element: <LegacyRedirect to="/app/projects/timeline" />
+  },
+  {
+    path: "/projects/calendar",
+    element: <LegacyRedirect to="/app/projects/calendar" />
+  },
+  {
+    path: "/projects/dashboard",
+    element: <LegacyRedirect to="/app/projects/dashboard" />
   },
   {
     path: "/projects/table",

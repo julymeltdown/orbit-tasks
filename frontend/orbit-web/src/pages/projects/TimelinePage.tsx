@@ -1,5 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { ProjectViewTabs } from "@/components/projects/ProjectViewTabs";
+import { ProjectFilterBar } from "@/components/projects/ProjectFilterBar";
 import { useProjectStore } from "@/stores/projectStore";
+import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { WorkItemStatus, useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 
@@ -17,34 +20,59 @@ function diffDays(start: Date, end: Date) {
 export function TimelinePage() {
   const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
+  const viewContext = useProjectViewStore((state) => state.getContext(projectId));
+  const setView = useProjectViewStore((state) => state.setView);
   const { items, loading, error, updateStatus } = useWorkItems(projectId);
 
+  useEffect(() => {
+    setView(projectId, "timeline");
+  }, [projectId, setView]);
+
+  const filteredItems = useMemo(() => {
+    const query = viewContext.filters.query.trim().toLowerCase();
+    const assigneeFilter = viewContext.filters.assignee.trim().toLowerCase();
+    return items.filter((item) => {
+      if (viewContext.filters.status !== "ALL" && item.status !== viewContext.filters.status) {
+        return false;
+      }
+      if (query && !item.title.toLowerCase().includes(query)) {
+        return false;
+      }
+      if (assigneeFilter && !(item.assignee ?? "").toLowerCase().includes(assigneeFilter)) {
+        return false;
+      }
+      return true;
+    });
+  }, [items, viewContext.filters.assignee, viewContext.filters.query, viewContext.filters.status]);
+
   const bounds = useMemo(() => {
-    if (items.length === 0) {
+    if (filteredItems.length === 0) {
       const today = new Date();
       return { min: today, max: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) };
     }
 
-    const starts = items.map((item) => toDate(item.startAt) ?? new Date(item.createdAt));
-    const ends = items.map((item) => toDate(item.dueAt) ?? new Date(item.createdAt));
+    const starts = filteredItems.map((item) => toDate(item.startAt) ?? new Date(item.createdAt));
+    const ends = filteredItems.map((item) => toDate(item.dueAt) ?? new Date(item.createdAt));
     const min = new Date(Math.min(...starts.map((date) => date.getTime())));
     const max = new Date(Math.max(...ends.map((date) => date.getTime())));
     return { min, max };
-  }, [items]);
+  }, [filteredItems]);
 
   const totalDays = Math.max(1, diffDays(bounds.min, bounds.max));
 
   return (
     <section style={{ display: "grid", gap: 14 }}>
+      <ProjectViewTabs />
+      <ProjectFilterBar title="Timeline View" subtitle="Dependency-aware scheduling and date-range operations." />
       <article className="orbit-card" style={{ padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Timeline</h2>
         {loading ? <p>Loading timeline...</p> : null}
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
       </article>
 
-      <article className="orbit-card" style={{ padding: 14, overflowX: "auto" }}>
+      <article className="orbit-card orbit-timeline-scroll-shell" style={{ padding: 14, overflowX: "auto" }}>
         <div style={{ minWidth: "max(100%, 56rem)", display: "grid", gap: 8 }}>
-          {items.map((item) => {
+          {filteredItems.map((item) => {
             const start = toDate(item.startAt) ?? new Date(item.createdAt);
             const end = toDate(item.dueAt) ?? new Date(start.getTime() + 2 * 24 * 60 * 60 * 1000);
             const left = ((start.getTime() - bounds.min.getTime()) / (bounds.max.getTime() - bounds.min.getTime() || 1)) * 100;
@@ -84,7 +112,7 @@ export function TimelinePage() {
               </div>
             );
           })}
-          {items.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No items to display yet.</p> : null}
+          {filteredItems.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No items to display yet.</p> : null}
         </div>
       </article>
     </section>

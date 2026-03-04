@@ -1,4 +1,5 @@
 import com.google.protobuf.gradle.*
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
@@ -74,6 +75,35 @@ tasks.named<JacocoReport>("jacocoTestReport") {
         xml.required.set(true)
         html.required.set(true)
         csv.required.set(false)
+    }
+
+    classDirectories.setFrom(files(classDirectories.files.map { dir ->
+        fileTree(dir) {
+            exclude(
+                "**/config/**",
+                "**/v1/**",
+                "**/*Application*"
+            )
+        }
+    }))
+}
+
+tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+    dependsOn(tasks.named("test"))
+    violationRules {
+        rule {
+            enabled = true
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.70".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "0.55".toBigDecimal()
+            }
+        }
     }
 
     classDirectories.setFrom(files(classDirectories.files.map { dir ->

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { HttpError, request } from "@/lib/http/client";
 import { ThreadPanel } from "@/components/collaboration/ThreadPanel";
+import { InboxFilterBar, type InboxFilter } from "@/components/collaboration/InboxFilterBar";
 import { useAuthStore } from "@/stores/authStore";
 
 interface GatewayNotification {
@@ -43,6 +44,7 @@ export function InboxPage() {
   const userId = useAuthStore((state) => state.userId) ?? "";
   const [items, setItems] = useState<InboxItem[]>([]);
   const [focusThreadId, setFocusThreadId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<InboxFilter>("all");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -66,9 +68,10 @@ export function InboxPage() {
       const feed = await request<NotificationFeedResponse>("/api/notifications?limit=50");
       const mapped: InboxItem[] = feed.items.map((entry) => {
         const payload = parsePayload(entry.payloadJson);
+        const normalizedType = entry.type.toUpperCase();
         return {
           id: entry.id,
-          type: entry.type,
+          type: normalizedType,
           createdAt: entry.createdAt,
           read: Boolean(entry.readAt),
           threadId: payload.threadId ?? null,
@@ -92,7 +95,7 @@ export function InboxPage() {
       setItems(
         legacy.map((entry) => ({
           id: entry.notificationId,
-          type: entry.type,
+          type: entry.type.toUpperCase(),
           createdAt: entry.createdAt,
           read: entry.read,
           threadId: entry.threadId,
@@ -145,25 +148,31 @@ export function InboxPage() {
   }
 
   const unreadCount = items.filter((item) => !item.read).length;
+  const filteredItems = items.filter((item) => {
+    if (filter === "all") return true;
+    if (filter === "notifications") return item.source === "notifications";
+    if (filter === "requests") return item.type.includes("REQUEST");
+    if (filter === "mentions") return item.type.includes("MENTION");
+    if (filter === "ai_questions") return item.type.includes("AI");
+    return true;
+  });
 
   return (
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 8", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Inbox</h2>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-          <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>Unread {unreadCount}</span>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={markAllRead}>
-            Mark All Read
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => loadInbox()}>
-            Refresh
-          </button>
-        </div>
+        <InboxFilterBar
+          value={filter}
+          onChange={setFilter}
+          unreadCount={unreadCount}
+          onMarkAllRead={markAllRead}
+          onRefresh={() => loadInbox()}
+        />
         {loading ? <p>Loading inbox...</p> : null}
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
         <div style={{ display: "grid", gap: 8 }}>
-          {items.length === 0 ? <p>No notifications yet.</p> : null}
-          {items.map((item) => (
+          {filteredItems.length === 0 ? <p>No notifications yet.</p> : null}
+          {filteredItems.map((item) => (
             <div key={item.id} className="orbit-panel orbit-animate-card" style={{ padding: 10, display: "grid", gap: 6 }}>
               <strong>
                 {item.type} {!item.read ? <span style={{ color: "var(--orbit-accent)" }}>•</span> : null}
@@ -175,6 +184,9 @@ export function InboxPage() {
               <div style={{ display: "flex", gap: 8 }}>
                 <button className="orbit-button orbit-button--ghost" type="button" onClick={() => markRead(item)}>
                   {item.read ? "Read" : "Mark Read"}
+                </button>
+                <button className="orbit-button orbit-button--ghost" type="button" onClick={() => markRead(item)}>
+                  Resolve
                 </button>
                 {item.threadId ? (
                   <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setFocusThreadId(item.threadId)}>

@@ -1,27 +1,46 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useProjectStore } from "@/stores/projectStore";
+import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { WorkItemStatus, WorkItemType, useWorkItems } from "@/features/workitems/hooks/useWorkItems";
+import { ProjectViewTabs } from "@/components/projects/ProjectViewTabs";
+import { ProjectFilterBar } from "@/components/projects/ProjectFilterBar";
 
 const STATUS_OPTIONS: WorkItemStatus[] = ["TODO", "IN_PROGRESS", "REVIEW", "DONE", "ARCHIVED"];
 
 export function TablePage() {
   const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
+  const viewContext = useProjectViewStore((state) => state.getContext(projectId));
+  const setView = useProjectViewStore((state) => state.setView);
+  const setFilter = useProjectViewStore((state) => state.setFilter);
   const { items, loading, error, mutation, createItem, updateStatus, archiveItem } = useWorkItems(projectId);
 
   const [title, setTitle] = useState("");
   const [assignee, setAssignee] = useState("");
   const [type, setType] = useState<WorkItemType>("TASK");
-  const [statusFilter, setStatusFilter] = useState<WorkItemStatus | "ALL">("ALL");
   const [localError, setLocalError] = useState<string | null>(null);
 
+  useEffect(() => {
+    setView(projectId, "table");
+  }, [projectId, setView]);
+
   const visible = useMemo(() => {
-    if (statusFilter === "ALL") {
-      return items;
-    }
-    return items.filter((item) => item.status === statusFilter);
-  }, [items, statusFilter]);
+    const query = viewContext.filters.query.trim().toLowerCase();
+    const assigneeFilter = viewContext.filters.assignee.trim().toLowerCase();
+    return items.filter((item) => {
+      if (viewContext.filters.status !== "ALL" && item.status !== viewContext.filters.status) {
+        return false;
+      }
+      if (query && !item.title.toLowerCase().includes(query)) {
+        return false;
+      }
+      if (assigneeFilter && !(item.assignee ?? "").toLowerCase().includes(assigneeFilter)) {
+        return false;
+      }
+      return true;
+    });
+  }, [items, viewContext.filters.assignee, viewContext.filters.query, viewContext.filters.status]);
 
   async function onCreate() {
     if (!title.trim()) {
@@ -44,8 +63,10 @@ export function TablePage() {
 
   return (
     <section style={{ display: "grid", gap: 14 }}>
+      <ProjectViewTabs />
+      <ProjectFilterBar title="Table View" subtitle="Bulk editing and audit-friendly operations over shared project data." />
       <article className="orbit-card" style={{ padding: 20 }}>
-        <h2 style={{ marginTop: 0 }}>Table View</h2>
+        <h2 style={{ marginTop: 0 }}>Table Operations</h2>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
           <input className="orbit-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="New work item title" />
@@ -62,7 +83,12 @@ export function TablePage() {
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-          <select className="orbit-input" style={{ maxWidth: "14rem" }} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as WorkItemStatus | "ALL")}>
+          <select
+            className="orbit-input"
+            style={{ maxWidth: "14rem" }}
+            value={viewContext.filters.status}
+            onChange={(event) => setFilter(projectId, "status", event.target.value as WorkItemStatus | "ALL")}
+          >
             <option value="ALL">All status</option>
             {STATUS_OPTIONS.map((status) => (
               <option key={status} value={status}>

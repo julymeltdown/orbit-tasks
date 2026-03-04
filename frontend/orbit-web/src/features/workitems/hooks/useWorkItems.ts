@@ -18,6 +18,26 @@ export interface WorkItem {
   createdAt: string;
 }
 
+export interface DependencyEdge {
+  dependencyId: string;
+  fromWorkItemId: string;
+  toWorkItemId: string;
+  type: string;
+}
+
+export interface DependencyGraphNode {
+  workItemId: string;
+  title: string;
+  status: WorkItemStatus;
+  upstreamCount: number;
+  downstreamCount: number;
+}
+
+export interface DependencyGraph {
+  nodes: DependencyGraphNode[];
+  edges: DependencyEdge[];
+}
+
 interface CreateInput {
   projectId: string;
   type: WorkItemType;
@@ -42,6 +62,7 @@ const EMPTY_MUTATION: MutationState = { loading: false, error: null };
 
 export function useWorkItems(projectId: string) {
   const [items, setItems] = useState<WorkItem[]>([]);
+  const [dependencyGraph, setDependencyGraph] = useState<DependencyGraph>({ nodes: [], edges: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mutation, setMutation] = useState<MutationState>(EMPTY_MUTATION);
@@ -50,8 +71,10 @@ export function useWorkItems(projectId: string) {
     setLoading(true);
     setError(null);
     try {
-      const response = await request<WorkItem[]>("/api/work-items");
-      setItems(response.filter((item) => item.projectId === projectId));
+      const response = await request<WorkItem[]>(`/api/work-items?projectId=${encodeURIComponent(projectId)}`);
+      setItems(response);
+      const graph = await request<DependencyGraph>(`/api/work-items/dependency-graph?projectId=${encodeURIComponent(projectId)}`);
+      setDependencyGraph(graph);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load work items");
     } finally {
@@ -121,13 +144,15 @@ export function useWorkItems(projectId: string) {
   }
 
   async function addDependency(workItemId: string, input: DependencyInput) {
-    return request(`/api/work-items/${workItemId}/dependencies`, {
+    const result = await request<DependencyEdge>(`/api/work-items/${workItemId}/dependencies`, {
       method: "POST",
       body: {
         toWorkItemId: input.toWorkItemId,
         type: input.type ?? "FS"
       }
     });
+    await load();
+    return result;
   }
 
   async function archiveItem(workItemId: string) {
@@ -136,6 +161,7 @@ export function useWorkItems(projectId: string) {
 
   return {
     items,
+    dependencyGraph,
     byStatus,
     loading,
     error,

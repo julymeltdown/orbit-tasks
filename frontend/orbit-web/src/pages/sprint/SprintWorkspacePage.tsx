@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { request } from "@/lib/http/client";
 import { DSUComposerPanel, DSUSummary } from "@/components/agile/DSUComposerPanel";
+import { EmptyStateCard } from "@/components/common/EmptyStateCard";
 import { useAuthStore } from "@/stores/authStore";
 import { useProjectStore } from "@/stores/projectStore";
+import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
@@ -40,6 +42,7 @@ export function SprintWorkspacePage() {
   const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
+  const setProjectFilter = useProjectViewStore((state) => state.setFilter);
   const { items: workItems } = useWorkItems(projectId);
   const { activeSprint, setActiveSprint } = useActiveSprint(activeWorkspaceId, projectId);
 
@@ -131,6 +134,7 @@ export function SprintWorkspacePage() {
         updatedAt: new Date().toISOString()
       });
       await loadBacklogAndDsu(created.sprintId);
+      setProjectFilter(projectId, "sprintOnly", true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create sprint");
     } finally {
@@ -192,6 +196,16 @@ export function SprintWorkspacePage() {
 
   return (
     <section style={{ display: "grid", gap: 14 }}>
+      {!sprint ? (
+        <EmptyStateCard
+          title="No active sprint selected"
+          description="Create a sprint first, then connect backlog and DSU updates to the board execution loop."
+          actions={[
+            { label: "Create Sprint", onClick: createSprint },
+            { label: "Open Board", onClick: () => setProjectFilter(projectId, "sprintOnly", false), variant: "ghost" }
+          ]}
+        />
+      ) : null}
       <article className="orbit-card" style={{ padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Sprint Workspace</h2>
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}

@@ -63,6 +63,16 @@ export function OperationsHubPage() {
         metricValue: `${activeCount}`
       },
       {
+        id: "calendar",
+        title: "Calendar",
+        path: "/app/projects/calendar",
+        primaryLabel: "Open Calendar",
+        secondaryPath: "/app/projects/dashboard",
+        secondaryLabel: "Open Dashboard",
+        metricLabel: "Done",
+        metricValue: `${doneCount}`
+      },
+      {
         id: "sprint",
         title: "Sprint Workspace",
         path: "/app/sprint",
@@ -124,11 +134,17 @@ export function OperationsHubPage() {
           <button className="orbit-link-button" type="button" onClick={() => ensureWorkspaceThenNavigate("/app/projects/table")}>
             3. Bulk Update Table
           </button>
+          <button className="orbit-link-button" type="button" onClick={() => ensureWorkspaceThenNavigate("/app/projects/calendar")}>
+            4. Plan in Calendar
+          </button>
+          <button className="orbit-link-button" type="button" onClick={() => ensureWorkspaceThenNavigate("/app/projects/dashboard")}>
+            5. Review Dashboard
+          </button>
           <button className="orbit-link-button" type="button" onClick={() => ensureWorkspaceThenNavigate("/app/sprint")}>
-            4. Run Sprint
+            6. Run Sprint
           </button>
           <button className="orbit-link-button" type="button" onClick={() => ensureWorkspaceThenNavigate("/app/inbox")}>
-            5. Resolve in Inbox
+            7. Resolve in Inbox
           </button>
         </div>
       </article>

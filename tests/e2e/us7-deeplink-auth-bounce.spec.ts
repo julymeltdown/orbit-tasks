@@ -5,6 +5,7 @@ test.describe("US7 deep-link auth bounce", () => {
     await page.goto("/dl/demo-token");
 
     await expect(page).toHaveURL(/\/login\?returnTo=/);
-    await expect(page.getByText("Orbit Login")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Welcome Back/i })).toBeVisible();
+    await expect(page.getByLabel("Email")).toBeVisible();
   });
 });

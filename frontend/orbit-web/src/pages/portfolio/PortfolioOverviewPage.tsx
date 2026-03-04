@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { request } from "@/lib/http/client";
 import { RiskDistributionWidget } from "@/components/portfolio/RiskDistributionWidget";
 import { EscalationCandidateTable } from "@/components/portfolio/EscalationCandidateTable";
+import { PortfolioSelector } from "@/components/portfolio/PortfolioSelector";
+import { usePortfolioList } from "@/features/portfolio/hooks/usePortfolioList";
 import { usePortfolioExport } from "@/features/portfolio/hooks/usePortfolioExport";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
@@ -23,11 +25,18 @@ interface Overview {
 
 export function PortfolioOverviewPage() {
   const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const { items: portfolios, loading: loadingPortfolios, error: portfolioError, load: reloadPortfolioList } = usePortfolioList(workspaceId);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [csvPreview, setCsvPreview] = useState<string>("");
-  const [portfolioId, setPortfolioId] = useState("55555555-5555-5555-5555-555555555555");
+  const [portfolioId, setPortfolioId] = useState("");
   const { exportMonthly } = usePortfolioExport();
+
+  useEffect(() => {
+    if (!portfolioId && portfolios.length > 0) {
+      setPortfolioId(portfolios[0].portfolioId);
+    }
+  }, [portfolioId, portfolios]);
 
   async function loadOverview() {
     if (!workspaceId) {
@@ -40,7 +49,7 @@ export function PortfolioOverviewPage() {
         method: "POST",
         body: {
           workspaceId,
-          portfolioId,
+          portfolioId: portfolioId || portfolios[0]?.portfolioId || "portfolio-core",
           periodStart: "2026-03-01",
           periodEnd: "2026-03-31",
           projects: [
@@ -58,10 +67,30 @@ export function PortfolioOverviewPage() {
 
   async function exportCsv() {
     try {
-      const csv = await exportMonthly(portfolioId);
+      const target = portfolioId || portfolios[0]?.portfolioId || "portfolio-core";
+      const csv = await exportMonthly(target);
       setCsvPreview(csv);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to export monthly report");
+    }
+  }
+
+  async function createPortfolioQuick() {
+    if (!workspaceId) {
+      setError("Select workspace first");
+      return;
+    }
+    try {
+      await request("/api/portfolio/list", {
+        method: "POST",
+        body: {
+          workspaceId,
+          name: `Portfolio ${new Date().toISOString().slice(0, 10)}`
+        }
+      });
+      await reloadPortfolioList();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create portfolio");
     }
   }
 
@@ -69,8 +98,7 @@ export function PortfolioOverviewPage() {
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Portfolio Overview</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10.5rem, 1fr))", gap: 8 }}>
-          <input className="orbit-input" value={portfolioId} onChange={(event) => setPortfolioId(event.target.value)} />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button className="orbit-button" type="button" onClick={loadOverview}>
             Load Overview
           </button>
@@ -78,8 +106,19 @@ export function PortfolioOverviewPage() {
             Export Monthly Report
           </button>
         </div>
+        {portfolioError ? <p style={{ color: "var(--orbit-danger)" }}>{portfolioError}</p> : null}
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
       </article>
+
+      <div style={{ gridColumn: "span 4" }}>
+        <PortfolioSelector
+          portfolios={portfolios}
+          selectedPortfolioId={portfolioId}
+          onSelect={setPortfolioId}
+          onCreateQuick={createPortfolioQuick}
+          loading={loadingPortfolios}
+        />
+      </div>
 
       {overview ? (
         <>
@@ -94,7 +133,11 @@ export function PortfolioOverviewPage() {
             <EscalationCandidateTable candidates={overview.escalationCandidates} />
           </div>
         </>
-      ) : null}
+      ) : (
+        <article className="orbit-card" style={{ gridColumn: "span 8", padding: 14 }}>
+          Select a portfolio and click <strong>Load Overview</strong>.
+        </article>
+      )}
 
       {csvPreview ? (
         <article className="orbit-card" style={{ gridColumn: "span 12", padding: 16 }}>

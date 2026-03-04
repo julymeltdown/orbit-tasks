@@ -13,6 +13,8 @@
   --orbit-accent-glow: #0066ff;
   --orbit-danger: #db1b4d;
   --orbit-success: #007a5a;
+  --orbit-warning: #9d6f00;
+  --orbit-info: #0a4cc2;
 
   --orbit-sidebar-w: 232px;
   --orbit-panel-w: 360px;
@@ -36,6 +38,8 @@
   --orbit-accent-glow: #4d90ff;
   --orbit-danger: #ff4a6e;
   --orbit-success: #21b58b;
+  --orbit-warning: #f5b400;
+  --orbit-info: #7fb2ff;
 
   --orbit-shadow-1: 0 10px 32px rgba(0, 0, 0, 0.45);
   --orbit-shadow-2: 0 28px 72px rgba(0, 0, 0, 0.58);

@@ -45,6 +45,31 @@ routes:
     path: /threads/{threadId}/messages
     target: collaboration-service
     policySet: workspace-user
+  - id: project.view-configs.list
+    method: GET
+    path: /projects/{projectId}/view-configurations
+    target: workgraph-service
+    policySet: workspace-user
+  - id: project.view-configs.save
+    method: POST
+    path: /projects/{projectId}/view-configurations
+    target: workgraph-service
+    policySet: workspace-user
+  - id: work-items.graph
+    method: GET
+    path: /work-items/dependency-graph
+    target: workgraph-service
+    policySet: workspace-user
+  - id: portfolio.list
+    method: GET
+    path: /portfolio/list
+    target: schedule-intelligence-service
+    policySet: workspace-manager
+  - id: portfolio.create
+    method: POST
+    path: /portfolio/list
+    target: schedule-intelligence-service
+    policySet: workspace-manager
   - id: deeplink.resolve
     method: GET
     path: /dl/{token}

@@ -23,18 +23,22 @@ export function DeepLinkResolverPage() {
     request<ResolveResponse>(`/api/deeplinks/${token}/resolve`)
       .then((result) => {
         if (result.status === "AUTH_REQUIRED") {
-          stashIntent(`/dl/${token}`);
-          navigate(`/login?returnTo=${encodeURIComponent(`/dl/${token}`)}`, { replace: true });
+          const returnTo = `/dl/${token}`;
+          stashIntent(returnTo);
+          navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`, { replace: true });
           return;
         }
         if (result.status === "OK") {
           navigate(result.targetPath, { replace: true });
           return;
         }
-        setMessage(`Deep link unavailable: ${result.reason}`);
+        setMessage(`Deep link unavailable: ${result.reason}. Redirecting to inbox...`);
+        window.setTimeout(() => navigate("/app/inbox", { replace: true }), 1200);
       })
       .catch((error) => {
-        setMessage(error instanceof Error ? error.message : "Failed to resolve deep link");
+        const reason = error instanceof Error ? error.message : "Failed to resolve deep link";
+        setMessage(`${reason}. Redirecting to inbox...`);
+        window.setTimeout(() => navigate("/app/inbox", { replace: true }), 1200);
       });
   }, [navigate, token]);
 

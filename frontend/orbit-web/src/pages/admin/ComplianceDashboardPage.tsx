@@ -12,6 +12,7 @@ interface AuditEvent {
   action: string;
   target: string;
   createdAt: string;
+  payload?: Record<string, unknown>;
 }
 
 interface RetentionRule {
@@ -35,6 +36,7 @@ interface AiControl {
 
 export function ComplianceDashboardPage() {
   const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const claims = useWorkspaceStore((state) => state.claims);
   const actor = useAuthStore((state) => state.userId) ?? "admin@orbit.local";
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [evidence, setEvidence] = useState("");
@@ -42,6 +44,9 @@ export function ComplianceDashboardPage() {
   const [aiControl, setAiControl] = useState<AiControl | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { exportAuditJsonl } = useEvidenceExport(workspaceId ?? "");
+  const activeRole = claims.find((claim) => claim.workspaceId === workspaceId)?.role;
+  const allowRetention = activeRole === "WORKSPACE_ADMIN";
+  const allowAiControls = activeRole === "WORKSPACE_ADMIN";
 
   async function refreshEvents() {
     if (!workspaceId) {
@@ -137,6 +142,9 @@ export function ComplianceDashboardPage() {
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Compliance Dashboard</h2>
+        <p style={{ marginTop: 0, color: "var(--orbit-text-subtle)" }}>
+          Workspace governance controls, audit explorer, and AI data-policy settings.
+        </p>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="orbit-button" type="button" onClick={refreshEvents}>
             Refresh Audit Events
@@ -149,12 +157,14 @@ export function ComplianceDashboardPage() {
       </article>
 
       <div style={{ gridColumn: "span 7" }}>
-        <AuditEventExplorer events={events} />
+        <AuditEventExplorer events={events} onExport={exportEvidence} />
       </div>
       <div style={{ gridColumn: "span 5" }}>
         <PolicyControlForms
           onSaveRetention={saveRetention}
           onSaveAIControl={saveAIControl}
+          allowRetention={allowRetention}
+          allowAiControls={allowAiControls}
           initialRetention={retention ? { dataset: retention.dataset, retentionDays: retention.retentionDays, hardDelete: retention.hardDelete } : null}
           initialAiControl={
             aiControl

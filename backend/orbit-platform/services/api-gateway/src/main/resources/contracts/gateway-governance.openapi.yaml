@@ -2,7 +2,10 @@ openapi: 3.0.3
 info:
   title: Gateway Governance API
   version: v1
-  description: Governance and policy management endpoints for the API gateway.
+  description: >
+    Governance and policy management endpoints for the API gateway.
+    Synced with route-contracts baseline including project view-configuration,
+    work-item dependency graph, and portfolio list/create routes.
 servers:
   - url: https://api.example.com
 
@@ -319,6 +322,24 @@ components:
       properties:
         routeKey:
           type: string
+          description: Contract key present in route-contracts.yml
+          enum:
+            - auth.login
+            - auth.refresh
+            - auth.logout
+            - auth.workspace-claims
+            - profile.settings.get
+            - profile.settings.patch
+            - team.memberships
+            - thread.messages
+            - thread.reply
+            - project.view-configs.list
+            - project.view-configs.save
+            - work-items.graph
+            - portfolio.list
+            - portfolio.create
+            - deeplink.resolve
+            - schedule.evaluate
         owner:
           type: string
         slaTarget:

@@ -12,12 +12,14 @@ recipes:
       - service: collaboration-service
         operation: listOpenMentions
   - id: thread-context
-    description: Compose thread messages with profile snapshots and work item metadata.
+    description: Compose thread messages, mention targets, and inbox triage metadata.
     timeoutMs: 900
     cacheTtlMs: 5000
     fanout:
       - service: collaboration-service
         operation: getThread
+      - service: collaboration-service
+        operation: listInboxByUser
       - service: profile-service
         operation: batchGetProfiles
       - service: workgraph-service

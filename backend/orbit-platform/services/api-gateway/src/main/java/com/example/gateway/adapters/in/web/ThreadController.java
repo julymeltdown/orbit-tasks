@@ -53,6 +53,7 @@ public class ThreadController {
                     message.messageId(),
                     "MENTION",
                     false,
+                    "OPEN",
                     Instant.now().toString()));
         }
 
@@ -72,7 +73,16 @@ public class ThreadController {
 
     @PatchMapping("/inbox/{notificationId}/read")
     public InboxItemView markRead(@PathVariable UUID notificationId, @Valid @RequestBody MarkReadRequest request) {
-        List<InboxItemView> current = inboxByUser.getOrDefault(request.userId(), List.of());
+        return updateInboxState(notificationId, request.userId(), true, null);
+    }
+
+    @PatchMapping("/inbox/{notificationId}/resolve")
+    public InboxItemView resolve(@PathVariable UUID notificationId, @Valid @RequestBody ResolveInboxRequest request) {
+        return updateInboxState(notificationId, request.userId(), true, "RESOLVED");
+    }
+
+    private InboxItemView updateInboxState(UUID notificationId, String userId, boolean read, String status) {
+        List<InboxItemView> current = inboxByUser.getOrDefault(userId, List.of());
         for (int i = 0; i < current.size(); i++) {
             InboxItemView item = current.get(i);
             if (item.notificationId().equals(notificationId)) {
@@ -82,7 +92,8 @@ public class ThreadController {
                         item.threadId(),
                         item.messageId(),
                         item.type(),
-                        true,
+                        read,
+                        status == null ? item.status() : status,
                         item.createdAt());
                 current.set(i, updated);
                 return updated;
@@ -122,12 +133,15 @@ public class ThreadController {
     public record MarkReadRequest(@NotBlank String userId) {
     }
 
+    public record ResolveInboxRequest(@NotBlank String userId) {
+    }
+
     public record ThreadView(UUID threadId, UUID workspaceId, UUID workItemId, String title, String createdBy, String status, String createdAt) {
     }
 
     public record MessageView(UUID messageId, UUID threadId, String authorId, String body, String createdAt) {
     }
 
-    public record InboxItemView(UUID notificationId, String userId, UUID threadId, UUID messageId, String type, boolean read, String createdAt) {
+    public record InboxItemView(UUID notificationId, String userId, UUID threadId, UUID messageId, String type, boolean read, String status, String createdAt) {
     }
 }

@@ -17,10 +17,14 @@ import { useNavigate } from "react-router-dom";
 import { request } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/authStore";
 import { useProjectStore } from "@/stores/projectStore";
+import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
 import { useWorkItemNotes } from "@/features/workitems/hooks/useWorkItemNotes";
 import { type WorkItem, type WorkItemPriority, type WorkItemStatus, type WorkItemType, useWorkItems } from "@/features/workitems/hooks/useWorkItems";
+import { ProjectViewTabs } from "@/components/projects/ProjectViewTabs";
+import { ProjectFilterBar } from "@/components/projects/ProjectFilterBar";
+import { DependencyInspectorPanel } from "@/components/projects/DependencyInspectorPanel";
 
 const FLOW_LANES: Array<{ status: WorkItemStatus; title: string }> = [
   { status: "TODO", title: "Backlog" },
@@ -146,13 +150,15 @@ function BoardCard({
   notePreview,
   inSprint,
   onOpen,
-  isSelected
+  isSelected,
+  onMoveByKeyboard
 }: {
   item: WorkItem;
   notePreview: string;
   inSprint: boolean;
   onOpen: (workItemId: string) => void;
   isSelected: boolean;
+  onMoveByKeyboard: (workItemId: string, direction: "left" | "right") => void;
 }) {
   const { attributes, listeners, setNodeRef: setDragNodeRef, transform, isDragging } = useDraggable({
     id: `item-${item.workItemId}`,
@@ -202,6 +208,22 @@ function BoardCard({
         </div>
         {notePreview ? <p className="orbit-notion-card__note">{notePreview}</p> : null}
       </button>
+      <button
+        type="button"
+        className="orbit-button orbit-button--ghost"
+        style={{ minHeight: 28, fontSize: 10 }}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            onMoveByKeyboard(item.workItemId, "left");
+          } else if (event.key === "ArrowRight") {
+            event.preventDefault();
+            onMoveByKeyboard(item.workItemId, "right");
+          }
+        }}
+      >
+        Move with keyboard ← →
+      </button>
     </article>
   );
 }
@@ -211,16 +233,18 @@ export function BoardPage() {
   const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
+  const projectView = useProjectViewStore((state) => state.getContext(projectId));
+  const setProjectView = useProjectViewStore((state) => state.setView);
+  const setProjectFilter = useProjectViewStore((state) => state.setFilter);
+  const setSelectedWorkItem = useProjectViewStore((state) => state.setSelectedWorkItem);
   const { activeSprint } = useActiveSprint(activeWorkspaceId, projectId);
 
-  const { byStatus, items, loading, error, mutation, createItem, updateStatus, addDependency, archiveItem } = useWorkItems(projectId);
+  const { items, dependencyGraph, loading, error, mutation, createItem, updateStatus, addDependency, archiveItem } = useWorkItems(projectId);
   const { notes, getNote, setNote } = useWorkItemNotes(activeWorkspaceId, projectId);
 
   const [composerLane, setComposerLane] = useState<WorkItemStatus | null>(null);
   const [composer, setComposer] = useState<ComposerState>(() => makeComposer(userId));
-  const [dependencyFrom, setDependencyFrom] = useState("");
-  const [dependencyTo, setDependencyTo] = useState("");
-  const [showDependencyTools, setShowDependencyTools] = useState(false);
+  const [showDependencyInspector, setShowDependencyInspector] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
@@ -230,7 +254,7 @@ export function BoardPage() {
   const [sprintBacklog, setSprintBacklog] = useState<BacklogItemView[]>([]);
   const [sprintLoading, setSprintLoading] = useState(false);
   const [sprintError, setSprintError] = useState<string | null>(null);
-  const [sprintOnly, setSprintOnly] = useState(false);
+  const sprintOnly = projectView.filters.sprintOnly;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -253,12 +277,52 @@ export function BoardPage() {
     return items.filter((item) => item.status === "DONE" && sprintBacklogMap.has(item.workItemId)).length;
   }, [items, sprintBacklogMap]);
 
+  const filteredItems = useMemo(() => {
+    const query = projectView.filters.query.trim().toLowerCase();
+    const assignee = projectView.filters.assignee.trim().toLowerCase();
+    const status = projectView.filters.status;
+    return items.filter((item) => {
+      if (query && !item.title.toLowerCase().includes(query)) {
+        return false;
+      }
+      if (assignee && !(item.assignee ?? "").toLowerCase().includes(assignee)) {
+        return false;
+      }
+      if (status !== "ALL" && item.status !== status) {
+        return false;
+      }
+      if (sprintOnly && !sprintBacklogMap.has(item.workItemId)) {
+        return false;
+      }
+      return true;
+    });
+  }, [items, projectView.filters.assignee, projectView.filters.query, projectView.filters.status, sprintBacklogMap, sprintOnly]);
+
+  const filteredByStatus = useMemo(() => {
+    const grouped: Record<WorkItemStatus, WorkItem[]> = {
+      TODO: [],
+      IN_PROGRESS: [],
+      REVIEW: [],
+      DONE: [],
+      ARCHIVED: []
+    };
+    for (const item of filteredItems) {
+      grouped[item.status].push(item);
+    }
+    return grouped;
+  }, [filteredItems]);
+
+  useEffect(() => {
+    setProjectView(projectId, "board");
+  }, [projectId, setProjectView]);
+
   useEffect(() => {
     if (selectedItemId && !itemIndex[selectedItemId]) {
       setSelectedItemId(null);
       setDetailOpen(false);
+      setSelectedWorkItem(projectId, null);
     }
-  }, [itemIndex, selectedItemId]);
+  }, [itemIndex, projectId, selectedItemId, setSelectedWorkItem]);
 
   useEffect(() => {
     if (!selectedItemId) {
@@ -285,7 +349,7 @@ export function BoardPage() {
     if (!activeSprint?.sprintId) {
       setSprintBacklog([]);
       setSprintError(null);
-      setSprintOnly(false);
+      setProjectFilter(projectId, "sprintOnly", false);
       return;
     }
     let cancelled = false;
@@ -312,7 +376,7 @@ export function BoardPage() {
     return () => {
       cancelled = true;
     };
-  }, [activeSprint?.sprintId]);
+  }, [activeSprint?.sprintId, projectId, setProjectFilter]);
 
   function openComposerFor(lane: WorkItemStatus) {
     setComposerLane(lane);
@@ -362,15 +426,14 @@ export function BoardPage() {
     }
   }
 
-  async function onAddDependency() {
-    if (!dependencyFrom || !dependencyTo || dependencyFrom === dependencyTo) {
+  async function onAddDependency(fromWorkItemId: string, toWorkItemId: string) {
+    if (!fromWorkItemId || !toWorkItemId || fromWorkItemId === toWorkItemId) {
       setLocalError("Select two different tasks for dependency");
       return;
     }
     setLocalError(null);
     try {
-      await addDependency(dependencyFrom, { toWorkItemId: dependencyTo, type: "FS" });
-      setDependencyTo("");
+      await addDependency(fromWorkItemId, { toWorkItemId, type: "FS" });
     } catch (e) {
       setLocalError(e instanceof Error ? e.message : "Failed to create dependency");
     }
@@ -431,22 +494,57 @@ export function BoardPage() {
     await updateStatus(workItemId, nextStatus);
   }
 
+  function statusByDirection(current: WorkItemStatus, direction: "left" | "right"): WorkItemStatus {
+    const order: WorkItemStatus[] = ["TODO", "IN_PROGRESS", "REVIEW", "DONE"];
+    const currentIndex = order.indexOf(current);
+    if (currentIndex < 0) {
+      return current;
+    }
+    if (direction === "left") {
+      return order[Math.max(0, currentIndex - 1)];
+    }
+    return order[Math.min(order.length - 1, currentIndex + 1)];
+  }
+
+  async function moveByKeyboard(workItemId: string, direction: "left" | "right") {
+    const current = itemIndex[workItemId];
+    if (!current) {
+      return;
+    }
+    const next = statusByDirection(current.status, direction);
+    if (next === current.status) {
+      return;
+    }
+    await updateStatus(workItemId, next);
+  }
+
   function openDetails(workItemId: string) {
     setSelectedItemId(workItemId);
+    setSelectedWorkItem(projectId, workItemId);
     setDetailOpen(true);
   }
 
   return (
     <section className="orbit-notion-layout">
+      <ProjectViewTabs />
+      <ProjectFilterBar
+        title="Task Database"
+        subtitle="Board view shares the same query context with table, timeline, calendar, and dashboard."
+      />
       <article className="orbit-card orbit-notion-toolbar">
         <div className="orbit-notion-toolbar__head">
-          <h2 style={{ margin: 0 }}>Task Database</h2>
+          <h2 style={{ margin: 0 }}>Board Operations</h2>
           <div className="orbit-notion-toolbar__actions">
             <button className="orbit-button" type="button" onClick={() => openComposerFor("TODO")}>
               + New Task
             </button>
-            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setShowDependencyTools((value) => !value)}>
-              {showDependencyTools ? "Hide Tools" : "More"}
+            <button
+              className="orbit-button orbit-button--ghost"
+              type="button"
+              onClick={() => setShowDependencyInspector((value) => !value)}
+              disabled={!selectedItemId}
+            >
+              {showDependencyInspector ? "Hide Dependencies" : "Dependencies"}
             </button>
             <button
               className="orbit-button orbit-button--ghost"
@@ -466,7 +564,11 @@ export function BoardPage() {
             <span>
               Backlog {sprintBacklog.length} · Done {sprintDoneCount}
             </span>
-            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setSprintOnly((value) => !value)}>
+            <button
+              className="orbit-button orbit-button--ghost"
+              type="button"
+              onClick={() => setProjectFilter(projectId, "sprintOnly", !sprintOnly)}
+            >
               {sprintOnly ? "All Tasks" : "Sprint Only"}
             </button>
             <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint")}>
@@ -481,29 +583,6 @@ export function BoardPage() {
             </button>
           </div>
         )}
-        {showDependencyTools ? (
-          <div className="orbit-notion-toolbar__dependencies">
-            <select className="orbit-input" value={dependencyFrom} onChange={(event) => setDependencyFrom(event.target.value)}>
-              <option value="">From task...</option>
-              {items.map((item) => (
-                <option key={item.workItemId} value={item.workItemId}>
-                  {item.title}
-                </option>
-              ))}
-            </select>
-            <select className="orbit-input" value={dependencyTo} onChange={(event) => setDependencyTo(event.target.value)}>
-              <option value="">To task...</option>
-              {items.map((item) => (
-                <option key={item.workItemId} value={item.workItemId}>
-                  {item.title}
-                </option>
-              ))}
-            </select>
-            <button className="orbit-button orbit-button--ghost" type="button" onClick={onAddDependency}>
-              Add Link
-            </button>
-          </div>
-        ) : null}
         {loading ? <p style={{ margin: 0 }}>Loading tasks...</p> : null}
         {error ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{error}</p> : null}
         {mutation.error ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{mutation.error}</p> : null}
@@ -531,14 +610,14 @@ export function BoardPage() {
                 key={lane.status}
                 status={lane.status}
                 title={lane.title}
-                count={(sprintOnly ? byStatus[lane.status].filter((item) => sprintBacklogMap.has(item.workItemId)) : byStatus[lane.status]).length}
+                count={filteredByStatus[lane.status].length}
                 composerOpen={composerLane === lane.status}
                 composer={composer}
                 onComposerChange={onComposerChange}
                 onComposerSubmit={submitComposer}
                 onComposerCancel={closeComposer}
               >
-                {(sprintOnly ? byStatus[lane.status].filter((item) => sprintBacklogMap.has(item.workItemId)) : byStatus[lane.status]).map((item) => (
+                {filteredByStatus[lane.status].map((item) => (
                   <BoardCard
                     key={item.workItemId}
                     item={item}
@@ -546,6 +625,7 @@ export function BoardPage() {
                     isSelected={selectedItemId === item.workItemId}
                     notePreview={summarizeMarkdown(notes[item.workItemId] ?? "")}
                     onOpen={openDetails}
+                    onMoveByKeyboard={moveByKeyboard}
                   />
                 ))}
               </Lane>
@@ -655,11 +735,20 @@ export function BoardPage() {
         ) : null}
       </div>
 
-      {byStatus.ARCHIVED.length > 0 ? (
+      <DependencyInspectorPanel
+        open={showDependencyInspector}
+        selectedWorkItemId={selectedItemId}
+        items={items}
+        edges={dependencyGraph.edges}
+        onClose={() => setShowDependencyInspector(false)}
+        onAddDependency={onAddDependency}
+      />
+
+      {filteredByStatus.ARCHIVED.length > 0 ? (
         <article className="orbit-card" style={{ padding: 14 }}>
           <h3 style={{ marginTop: 0 }}>Archived</h3>
           <div style={{ display: "grid", gap: 8 }}>
-            {byStatus.ARCHIVED.map((item) => (
+            {filteredByStatus.ARCHIVED.map((item) => (
               <button
                 key={item.workItemId}
                 type="button"

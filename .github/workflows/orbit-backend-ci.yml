@@ -38,6 +38,11 @@ jobs:
         run: |
           if [ -d "backend/orbit-platform/services/${{ matrix.service }}" ]; then
             cd "backend/orbit-platform/services/${{ matrix.service }}"
+            if [ ! -f "./gradlew" ]; then
+              echo "Missing gradlew for ${{ matrix.service }}"
+              exit 1
+            fi
+            chmod +x ./gradlew
             ./gradlew test build
           else
             echo "Service ${{ matrix.service }} not scaffolded yet; failing intentionally"

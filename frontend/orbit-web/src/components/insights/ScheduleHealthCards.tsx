@@ -34,6 +34,19 @@ export function ScheduleHealthCards({ health, confidence, topRisks, fallback }: 
                 <li key={action}>{action}</li>
               ))}
             </ul>
+            {risk.evidence.length > 0 ? (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                {risk.evidence.map((entry) => (
+                  <a
+                    key={entry}
+                    className="orbit-link-button orbit-link-button--tab"
+                    href={`/app/projects/table?evidence=${encodeURIComponent(entry)}`}
+                  >
+                    {entry}
+                  </a>
+                ))}
+              </div>
+            ) : null}
           </div>
         ))}
       </div>

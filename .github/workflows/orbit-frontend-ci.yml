@@ -25,3 +25,19 @@ jobs:
           npm run lint
           npm run test
           npm run build
+      - name: Install e2e tooling
+        run: |
+          cd tests/e2e
+          npm install
+          npx playwright install --with-deps chromium
+      - name: Run e2e smoke
+        env:
+          ORBIT_E2E_NO_WEBSERVER: "1"
+          ORBIT_E2E_BASE_URL: http://127.0.0.1:4173
+        run: |
+          cd frontend/orbit-web
+          npm run preview -- --host 127.0.0.1 --port 4173 &
+          PREVIEW_PID=$!
+          cd ../../tests/e2e
+          npx playwright test -c playwright.config.ts us7-deeplink-auth-bounce.spec.ts --project=chromium
+          kill $PREVIEW_PID

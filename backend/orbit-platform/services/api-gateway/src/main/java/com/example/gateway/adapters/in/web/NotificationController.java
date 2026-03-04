@@ -37,6 +37,13 @@ public class NotificationController {
         return notificationService.markRead(userId, notificationId);
     }
 
+    @PatchMapping("/{notificationId}/resolve")
+    public NotificationResponse resolve(@PathVariable String notificationId,
+                                        JwtAuthenticationToken authentication) {
+        String userId = authentication.getToken().getSubject();
+        return notificationService.markRead(userId, notificationId);
+    }
+
     @PatchMapping("/read-all")
     public NotificationMarkAllReadResponse markAllRead(JwtAuthenticationToken authentication) {
         String userId = authentication.getToken().getSubject();

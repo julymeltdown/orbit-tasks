@@ -23,6 +23,17 @@ export function RiskDistributionWidget({ healthy, warning, atRisk }: Props) {
       <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
         Healthy {healthyPct}% · Warning {warningPct}% · At risk {atRiskPct}%
       </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <a className="orbit-link-button orbit-link-button--tab" href="/app/projects/table?status=DONE">
+          Healthy Projects
+        </a>
+        <a className="orbit-link-button orbit-link-button--tab" href="/app/projects/table?status=REVIEW">
+          Warning Projects
+        </a>
+        <a className="orbit-link-button orbit-link-button--tab" href="/app/projects/table?status=TODO">
+          At Risk Projects
+        </a>
+      </div>
     </article>
   );
 }

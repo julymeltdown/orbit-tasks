@@ -160,6 +160,37 @@ function AppOverviewPage() {
     };
   }, []);
 
+  const downstreams = React.useMemo(() => {
+    if (!payload) {
+      return [];
+    }
+    const raw = payload.downstreams;
+    if (!Array.isArray(raw)) {
+      return [];
+    }
+    return raw
+      .map((entry) => {
+        if (!entry || typeof entry !== "object") {
+          return null;
+        }
+        const next = entry as { service?: unknown; path?: unknown; fields?: unknown };
+        return {
+          service: typeof next.service === "string" ? next.service : "unknown",
+          path: typeof next.path === "string" ? next.path : "-",
+          fields: Array.isArray(next.fields) ? next.fields.filter((field): field is string => typeof field === "string") : []
+        };
+      })
+      .filter((entry): entry is { service: string; path: string; fields: string[] } => entry !== null);
+  }, [payload]);
+
+  const joinStrategy = React.useMemo(() => {
+    if (!payload) {
+      return "-";
+    }
+    const value = payload.joinStrategy;
+    return typeof value === "string" ? value : "-";
+  }, [payload]);
+
   return (
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 8", padding: 20 }}>
@@ -168,22 +199,74 @@ function AppOverviewPage() {
           워크스페이스·보드·타임라인·협업 인박스가 연결된 운영 대시보드입니다.
         </p>
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
-        {payload ? (
-          <>
-            <p style={{ marginTop: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
-              Active recipe: <code>{recipeKey}</code>
-            </p>
-            <pre className="orbit-panel" style={{ padding: 12, margin: 0, fontSize: 12, whiteSpace: "pre-wrap" }}>
-              {JSON.stringify(payload, null, 2)}
-            </pre>
-          </>
-        ) : (
+        {!payload ? (
           <div className="orbit-panel" style={{ padding: 12 }}>{loading ? "Loading aggregate recipes..." : "No aggregate payload available."}</div>
-        )}
+        ) : null}
+
+        {payload ? (
+          <div style={{ display: "grid", gap: 12 }}>
+            <div className="orbit-panel" style={{ padding: 12, display: "grid", gap: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <strong>Aggregation Status</strong>
+                <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>Recipe: {recipeKey}</span>
+              </div>
+              <div style={{ fontSize: 13, color: "var(--orbit-text-subtle)" }}>
+                Join strategy: <strong style={{ color: "var(--orbit-text)" }}>{joinStrategy}</strong>
+              </div>
+            </div>
+
+            <div className="orbit-panel" style={{ padding: 12, display: "grid", gap: 8 }}>
+              <strong>Connected Services</strong>
+              {downstreams.length === 0 ? (
+                <span style={{ color: "var(--orbit-text-subtle)", fontSize: 13 }}>No downstream metadata provided.</span>
+              ) : (
+                <div style={{ display: "grid", gap: 8 }}>
+                  {downstreams.map((downstream, index) => (
+                    <div
+                      key={`${downstream.service}-${downstream.path}-${index}`}
+                      style={{
+                        border: "1px solid var(--orbit-border)",
+                        padding: 10,
+                        background: "var(--orbit-surface-1)",
+                        display: "grid",
+                        gap: 6
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                        <strong>{downstream.service}</strong>
+                        <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{downstream.path}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {downstream.fields.length === 0 ? (
+                          <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>No field hints</span>
+                        ) : (
+                          downstream.fields.map((field) => (
+                            <span
+                              key={field}
+                              style={{
+                                fontSize: 11,
+                                padding: "4px 8px",
+                                border: "1px solid var(--orbit-border)",
+                                background: "var(--orbit-surface-2)"
+                              }}
+                            >
+                              {field}
+                            </span>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
       </article>
       <article className="orbit-card" style={{ gridColumn: "span 4", padding: 20 }}>
         <h3 style={{ marginTop: 0 }}>Health</h3>
         <p style={{ fontSize: 40, fontWeight: 900, margin: "6px 0 0" }}>94%</p>
+        <p style={{ marginBottom: 0, color: "var(--orbit-text-subtle)", fontSize: 13 }}>Overview cards now use normalized summary instead of raw payload JSON.</p>
       </article>
     </section>
   );

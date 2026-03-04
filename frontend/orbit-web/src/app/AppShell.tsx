@@ -52,19 +52,12 @@ export function AppShell() {
       </header>
 
       <aside className="orbit-shell__side">
-        <nav style={{ display: "grid", gap: 4, padding: "0 10px" }}>
+        <nav className="orbit-side-nav" aria-label="Primary navigation">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
-              style={({ isActive }) => ({
-                textDecoration: "none",
-                color: "var(--orbit-text)",
-                fontWeight: isActive ? 800 : 600,
-                border: "1px solid var(--orbit-border)",
-                padding: "12px 10px",
-                background: isActive ? "var(--orbit-surface-3)" : "var(--orbit-surface-1)"
-              })}
+              className={({ isActive }) => `orbit-side-link${isActive ? " is-active" : ""}`}
             >
               {item.label}
             </NavLink>

@@ -3,6 +3,7 @@
   display: grid;
   grid-template-columns: var(--orbit-sidebar-w) 1fr var(--orbit-panel-w);
   grid-template-rows: auto 1fr;
+  position: relative;
 }
 
 .orbit-shell__top {
@@ -22,12 +23,16 @@
 .orbit-shell__side {
   border-right: 1px solid var(--orbit-border);
   background: var(--orbit-surface-1);
-  padding: 20px 0;
+  padding: 18px 0;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .orbit-shell__content {
   padding: 18px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .orbit-shell__rail {
@@ -42,15 +47,45 @@
   gap: 16px;
 }
 
+.orbit-side-nav {
+  display: grid;
+  gap: 6px;
+  padding: 0 12px;
+}
+
+.orbit-side-link {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  width: 100%;
+  text-decoration: none;
+  color: var(--orbit-text);
+  border: 1px solid var(--orbit-border);
+  background: var(--orbit-surface-1);
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.orbit-side-link.is-active {
+  font-weight: 800;
+  background: var(--orbit-surface-3);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orbit-accent) 45%, transparent);
+}
+
 @media (max-width: 1280px) {
   .orbit-shell {
-    grid-template-columns: 68px 1fr 320px;
+    grid-template-columns: 214px 1fr 300px;
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1140px) {
   .orbit-shell {
-    grid-template-columns: 64px 1fr;
+    grid-template-columns: 206px 1fr;
   }
 
   .orbit-shell__rail {
@@ -72,11 +107,26 @@
     grid-column: 1;
     border-right: none;
     border-bottom: 1px solid var(--orbit-border);
-    padding: 10px 16px;
+    padding: 10px 12px;
+    overflow: visible;
   }
 
   .orbit-shell__content {
     grid-column: 1;
     padding: 12px;
+  }
+
+  .orbit-side-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0;
+  }
+
+  .orbit-side-link {
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px;
+    font-size: 11px;
   }
 }

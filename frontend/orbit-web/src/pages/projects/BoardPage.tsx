@@ -4,7 +4,6 @@ import remarkGfm from "remark-gfm";
 import {
   DndContext,
   type DragEndEvent,
-  DragOverlay,
   PointerSensor,
   TouchSensor,
   pointerWithin,
@@ -74,7 +73,6 @@ function Lane({
   children,
   composerOpen,
   composer,
-  onOpenComposer,
   onComposerChange,
   onComposerSubmit,
   onComposerCancel
@@ -85,7 +83,6 @@ function Lane({
   children: ReactNode;
   composerOpen: boolean;
   composer: ComposerState;
-  onOpenComposer: (lane: WorkItemStatus) => void;
   onComposerChange: (field: keyof ComposerState, value: string) => void;
   onComposerSubmit: (lane: WorkItemStatus) => void;
   onComposerCancel: () => void;
@@ -102,9 +99,6 @@ function Lane({
           <h3 className="orbit-notion-lane__title">{title}</h3>
           <span className="orbit-notion-lane__count">{count}</span>
         </div>
-        <button className="orbit-button orbit-button--ghost orbit-notion-lane__new" type="button" onClick={() => onOpenComposer(status)}>
-          + New
-        </button>
       </header>
 
       {composerOpen ? (
@@ -150,21 +144,15 @@ function Lane({
 function BoardCard({
   item,
   notePreview,
-  canPlanSprint,
   inSprint,
-  sprintLoading,
   onOpen,
-  onAddToSprint,
-  onArchive
+  isSelected
 }: {
   item: WorkItem;
   notePreview: string;
-  canPlanSprint: boolean;
   inSprint: boolean;
-  sprintLoading: boolean;
   onOpen: (workItemId: string) => void;
-  onAddToSprint: (workItemId: string) => void;
-  onArchive: (workItemId: string) => void;
+  isSelected: boolean;
 }) {
   const { attributes, listeners, setNodeRef: setDragNodeRef, transform, isDragging } = useDraggable({
     id: `item-${item.workItemId}`,
@@ -194,7 +182,7 @@ function BoardCard({
       style={{
         transform: CSS.Translate.toString(transform),
         opacity: isDragging ? 0.42 : 1,
-        borderColor: isOver ? "var(--orbit-accent)" : undefined
+        borderColor: isOver ? "var(--orbit-accent)" : isSelected ? "var(--orbit-accent)" : undefined
       }}
     >
       <div className="orbit-notion-card__top orbit-notion-card__top--drag" aria-label={`Drag ${item.title}`} {...listeners} {...attributes}>
@@ -214,26 +202,7 @@ function BoardCard({
         </div>
         {notePreview ? <p className="orbit-notion-card__note">{notePreview}</p> : null}
       </button>
-
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
-        {canPlanSprint && !inSprint ? (
-          <button className="orbit-button orbit-button--ghost orbit-notion-card__archive" type="button" onClick={() => onAddToSprint(item.workItemId)} disabled={sprintLoading}>
-            + Sprint
-          </button>
-        ) : null}
-        <button className="orbit-button orbit-button--ghost orbit-notion-card__archive" type="button" onClick={() => onArchive(item.workItemId)}>
-          Archive
-        </button>
-      </div>
     </article>
-  );
-}
-
-function OverlayCard({ title }: { title: string }) {
-  return (
-    <div className="orbit-panel orbit-notion-overlay">
-      <strong>{title}</strong>
-    </div>
   );
 }
 
@@ -253,11 +222,11 @@ export function BoardPage() {
   const [dependencyTo, setDependencyTo] = useState("");
   const [showDependencyTools, setShowDependencyTools] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [noteMode, setNoteMode] = useState<"edit" | "preview">("edit");
   const [noteDirty, setNoteDirty] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const [draggingTitle, setDraggingTitle] = useState<string | null>(null);
   const [sprintBacklog, setSprintBacklog] = useState<BacklogItemView[]>([]);
   const [sprintLoading, setSprintLoading] = useState(false);
   const [sprintError, setSprintError] = useState<string | null>(null);
@@ -285,18 +254,11 @@ export function BoardPage() {
   }, [items, sprintBacklogMap]);
 
   useEffect(() => {
-    if (!selectedItemId && items.length > 0) {
-      setSelectedItemId(items[0].workItemId);
-      return;
-    }
-    if (selectedItemId && !itemIndex[selectedItemId] && items.length > 0) {
-      setSelectedItemId(items[0].workItemId);
-      return;
-    }
-    if (selectedItemId && !itemIndex[selectedItemId] && items.length === 0) {
+    if (selectedItemId && !itemIndex[selectedItemId]) {
       setSelectedItemId(null);
+      setDetailOpen(false);
     }
-  }, [items, itemIndex, selectedItemId]);
+  }, [itemIndex, selectedItemId]);
 
   useEffect(() => {
     if (!selectedItemId) {
@@ -393,6 +355,7 @@ export function BoardPage() {
       }
 
       setSelectedItemId(created.workItemId);
+      setDetailOpen(true);
       closeComposer();
     } catch (e) {
       setLocalError(e instanceof Error ? e.message : "Failed to create task");
@@ -446,13 +409,11 @@ export function BoardPage() {
     const activeId = String(event.active.id ?? "");
     const overId = String(event.over?.id ?? "");
     if (!activeId.startsWith("item-")) {
-      setDraggingTitle(null);
       return;
     }
     const workItemId = activeId.replace("item-", "");
     const current = itemIndex[workItemId];
     if (!current) {
-      setDraggingTitle(null);
       return;
     }
 
@@ -465,52 +426,56 @@ export function BoardPage() {
       nextStatus = itemIndex[targetId]?.status ?? null;
     }
     if (!nextStatus || nextStatus === current.status) {
-      setDraggingTitle(null);
       return;
     }
+    await updateStatus(workItemId, nextStatus);
+  }
 
-    try {
-      await updateStatus(workItemId, nextStatus);
-    } finally {
-      setDraggingTitle(null);
-    }
+  function openDetails(workItemId: string) {
+    setSelectedItemId(workItemId);
+    setDetailOpen(true);
   }
 
   return (
     <section className="orbit-notion-layout">
       <article className="orbit-card orbit-notion-toolbar">
-        <div>
-          <h2 style={{ marginTop: 0, marginBottom: 6 }}>Task Database</h2>
-        </div>
-        <div className="orbit-notion-toolbar__actions">
-          <button className="orbit-button" type="button" onClick={() => openComposerFor("TODO")}>
-            + New Task
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setSprintOnly((value) => !value)} disabled={!activeSprint}>
-            {sprintOnly ? "Show All Tasks" : "Sprint Tasks Only"}
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint")}>
-            Open Sprint
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setShowDependencyTools((value) => !value)}>
-            Dependencies
-          </button>
+        <div className="orbit-notion-toolbar__head">
+          <h2 style={{ margin: 0 }}>Task Database</h2>
+          <div className="orbit-notion-toolbar__actions">
+            <button className="orbit-button" type="button" onClick={() => openComposerFor("TODO")}>
+              + New Task
+            </button>
+            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setShowDependencyTools((value) => !value)}>
+              {showDependencyTools ? "Hide Tools" : "More"}
+            </button>
+            <button
+              className="orbit-button orbit-button--ghost"
+              type="button"
+              onClick={() => setDetailOpen((value) => !value)}
+              disabled={!selectedItem}
+            >
+              {detailOpen ? "Hide Detail" : "Show Detail"}
+            </button>
+          </div>
         </div>
         {activeSprint ? (
-          <div className="orbit-panel orbit-sprint-bridge">
-            <div>
-              <strong>{activeSprint.name}</strong>
-              <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
-                {activeSprint.startDate} ~ {activeSprint.endDate}
-              </div>
-            </div>
-            <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)", textAlign: "right" }}>
+          <div className="orbit-notion-toolbar__meta">
+            <span>
+              {activeSprint.name} · {activeSprint.startDate} ~ {activeSprint.endDate}
+            </span>
+            <span>
               Backlog {sprintBacklog.length} · Done {sprintDoneCount}
-            </div>
+            </span>
+            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setSprintOnly((value) => !value)}>
+              {sprintOnly ? "All Tasks" : "Sprint Only"}
+            </button>
+            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint")}>
+              Open Sprint
+            </button>
           </div>
         ) : (
-          <div className="orbit-panel orbit-sprint-bridge">
-            <span style={{ color: "var(--orbit-text-subtle)", fontSize: 12 }}>No active sprint selected</span>
+          <div className="orbit-notion-toolbar__meta">
+            <span>No active sprint selected</span>
             <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint")}>
               Create Sprint
             </button>
@@ -550,12 +515,15 @@ export function BoardPage() {
         <DndContext
           sensors={sensors}
           collisionDetection={pointerWithin}
-          onDragStart={(event) => {
-            const workItemId = String(event.active.id).replace("item-", "");
-            setDraggingTitle(itemIndex[workItemId]?.title ?? null);
+          accessibility={{
+            announcements: {
+              onDragStart: () => "",
+              onDragOver: () => "",
+              onDragEnd: () => "",
+              onDragCancel: () => ""
+            }
           }}
           onDragEnd={onDragEnd}
-          onDragCancel={() => setDraggingTitle(null)}
         >
           <section className="orbit-notion-board" aria-label="Kanban board">
             {FLOW_LANES.map((lane) => (
@@ -566,7 +534,6 @@ export function BoardPage() {
                 count={(sprintOnly ? byStatus[lane.status].filter((item) => sprintBacklogMap.has(item.workItemId)) : byStatus[lane.status]).length}
                 composerOpen={composerLane === lane.status}
                 composer={composer}
-                onOpenComposer={openComposerFor}
                 onComposerChange={onComposerChange}
                 onComposerSubmit={submitComposer}
                 onComposerCancel={closeComposer}
@@ -575,27 +542,28 @@ export function BoardPage() {
                   <BoardCard
                     key={item.workItemId}
                     item={item}
-                    canPlanSprint={Boolean(activeSprint?.sprintId)}
                     inSprint={sprintBacklogMap.has(item.workItemId)}
-                    sprintLoading={sprintLoading}
+                    isSelected={selectedItemId === item.workItemId}
                     notePreview={summarizeMarkdown(notes[item.workItemId] ?? "")}
-                    onOpen={setSelectedItemId}
-                    onAddToSprint={addItemToSprint}
-                    onArchive={archiveItem}
+                    onOpen={openDetails}
                   />
                 ))}
               </Lane>
             ))}
           </section>
-          <DragOverlay>{draggingTitle ? <OverlayCard title={draggingTitle} /> : null}</DragOverlay>
         </DndContext>
 
-        <aside className="orbit-card orbit-notion-detail">
-          {selectedItem ? (
+        {detailOpen && selectedItem ? (
+          <aside className="orbit-card orbit-notion-detail">
             <>
               <header className="orbit-notion-detail__header">
-                <p className="orbit-notion-detail__label">Page</p>
-                <h3>{selectedItem.title}</h3>
+                <p className="orbit-notion-detail__label">Detail</p>
+                <div className="orbit-notion-detail__head-row">
+                  <h3>{selectedItem.title}</h3>
+                  <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setDetailOpen(false)}>
+                    Close
+                  </button>
+                </div>
               </header>
               <div className="orbit-notion-detail__meta">
                 <span className="orbit-notion-pill">{selectedItem.type}</span>
@@ -683,14 +651,8 @@ export function BoardPage() {
                 )}
               </section>
             </>
-          ) : (
-            <div className="orbit-panel" style={{ padding: 12 }}>
-              <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>
-                Select a card to open page-style details and markdown editor.
-              </p>
-            </div>
-          )}
-        </aside>
+          </aside>
+        ) : null}
       </div>
 
       {byStatus.ARCHIVED.length > 0 ? (

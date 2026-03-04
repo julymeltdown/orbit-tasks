@@ -38,6 +38,10 @@
   gap: 10px;
 }
 
+.orbit-mobile-menu-button {
+  display: none;
+}
+
 .orbit-shell__side {
   border-right: 1px solid var(--orbit-border);
   background: var(--orbit-surface-1);
@@ -123,6 +127,10 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orbit-accent) 45%, transparent);
 }
 
+.orbit-mobile-side-actions {
+  display: none;
+}
+
 @media (max-width: 1280px) {
   .orbit-shell {
     grid-template-columns: 214px 1fr 300px;
@@ -142,7 +150,7 @@
 @media (max-width: 768px) {
   .orbit-shell {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto 1fr;
   }
 
   .orbit-shell__top {
@@ -151,26 +159,36 @@
   }
 
   .orbit-shell__side {
-    display: block;
-    grid-column: 1;
-    position: sticky;
+    display: none;
+    position: fixed;
     top: 58px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 20;
     border-right: none;
-    border-bottom: 1px solid var(--orbit-border);
-    padding: 8px 0;
-    overflow-x: auto;
-    overflow-y: hidden;
+    border-top: 1px solid var(--orbit-border);
+    border-bottom: none;
+    padding: 10px;
+    overflow: auto;
     background: color-mix(in oklab, var(--orbit-bg) 94%, transparent);
     backdrop-filter: blur(8px);
+  }
+
+  .orbit-shell__side.is-open {
+    display: block;
   }
 
   .orbit-side-nav {
     display: flex;
     gap: 8px;
-    padding: 0 12px;
-    width: max-content;
-    min-width: 100%;
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    min-width: 0;
+    margin-top: 8px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .orbit-side-link {
@@ -211,7 +229,24 @@
     display: inline-flex;
   }
 
+  .orbit-mobile-menu-button {
+    display: inline-flex;
+  }
+
   .orbit-mobile-actions .orbit-button {
+    min-height: 34px;
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+
+  .orbit-mobile-side-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .orbit-mobile-side-actions .orbit-button,
+  .orbit-mobile-side-actions .orbit-link-button {
     min-height: 34px;
     padding: 8px 10px;
     font-size: 10px;

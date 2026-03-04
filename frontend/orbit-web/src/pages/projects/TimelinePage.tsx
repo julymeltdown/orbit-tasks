@@ -38,15 +38,12 @@ export function TimelinePage() {
     <section style={{ display: "grid", gap: 14 }}>
       <article className="orbit-card" style={{ padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Timeline</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>
-          동일 Work Item 데이터를 타임라인으로 표시합니다. 상태 변경은 보드/테이블과 즉시 동기화됩니다.
-        </p>
         {loading ? <p>Loading timeline...</p> : null}
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
       </article>
 
       <article className="orbit-card" style={{ padding: 14, overflowX: "auto" }}>
-        <div style={{ minWidth: 900, display: "grid", gap: 8 }}>
+        <div style={{ minWidth: "max(100%, 56rem)", display: "grid", gap: 8 }}>
           {items.map((item) => {
             const start = toDate(item.startAt) ?? new Date(item.createdAt);
             const end = toDate(item.dueAt) ?? new Date(start.getTime() + 2 * 24 * 60 * 60 * 1000);
@@ -59,7 +56,7 @@ export function TimelinePage() {
                   <select
                     className="orbit-input"
                     value={item.status}
-                    style={{ width: 170 }}
+                    style={{ width: "10.5rem" }}
                     onChange={(event) => updateStatus(item.workItemId, event.target.value as WorkItemStatus)}
                   >
                     {STATUS_STEPS.map((status) => (

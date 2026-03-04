@@ -69,8 +69,7 @@ export function PortfolioOverviewPage() {
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Portfolio Overview</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>Executive visibility for health trend and escalation targets.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10.5rem, 1fr))", gap: 8 }}>
           <input className="orbit-input" value={portfolioId} onChange={(event) => setPortfolioId(event.target.value)} />
           <button className="orbit-button" type="button" onClick={loadOverview}>
             Load Overview

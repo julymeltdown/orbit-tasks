@@ -223,9 +223,6 @@ export function AppShell() {
           <p style={{ marginTop: 0, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             Orbit Intelligence
           </p>
-          <p style={{ marginBottom: 0, lineHeight: 1.5, color: "var(--orbit-text-subtle)" }}>
-            Real-time schedule health, mention heat, and deep-link activity are streamed here.
-          </p>
           <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
             {legacyDirectLinks.map((item) => (
               <NavLink key={item.to} to={item.to} className="orbit-link-button" style={{ fontSize: 10, padding: "8px 10px" }}>

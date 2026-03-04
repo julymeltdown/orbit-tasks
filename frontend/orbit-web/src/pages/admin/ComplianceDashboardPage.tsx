@@ -137,9 +137,6 @@ export function ComplianceDashboardPage() {
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Compliance Dashboard</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>
-          Audit events, retention controls, and AI transmission policies for enterprise governance.
-        </p>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="orbit-button" type="button" onClick={refreshEvents}>
             Refresh Audit Events

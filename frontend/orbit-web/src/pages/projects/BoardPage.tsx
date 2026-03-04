@@ -7,15 +7,19 @@ import {
   DragOverlay,
   PointerSensor,
   TouchSensor,
+  pointerWithin,
   useDraggable,
   useDroppable,
   useSensor,
   useSensors
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { useNavigate } from "react-router-dom";
+import { request } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/authStore";
 import { useProjectStore } from "@/stores/projectStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
 import { useWorkItemNotes } from "@/features/workitems/hooks/useWorkItemNotes";
 import { type WorkItem, type WorkItemPriority, type WorkItemStatus, type WorkItemType, useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 
@@ -32,6 +36,13 @@ interface ComposerState {
   priority: WorkItemPriority;
   assignee: string;
   dueAt: string;
+}
+
+interface BacklogItemView {
+  backlogItemId: string;
+  workItemId: string;
+  rank: number;
+  status: string;
 }
 
 function makeComposer(assignee: string): ComposerState {
@@ -139,15 +150,23 @@ function Lane({
 function BoardCard({
   item,
   notePreview,
+  canPlanSprint,
+  inSprint,
+  sprintLoading,
   onOpen,
+  onAddToSprint,
   onArchive
 }: {
   item: WorkItem;
   notePreview: string;
+  canPlanSprint: boolean;
+  inSprint: boolean;
+  sprintLoading: boolean;
   onOpen: (workItemId: string) => void;
+  onAddToSprint: (workItemId: string) => void;
   onArchive: (workItemId: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef: setDragNodeRef, transform, isDragging } = useDraggable({
     id: `item-${item.workItemId}`,
     data: {
       kind: "card",
@@ -155,6 +174,18 @@ function BoardCard({
       status: item.status
     }
   });
+  const { setNodeRef: setDropNodeRef, isOver } = useDroppable({
+    id: `item-${item.workItemId}`,
+    data: {
+      kind: "card-target",
+      workItemId: item.workItemId,
+      status: item.status
+    }
+  });
+  const setNodeRef = (node: HTMLElement | null) => {
+    setDragNodeRef(node);
+    setDropNodeRef(node);
+  };
 
   return (
     <article
@@ -162,21 +193,16 @@ function BoardCard({
       className="orbit-panel orbit-notion-card orbit-animate-card"
       style={{
         transform: CSS.Translate.toString(transform),
-        opacity: isDragging ? 0.42 : 1
+        opacity: isDragging ? 0.42 : 1,
+        borderColor: isOver ? "var(--orbit-accent)" : undefined
       }}
     >
-      <div className="orbit-notion-card__top">
-        <button
-          className="orbit-notion-card__drag"
-          type="button"
-          onClick={(event) => event.stopPropagation()}
-          aria-label={`Drag ${item.title}`}
-          {...listeners}
-          {...attributes}
-        >
+      <div className="orbit-notion-card__top orbit-notion-card__top--drag" aria-label={`Drag ${item.title}`} {...listeners} {...attributes}>
+        <span className="orbit-notion-card__drag" aria-hidden>
           ::
-        </button>
+        </span>
         <span className="orbit-notion-pill">{item.priority ?? "MEDIUM"}</span>
+        {inSprint ? <span className="orbit-notion-pill">SPRINT</span> : null}
       </div>
 
       <button className="orbit-notion-card__body" type="button" onClick={() => onOpen(item.workItemId)}>
@@ -189,7 +215,12 @@ function BoardCard({
         {notePreview ? <p className="orbit-notion-card__note">{notePreview}</p> : null}
       </button>
 
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
+        {canPlanSprint && !inSprint ? (
+          <button className="orbit-button orbit-button--ghost orbit-notion-card__archive" type="button" onClick={() => onAddToSprint(item.workItemId)} disabled={sprintLoading}>
+            + Sprint
+          </button>
+        ) : null}
         <button className="orbit-button orbit-button--ghost orbit-notion-card__archive" type="button" onClick={() => onArchive(item.workItemId)}>
           Archive
         </button>
@@ -207,9 +238,11 @@ function OverlayCard({ title }: { title: string }) {
 }
 
 export function BoardPage() {
+  const navigate = useNavigate();
   const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
+  const { activeSprint } = useActiveSprint(activeWorkspaceId, projectId);
 
   const { byStatus, items, loading, error, mutation, createItem, updateStatus, addDependency, archiveItem } = useWorkItems(projectId);
   const { notes, getNote, setNote } = useWorkItemNotes(activeWorkspaceId, projectId);
@@ -225,10 +258,14 @@ export function BoardPage() {
   const [noteDirty, setNoteDirty] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [draggingTitle, setDraggingTitle] = useState<string | null>(null);
+  const [sprintBacklog, setSprintBacklog] = useState<BacklogItemView[]>([]);
+  const [sprintLoading, setSprintLoading] = useState(false);
+  const [sprintError, setSprintError] = useState<string | null>(null);
+  const [sprintOnly, setSprintOnly] = useState(false);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 140, tolerance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 90, tolerance: 6 } })
   );
 
   const itemIndex = useMemo(() => {
@@ -236,6 +273,16 @@ export function BoardPage() {
   }, [items]);
 
   const selectedItem = selectedItemId ? itemIndex[selectedItemId] ?? null : null;
+  const sprintBacklogMap = useMemo(() => {
+    return new Map(
+      sprintBacklog
+        .filter((item) => item.status !== "REMOVED")
+        .map((item) => [item.workItemId, item] as const)
+    );
+  }, [sprintBacklog]);
+  const sprintDoneCount = useMemo(() => {
+    return items.filter((item) => item.status === "DONE" && sprintBacklogMap.has(item.workItemId)).length;
+  }, [items, sprintBacklogMap]);
 
   useEffect(() => {
     if (!selectedItemId && items.length > 0) {
@@ -271,6 +318,39 @@ export function BoardPage() {
     }, 350);
     return () => window.clearTimeout(timer);
   }, [selectedItemId, noteDraft, noteDirty, setNote]);
+
+  useEffect(() => {
+    if (!activeSprint?.sprintId) {
+      setSprintBacklog([]);
+      setSprintError(null);
+      setSprintOnly(false);
+      return;
+    }
+    let cancelled = false;
+    setSprintLoading(true);
+    setSprintError(null);
+    request<BacklogItemView[]>(`/api/agile/sprints/${activeSprint.sprintId}/backlog`)
+      .then((response) => {
+        if (!cancelled) {
+          setSprintBacklog(response);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setSprintError(e instanceof Error ? e.message : "Failed to load sprint backlog");
+          setSprintBacklog([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setSprintLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSprint?.sprintId]);
 
   function openComposerFor(lane: WorkItemStatus) {
     setComposerLane(lane);
@@ -333,6 +413,35 @@ export function BoardPage() {
     }
   }
 
+  async function addItemToSprint(workItemId: string) {
+    if (!activeSprint?.sprintId) {
+      setLocalError("Create or select sprint first");
+      return;
+    }
+    if (sprintBacklogMap.has(workItemId)) {
+      return;
+    }
+    const nextRank = sprintBacklog.length > 0 ? Math.max(...sprintBacklog.map((entry) => entry.rank)) + 1 : 1;
+    setSprintLoading(true);
+    setLocalError(null);
+    try {
+      await request(`/api/agile/sprints/${activeSprint.sprintId}/backlog`, {
+        method: "POST",
+        body: {
+          workItemId,
+          rank: nextRank,
+          status: "READY"
+        }
+      });
+      const refreshed = await request<BacklogItemView[]>(`/api/agile/sprints/${activeSprint.sprintId}/backlog`);
+      setSprintBacklog(refreshed);
+    } catch (e) {
+      setLocalError(e instanceof Error ? e.message : "Failed to add item to sprint");
+    } finally {
+      setSprintLoading(false);
+    }
+  }
+
   async function onDragEnd(event: DragEndEvent) {
     const activeId = String(event.active.id ?? "");
     const overId = String(event.over?.id ?? "");
@@ -372,18 +481,41 @@ export function BoardPage() {
       <article className="orbit-card orbit-notion-toolbar">
         <div>
           <h2 style={{ marginTop: 0, marginBottom: 6 }}>Task Database</h2>
-          <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>
-            Notion-style kanban workflow with click-to-open details and markdown notes.
-          </p>
         </div>
         <div className="orbit-notion-toolbar__actions">
           <button className="orbit-button" type="button" onClick={() => openComposerFor("TODO")}>
             + New Task
           </button>
+          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setSprintOnly((value) => !value)} disabled={!activeSprint}>
+            {sprintOnly ? "Show All Tasks" : "Sprint Tasks Only"}
+          </button>
+          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint")}>
+            Open Sprint
+          </button>
           <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setShowDependencyTools((value) => !value)}>
             Dependencies
           </button>
         </div>
+        {activeSprint ? (
+          <div className="orbit-panel orbit-sprint-bridge">
+            <div>
+              <strong>{activeSprint.name}</strong>
+              <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
+                {activeSprint.startDate} ~ {activeSprint.endDate}
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)", textAlign: "right" }}>
+              Backlog {sprintBacklog.length} · Done {sprintDoneCount}
+            </div>
+          </div>
+        ) : (
+          <div className="orbit-panel orbit-sprint-bridge">
+            <span style={{ color: "var(--orbit-text-subtle)", fontSize: 12 }}>No active sprint selected</span>
+            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint")}>
+              Create Sprint
+            </button>
+          </div>
+        )}
         {showDependencyTools ? (
           <div className="orbit-notion-toolbar__dependencies">
             <select className="orbit-input" value={dependencyFrom} onChange={(event) => setDependencyFrom(event.target.value)}>
@@ -410,12 +542,14 @@ export function BoardPage() {
         {loading ? <p style={{ margin: 0 }}>Loading tasks...</p> : null}
         {error ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{error}</p> : null}
         {mutation.error ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{mutation.error}</p> : null}
+        {sprintError ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{sprintError}</p> : null}
         {localError ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{localError}</p> : null}
       </article>
 
       <div className="orbit-notion-main">
         <DndContext
           sensors={sensors}
+          collisionDetection={pointerWithin}
           onDragStart={(event) => {
             const workItemId = String(event.active.id).replace("item-", "");
             setDraggingTitle(itemIndex[workItemId]?.title ?? null);
@@ -429,7 +563,7 @@ export function BoardPage() {
                 key={lane.status}
                 status={lane.status}
                 title={lane.title}
-                count={byStatus[lane.status].length}
+                count={(sprintOnly ? byStatus[lane.status].filter((item) => sprintBacklogMap.has(item.workItemId)) : byStatus[lane.status]).length}
                 composerOpen={composerLane === lane.status}
                 composer={composer}
                 onOpenComposer={openComposerFor}
@@ -437,12 +571,16 @@ export function BoardPage() {
                 onComposerSubmit={submitComposer}
                 onComposerCancel={closeComposer}
               >
-                {byStatus[lane.status].map((item) => (
+                {(sprintOnly ? byStatus[lane.status].filter((item) => sprintBacklogMap.has(item.workItemId)) : byStatus[lane.status]).map((item) => (
                   <BoardCard
                     key={item.workItemId}
                     item={item}
+                    canPlanSprint={Boolean(activeSprint?.sprintId)}
+                    inSprint={sprintBacklogMap.has(item.workItemId)}
+                    sprintLoading={sprintLoading}
                     notePreview={summarizeMarkdown(notes[item.workItemId] ?? "")}
                     onOpen={setSelectedItemId}
+                    onAddToSprint={addItemToSprint}
                     onArchive={archiveItem}
                   />
                 ))}
@@ -484,6 +622,25 @@ export function BoardPage() {
               <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
                 Due date: {selectedItem.dueAt ? new Date(selectedItem.dueAt).toLocaleDateString() : "Not set"}
               </div>
+              {activeSprint ? (
+                <div className="orbit-panel orbit-notion-sprint-inline">
+                  <div>
+                    <strong style={{ fontSize: 13 }}>{activeSprint.name}</strong>
+                    <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
+                      {activeSprint.startDate} ~ {activeSprint.endDate}
+                    </div>
+                  </div>
+                  {sprintBacklogMap.has(selectedItem.workItemId) ? (
+                    <span className="orbit-notion-pill">
+                      In Sprint · {sprintBacklogMap.get(selectedItem.workItemId)?.status ?? "READY"}
+                    </span>
+                  ) : (
+                    <button className="orbit-button orbit-button--ghost" type="button" onClick={() => addItemToSprint(selectedItem.workItemId)} disabled={sprintLoading}>
+                      Add To Sprint
+                    </button>
+                  )}
+                </div>
+              ) : null}
 
               <section className="orbit-notion-markdown">
                 <div className="orbit-notion-markdown__tabs">

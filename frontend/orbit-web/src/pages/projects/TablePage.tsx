@@ -46,9 +46,8 @@ export function TablePage() {
     <section style={{ display: "grid", gap: 14 }}>
       <article className="orbit-card" style={{ padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Table View</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>대량 편집/필터링/상태 변경/아카이브를 테이블에서 처리합니다.</p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
           <input className="orbit-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="New work item title" />
           <input className="orbit-input" value={assignee} onChange={(event) => setAssignee(event.target.value)} placeholder="Assignee" />
           <select className="orbit-input" value={type} onChange={(event) => setType(event.target.value as WorkItemType)}>
@@ -63,7 +62,7 @@ export function TablePage() {
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-          <select className="orbit-input" style={{ maxWidth: 220 }} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as WorkItemStatus | "ALL")}>
+          <select className="orbit-input" style={{ maxWidth: "14rem" }} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as WorkItemStatus | "ALL")}>
             <option value="ALL">All status</option>
             {STATUS_OPTIONS.map((status) => (
               <option key={status} value={status}>
@@ -81,7 +80,7 @@ export function TablePage() {
 
       <article className="orbit-card" style={{ padding: 16 }}>
         <div style={{ overflowX: "auto", width: "100%" }}>
-          <table style={{ width: "100%", minWidth: 860, borderCollapse: "collapse", fontSize: 13 }}>
+          <table style={{ width: "100%", minWidth: "max(100%, 54rem)", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr>
                 <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>Title</th>
@@ -100,7 +99,7 @@ export function TablePage() {
                   <td>
                     <select
                       className="orbit-input"
-                      style={{ width: 170, minWidth: 170 }}
+                      style={{ width: "10.5rem", minWidth: "10.5rem" }}
                       value={item.status}
                       onChange={(event) => updateStatus(item.workItemId, event.target.value as WorkItemStatus)}
                     >

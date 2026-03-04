@@ -37,9 +37,6 @@ export function WorkspaceEntryPage() {
     <section style={{ display: "grid", gap: 14 }}>
       <article className="orbit-card" style={{ padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Select a workspace</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>
-          워크스페이스 범위와 역할은 identity-access claim에서 동기화됩니다.
-        </p>
 
         {loading && <p style={{ color: "var(--orbit-text-subtle)" }}>Loading workspace claims...</p>}
         {error && (

@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useProjectStore } from "@/stores/projectStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
+import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
 
 interface SprintView {
   sprintId: string;
@@ -40,6 +41,7 @@ export function SprintWorkspacePage() {
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
   const { items: workItems } = useWorkItems(projectId);
+  const { activeSprint, setActiveSprint } = useActiveSprint(activeWorkspaceId, projectId);
 
   const [sprint, setSprint] = useState<SprintView | null>(null);
   const [backlog, setBacklog] = useState<BacklogItemView[]>([]);
@@ -68,6 +70,31 @@ export function SprintWorkspacePage() {
     setDsuHistory(nextDsu);
   }
 
+  useEffect(() => {
+    if (!activeWorkspaceId || !projectId || sprint || !activeSprint?.sprintId) {
+      return;
+    }
+    setSprint({
+      sprintId: activeSprint.sprintId,
+      workspaceId: activeWorkspaceId,
+      projectId,
+      name: activeSprint.name,
+      goal: activeSprint.goal,
+      startDate: activeSprint.startDate,
+      endDate: activeSprint.endDate,
+      capacitySp: activeSprint.capacitySp,
+      status: "ACTIVE"
+    });
+    setSprintName(activeSprint.name);
+    setGoal(activeSprint.goal);
+    setStartDate(activeSprint.startDate);
+    setEndDate(activeSprint.endDate);
+    setCapacitySp(activeSprint.capacitySp);
+    loadBacklogAndDsu(activeSprint.sprintId).catch((e) => {
+      setError(e instanceof Error ? e.message : "Failed to load active sprint context");
+    });
+  }, [activeWorkspaceId, projectId, sprint, activeSprint]);
+
   async function createSprint() {
     if (!activeWorkspaceId) {
       setError("No active workspace selected");
@@ -94,6 +121,15 @@ export function SprintWorkspacePage() {
         }
       });
       setSprint(created);
+      setActiveSprint({
+        sprintId: created.sprintId,
+        name: created.name,
+        goal: created.goal,
+        startDate: created.startDate,
+        endDate: created.endDate,
+        capacitySp: created.capacitySp,
+        updatedAt: new Date().toISOString()
+      });
       await loadBacklogAndDsu(created.sprintId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create sprint");
@@ -158,12 +194,9 @@ export function SprintWorkspacePage() {
     <section style={{ display: "grid", gap: 14 }}>
       <article className="orbit-card" style={{ padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Sprint Workspace</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>
-          스프린트 생성, 백로그 편성, DSU 루프를 한 화면에서 운영합니다.
-        </p>
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
           <input className="orbit-input" value={sprintName} onChange={(event) => setSprintName(event.target.value)} placeholder="Sprint name" />
           <input className="orbit-input" value={goal} onChange={(event) => setGoal(event.target.value)} placeholder="Sprint goal" />
           <input className="orbit-input" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
@@ -191,7 +224,7 @@ export function SprintWorkspacePage() {
 
       <article className="orbit-card" style={{ padding: 16 }}>
         <h3 style={{ marginTop: 0 }}>Backlog</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
           <select className="orbit-input" value={selectedWorkItemId} onChange={(event) => setSelectedWorkItemId(event.target.value)}>
             <option value="">Select work item...</option>
             {workItems

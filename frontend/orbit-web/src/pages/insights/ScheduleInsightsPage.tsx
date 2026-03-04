@@ -81,9 +81,6 @@ export function ScheduleInsightsPage() {
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Schedule Intelligence</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>
-          Deterministic engine + AI structured output with fallback governance.
-        </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 8 }}>
           <input
             className="orbit-input"

@@ -161,13 +161,10 @@ export function TeamManagementPage() {
     <section style={{ display: "grid", gap: 14 }}>
       <article className="orbit-card" style={{ padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Team Management</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>
-          팀 생성, 멤버 초대, 역할 변경 및 soft remove(REMOVED)를 지원합니다.
-        </p>
 
         {error && <p style={{ color: "var(--orbit-danger)" }}>{error}</p>}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(11.25rem, 1fr))", gap: 8 }}>
           <input className="orbit-input" value={teamName} onChange={(event) => setTeamName(event.target.value)} placeholder="New team name" />
           <button className="orbit-button" type="button" onClick={createTeam} disabled={loading}>
             {loading ? "Creating..." : "Create Team"}
@@ -190,7 +187,7 @@ export function TeamManagementPage() {
             <p style={{ marginBottom: 12, marginTop: 10 }}>
               Active team: <strong>{team.name}</strong>
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8, marginBottom: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8, marginBottom: 12 }}>
               <input className="orbit-input" value={invitee} onChange={(event) => setInvitee(event.target.value)} placeholder="Invite user id or handle" />
               <select className="orbit-input" value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}>
                 <option value="TEAM_MEMBER">TEAM_MEMBER</option>

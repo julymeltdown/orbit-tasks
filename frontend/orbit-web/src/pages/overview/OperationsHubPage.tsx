@@ -7,7 +7,6 @@ import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 type HubModule = {
   id: string;
   title: string;
-  description: string;
   path: string;
   primaryLabel: string;
   secondaryPath: string;
@@ -46,7 +45,6 @@ export function OperationsHubPage() {
       {
         id: "kanban",
         title: "Kanban Board",
-        description: "업무를 생성/이동/아카이브하며 진행 상태를 업데이트합니다.",
         path: "/app/projects/board",
         primaryLabel: "Open Board",
         secondaryPath: "/app/projects/table",
@@ -57,7 +55,6 @@ export function OperationsHubPage() {
       {
         id: "timeline",
         title: "Timeline",
-        description: "같은 Work Item을 일정 축에서 보고 리스크를 조기에 확인합니다.",
         path: "/app/projects/timeline",
         primaryLabel: "Open Timeline",
         secondaryPath: "/app/sprint",
@@ -68,7 +65,6 @@ export function OperationsHubPage() {
       {
         id: "sprint",
         title: "Sprint Workspace",
-        description: "스프린트 생성, 백로그 편성, DSU 루프를 한 화면에서 운영합니다.",
         path: "/app/sprint",
         primaryLabel: "Open Sprint",
         secondaryPath: "/app/inbox",
@@ -79,7 +75,6 @@ export function OperationsHubPage() {
       {
         id: "inbox",
         title: "Collaboration Inbox",
-        description: "멘션/스레드 알림을 모아보고 읽음 상태와 스레드 이동을 처리합니다.",
         path: "/app/inbox",
         primaryLabel: "Open Inbox",
         secondaryPath: "/app/team",
@@ -107,10 +102,6 @@ export function OperationsHubPage() {
           <div>
             <p className="orbit-ops-hub__eyebrow">Schedule Operations</p>
             <h2 style={{ marginTop: 0, marginBottom: 8 }}>기능이 연결된 작업 허브</h2>
-            <p style={{ margin: 0, color: "var(--orbit-text-subtle)", maxWidth: 760 }}>
-              워크스페이스 컨텍스트를 유지한 채 보드·타임라인·테이블·스프린트·인박스로 바로 이동합니다.
-              각 모듈은 같은 Work Item 집합을 공유하며 상태 변경이 즉시 반영됩니다.
-            </p>
           </div>
           <div className="orbit-ops-hub__workspace">
             <strong>{activeWorkspace?.workspaceName ?? "No workspace selected"}</strong>
@@ -151,7 +142,6 @@ export function OperationsHubPage() {
               <strong>{loadingItems ? "..." : module.metricValue}</strong>
             </div>
           </div>
-          <p style={{ color: "var(--orbit-text-subtle)", margin: "0 0 14px" }}>{module.description}</p>
           <div className="orbit-ops-hub__actions">
             <button className="orbit-button" type="button" onClick={() => ensureWorkspaceThenNavigate(module.path)}>
               {module.primaryLabel}

@@ -150,9 +150,6 @@ export function InboxPage() {
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 8", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Inbox</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>
-          Mentions and thread notifications are collected here with read-state control.
-        </p>
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
           <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>Unread {unreadCount}</span>
           <button className="orbit-button orbit-button--ghost" type="button" onClick={markAllRead}>

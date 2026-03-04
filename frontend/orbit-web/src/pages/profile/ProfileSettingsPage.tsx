@@ -54,9 +54,6 @@ export function ProfileSettingsPage() {
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 8", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Profile Settings</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>
-          Presence, timezone, and notification preferences sync to thread/mention/inbox surfaces.
-        </p>
 
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
           <label style={{ display: "grid", gap: 6 }}>

@@ -116,9 +116,6 @@ export function ImportWizardPage() {
     <section className="orbit-shell__content-grid">
       <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Import Wizard</h2>
-        <p style={{ color: "var(--orbit-text-subtle)" }}>
-          Guided migration with preview validation, execution, and rollback snapshot.
-        </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <input className="orbit-input" value={sourceSystem} onChange={(event) => setSourceSystem(event.target.value)} />
           <input className="orbit-input" value={sourceRef} onChange={(event) => setSourceRef(event.target.value)} />

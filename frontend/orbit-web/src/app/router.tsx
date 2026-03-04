@@ -108,12 +108,56 @@ function LegacyRedirect({ to }: { to: string }) {
 
 function AppOverviewPage() {
   const [payload, setPayload] = React.useState<Record<string, unknown> | null>(null);
+  const [recipeKey, setRecipeKey] = React.useState<string>("my-work-home");
+  const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    request<{ payload: Record<string, unknown> }>("/api/aggregate/my-work-home")
-      .then((response) => setPayload(response.payload))
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load aggregate overview"));
+    let cancelled = false;
+
+    async function loadOverview() {
+      const routeKeys = ["my-work-home", "feed-summary", "schedule-health-overview"];
+      let lastError: string | null = null;
+
+      setLoading(true);
+      setError(null);
+      setPayload(null);
+
+      for (const key of routeKeys) {
+        try {
+          const response = await request<{ routeKey?: string; payload: Record<string, unknown> }>(`/api/aggregate/${key}`);
+          if (cancelled) {
+            return;
+          }
+          setPayload(response.payload);
+          setRecipeKey(response.routeKey ?? key);
+          setLoading(false);
+          return;
+        } catch (e) {
+          const message = e instanceof Error ? e.message : "Failed to load aggregate overview";
+          lastError = message;
+          if (!/aggregation recipe not found/i.test(message)) {
+            break;
+          }
+        }
+      }
+
+      if (!cancelled) {
+        setError(lastError ?? "Failed to load aggregate overview");
+        setLoading(false);
+      }
+    }
+
+    loadOverview().catch((e) => {
+      if (!cancelled) {
+        setError(e instanceof Error ? e.message : "Failed to load aggregate overview");
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -125,13 +169,16 @@ function AppOverviewPage() {
         </p>
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
         {payload ? (
-          <pre className="orbit-panel" style={{ padding: 12, margin: 0, fontSize: 12, whiteSpace: "pre-wrap" }}>
-            {JSON.stringify(payload, null, 2)}
-          </pre>
+          <>
+            <p style={{ marginTop: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
+              Active recipe: <code>{recipeKey}</code>
+            </p>
+            <pre className="orbit-panel" style={{ padding: 12, margin: 0, fontSize: 12, whiteSpace: "pre-wrap" }}>
+              {JSON.stringify(payload, null, 2)}
+            </pre>
+          </>
         ) : (
-          <div className="orbit-panel" style={{ padding: 12 }}>
-            Loading aggregate recipe <code>my-work-home</code>...
-          </div>
+          <div className="orbit-panel" style={{ padding: 12 }}>{loading ? "Loading aggregate recipes..." : "No aggregate payload available."}</div>
         )}
       </article>
       <article className="orbit-card" style={{ gridColumn: "span 4", padding: 20 }}>

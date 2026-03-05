@@ -561,6 +561,166 @@
   scroll-behavior: smooth;
 }
 
+.orbit-calendar-shell {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.orbit-calendar-surface {
+  padding: 10px;
+  overflow-x: auto;
+}
+
+.orbit-calendar-surface .fc {
+  color: var(--orbit-text);
+}
+
+.orbit-calendar-surface .fc .fc-toolbar-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.orbit-calendar-surface .fc .fc-button {
+  border: 1px solid var(--orbit-border);
+  border-radius: 0;
+  background: var(--orbit-surface-2);
+  color: var(--orbit-text);
+  box-shadow: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  font-size: 10px;
+  min-height: 34px;
+}
+
+.orbit-calendar-surface .fc .fc-button:hover {
+  border-color: var(--orbit-accent);
+  background: color-mix(in srgb, var(--orbit-accent) 14%, var(--orbit-surface-2));
+}
+
+.orbit-calendar-surface .fc .fc-button:disabled {
+  opacity: 0.5;
+}
+
+.orbit-calendar-surface .fc .fc-button-primary:not(:disabled).fc-button-active,
+.orbit-calendar-surface .fc .fc-button-primary:not(:disabled):active {
+  border-color: var(--orbit-accent);
+  background: color-mix(in srgb, var(--orbit-accent) 22%, var(--orbit-surface-2));
+}
+
+.orbit-calendar-surface .fc .fc-daygrid-day-frame {
+  min-height: clamp(5.8rem, 11vh, 8.4rem);
+}
+
+.orbit-calendar-surface .fc .fc-col-header-cell-cushion,
+.orbit-calendar-surface .fc .fc-daygrid-day-number {
+  color: var(--orbit-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+}
+
+.orbit-calendar-surface .fc .fc-day-today {
+  background: color-mix(in srgb, var(--orbit-accent) 8%, transparent) !important;
+}
+
+.orbit-calendar-surface .fc-event.orbit-fc-event {
+  border: 1px solid var(--orbit-border);
+  border-radius: 0;
+  color: var(--orbit-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 1px 4px;
+}
+
+.orbit-calendar-surface .fc-event.orbit-fc-event.orbit-fc-event--todo {
+  background: color-mix(in srgb, var(--orbit-info) 18%, var(--orbit-surface-1));
+  border-color: color-mix(in srgb, var(--orbit-info) 55%, var(--orbit-border));
+}
+
+.orbit-calendar-surface .fc-event.orbit-fc-event.orbit-fc-event--in_progress {
+  background: color-mix(in srgb, var(--orbit-accent) 20%, var(--orbit-surface-1));
+  border-color: color-mix(in srgb, var(--orbit-accent) 58%, var(--orbit-border));
+}
+
+.orbit-calendar-surface .fc-event.orbit-fc-event.orbit-fc-event--review {
+  background: color-mix(in srgb, var(--orbit-warning) 20%, var(--orbit-surface-1));
+  border-color: color-mix(in srgb, var(--orbit-warning) 55%, var(--orbit-border));
+}
+
+.orbit-calendar-surface .fc-event.orbit-fc-event.orbit-fc-event--done {
+  background: color-mix(in srgb, var(--orbit-success) 18%, var(--orbit-surface-1));
+  border-color: color-mix(in srgb, var(--orbit-success) 55%, var(--orbit-border));
+}
+
+.orbit-calendar-surface .fc-event.orbit-fc-event.orbit-fc-event--archived {
+  background: color-mix(in srgb, var(--orbit-text-subtle) 20%, var(--orbit-surface-1));
+  border-color: color-mix(in srgb, var(--orbit-text-subtle) 50%, var(--orbit-border));
+  opacity: 0.82;
+}
+
+.orbit-calendar-selected {
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.orbit-calendar-selected__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.orbit-calendar-selected__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--orbit-text-subtle);
+  font-size: 12px;
+}
+
+.orbit-calendar-unscheduled {
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.orbit-calendar-unscheduled__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.orbit-calendar-unscheduled__head span {
+  font-size: 12px;
+  color: var(--orbit-text-subtle);
+}
+
+.orbit-calendar-unscheduled__list {
+  display: grid;
+  gap: 8px;
+}
+
+.orbit-calendar-unscheduled__item {
+  width: 100%;
+  border: 1px solid var(--orbit-border);
+  background: var(--orbit-surface-1);
+  color: var(--orbit-text);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  cursor: pointer;
+}
+
 .orbit-notion-board {
   display: flex;
   gap: 12px;
@@ -1130,6 +1290,32 @@
 
   .orbit-project-tabs {
     padding: 8px;
+  }
+
+  .orbit-calendar-surface .fc .fc-header-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .orbit-calendar-surface .fc .fc-toolbar-title {
+    font-size: 0.95rem;
+  }
+
+  .orbit-calendar-surface .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .orbit-calendar-surface .fc .fc-button {
+    min-height: 32px;
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .orbit-calendar-surface .fc .fc-daygrid-day-frame {
+    min-height: clamp(4.8rem, 14vw, 6.8rem);
   }
 
   .orbit-project-tabs__links,

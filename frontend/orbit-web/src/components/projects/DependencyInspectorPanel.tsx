@@ -1,4 +1,5 @@
 import type { WorkItem } from "@/features/workitems/hooks/useWorkItems";
+import { displayWorkItemTitle } from "@/features/workitems/display";
 
 interface DependencyEdge {
   dependencyId: string;
@@ -52,13 +53,13 @@ export function DependencyInspectorPanel({
         <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>Select a work item to inspect dependencies.</p>
       ) : (
         <>
-          <strong>{selected.title}</strong>
+          <strong>{displayWorkItemTitle(selected.title)}</strong>
           <div className="orbit-dependency-inspector__groups">
             <section className="orbit-panel" style={{ padding: 10 }}>
               <p className="orbit-ops-hub__eyebrow">Upstream</p>
               <ul style={{ margin: 0, paddingLeft: 16 }}>
                 {upstream.map((item) => (
-                  <li key={item.workItemId}>{item.title}</li>
+                  <li key={item.workItemId}>{displayWorkItemTitle(item.title)}</li>
                 ))}
                 {upstream.length === 0 ? <li style={{ color: "var(--orbit-text-subtle)" }}>No upstream dependencies</li> : null}
               </ul>
@@ -67,7 +68,7 @@ export function DependencyInspectorPanel({
               <p className="orbit-ops-hub__eyebrow">Downstream</p>
               <ul style={{ margin: 0, paddingLeft: 16 }}>
                 {downstream.map((item) => (
-                  <li key={item.workItemId}>{item.title}</li>
+                  <li key={item.workItemId}>{displayWorkItemTitle(item.title)}</li>
                 ))}
                 {downstream.length === 0 ? <li style={{ color: "var(--orbit-text-subtle)" }}>No downstream dependencies</li> : null}
               </ul>
@@ -81,7 +82,7 @@ export function DependencyInspectorPanel({
                 type="button"
                 onClick={() => onAddDependency(selected.workItemId, candidate.workItemId)}
               >
-                Depends on: {candidate.title}
+                Depends on: {displayWorkItemTitle(candidate.title)}
               </button>
             ))}
           </div>
@@ -90,4 +91,3 @@ export function DependencyInspectorPanel({
     </aside>
   );
 }
-

@@ -13,7 +13,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "react-router-dom";
 import { request } from "@/lib/http/client";
-import { useAuthStore } from "@/stores/authStore";
 import { useProjectStore } from "@/stores/projectStore";
 import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
@@ -34,6 +33,7 @@ const FLOW_LANES: Array<{ status: WorkItemStatus; title: string }> = [
 
 interface ComposerState {
   title: string;
+  status: WorkItemStatus;
   type: WorkItemType;
   priority: WorkItemPriority;
   assignee: string;
@@ -47,12 +47,13 @@ interface BacklogItemView {
   status: string;
 }
 
-function makeComposer(assignee: string): ComposerState {
+function makeComposer(): ComposerState {
   return {
     title: "",
+    status: "TODO",
     type: "TASK",
     priority: "MEDIUM",
-    assignee,
+    assignee: "",
     dueAt: ""
   };
 }
@@ -74,21 +75,13 @@ function Lane({
   title,
   count,
   children,
-  composerOpen,
-  composer,
-  onComposerChange,
-  onComposerSubmit,
-  onComposerCancel
+  onQuickAdd
 }: {
   status: WorkItemStatus;
   title: string;
   count: number;
   children: ReactNode;
-  composerOpen: boolean;
-  composer: ComposerState;
-  onComposerChange: (field: keyof ComposerState, value: string) => void;
-  onComposerSubmit: (lane: WorkItemStatus) => void;
-  onComposerCancel: () => void;
+  onQuickAdd: (lane: WorkItemStatus) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `lane-${status}`,
@@ -102,42 +95,10 @@ function Lane({
           <h3 className="orbit-notion-lane__title">{title}</h3>
           <span className="orbit-notion-lane__count">{count}</span>
         </div>
+        <button className="orbit-lane-add-button" type="button" onClick={() => onQuickAdd(status)} aria-label={`${title} quick add`}>
+          <span className="material-symbols-outlined">add</span>
+        </button>
       </header>
-
-      {composerOpen ? (
-        <section className="orbit-panel orbit-notion-composer">
-          <input
-            className="orbit-input"
-            placeholder="Task title..."
-            value={composer.title}
-            onChange={(event) => onComposerChange("title", event.target.value)}
-          />
-          <div className="orbit-notion-composer__meta">
-            <select className="orbit-input" value={composer.type} onChange={(event) => onComposerChange("type", event.target.value)}>
-              <option value="TASK">Task</option>
-              <option value="STORY">Story</option>
-              <option value="BUG">Bug</option>
-              <option value="EPIC">Epic</option>
-            </select>
-            <select className="orbit-input" value={composer.priority} onChange={(event) => onComposerChange("priority", event.target.value)}>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-              <option value="CRITICAL">Critical</option>
-            </select>
-            <input className="orbit-input" placeholder="Assignee" value={composer.assignee} onChange={(event) => onComposerChange("assignee", event.target.value)} />
-            <input className="orbit-input" type="date" value={composer.dueAt} onChange={(event) => onComposerChange("dueAt", event.target.value)} />
-          </div>
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button className="orbit-button orbit-button--ghost" type="button" onClick={onComposerCancel}>
-              Cancel
-            </button>
-            <button className="orbit-button" type="button" onClick={() => onComposerSubmit(status)}>
-              Add
-            </button>
-          </div>
-        </section>
-      ) : null}
 
       <div className="orbit-notion-lane__cards">{children}</div>
     </article>
@@ -224,9 +185,73 @@ function BoardCard({
   );
 }
 
+function CreateTaskPanel({
+  open,
+  composer,
+  onComposerChange,
+  onSubmit,
+  onClose
+}: {
+  open: boolean;
+  composer: ComposerState;
+  onComposerChange: (field: keyof ComposerState, value: string) => void;
+  onSubmit: () => void;
+  onClose: () => void;
+}) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <article className="orbit-board-create-panel">
+      <header className="orbit-board-create-panel__head">
+        <h3 style={{ margin: 0 }}>새 작업 만들기</h3>
+        <button className="orbit-button orbit-button--ghost" type="button" onClick={onClose}>
+          닫기
+        </button>
+      </header>
+      <input
+        className="orbit-input"
+        placeholder="작업 제목"
+        value={composer.title}
+        onChange={(event) => onComposerChange("title", event.target.value)}
+      />
+      <div className="orbit-board-create-panel__grid">
+        <select className="orbit-input" value={composer.status} onChange={(event) => onComposerChange("status", event.target.value)}>
+          <option value="TODO">Backlog</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="REVIEW">Review</option>
+          <option value="DONE">Done</option>
+        </select>
+        <select className="orbit-input" value={composer.type} onChange={(event) => onComposerChange("type", event.target.value)}>
+          <option value="TASK">Task</option>
+          <option value="STORY">Story</option>
+          <option value="BUG">Bug</option>
+          <option value="EPIC">Epic</option>
+        </select>
+        <select className="orbit-input" value={composer.priority} onChange={(event) => onComposerChange("priority", event.target.value)}>
+          <option value="LOW">Low</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="HIGH">High</option>
+          <option value="CRITICAL">Critical</option>
+        </select>
+        <input className="orbit-input" placeholder="담당자" value={composer.assignee} onChange={(event) => onComposerChange("assignee", event.target.value)} />
+        <input className="orbit-input" type="date" value={composer.dueAt} onChange={(event) => onComposerChange("dueAt", event.target.value)} />
+      </div>
+      <div className="orbit-board-create-panel__actions">
+        <button className="orbit-button orbit-button--ghost" type="button" onClick={onClose}>
+          취소
+        </button>
+        <button className="orbit-button" type="button" onClick={onSubmit}>
+          추가
+        </button>
+      </div>
+    </article>
+  );
+}
+
 export function BoardPage() {
   const navigate = useNavigate();
-  const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
   const projectView = useProjectViewStore((state) => state.getContext(projectId));
@@ -237,8 +262,8 @@ export function BoardPage() {
 
   const { items, dependencyGraph, loading, error, mutation, createItem, updateStatus, updateItem, addDependency, loadActivity, archiveItem } = useWorkItems(projectId);
 
-  const [composerLane, setComposerLane] = useState<WorkItemStatus | null>(null);
-  const [composer, setComposer] = useState<ComposerState>(() => makeComposer(userId));
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [composer, setComposer] = useState<ComposerState>(() => makeComposer());
   const [showDependencyInspector, setShowDependencyInspector] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -350,25 +375,27 @@ export function BoardPage() {
   }, [activeSprint?.sprintId, projectId, setProjectFilter]);
 
   function openComposerFor(lane: WorkItemStatus) {
-    setComposerLane(lane);
+    setComposerOpen(true);
     setComposer((previous) => ({
       ...previous,
       title: "",
-      assignee: previous.assignee || userId
+      status: lane,
+      assignee: "",
+      dueAt: ""
     }));
     setLocalError(null);
   }
 
   function closeComposer() {
-    setComposerLane(null);
-    setComposer(makeComposer(userId));
+    setComposerOpen(false);
+    setComposer(makeComposer());
   }
 
   function onComposerChange(field: keyof ComposerState, value: string) {
     setComposer((previous) => ({ ...previous, [field]: value }));
   }
 
-  async function submitComposer(lane: WorkItemStatus) {
+  async function submitComposer() {
     if (!composer.title.trim()) {
       setLocalError("Title is required");
       return;
@@ -385,8 +412,8 @@ export function BoardPage() {
         priority: composer.priority
       });
 
-      if (lane !== "TODO") {
-        await updateStatus(created.workItemId, lane);
+      if (composer.status !== "TODO") {
+        await updateStatus(created.workItemId, composer.status);
       }
 
       setSelectedItemId(created.workItemId);
@@ -498,32 +525,16 @@ export function BoardPage() {
   return (
     <section className="orbit-notion-layout">
       <ProjectViewTabs />
-      <ProjectFilterBar
-        title="Task Database"
-        subtitle="Board view shares the same query context with table, timeline, calendar, and dashboard."
-      />
+      <ProjectFilterBar title="작업 보드" />
       <section className="orbit-notion-toolbar">
         <div className="orbit-notion-toolbar__head">
-          <h2 style={{ margin: 0 }}>Board Operations</h2>
+          <h2 style={{ margin: 0 }}>실행 작업</h2>
           <div className="orbit-notion-toolbar__actions">
             <button className="orbit-button" type="button" onClick={() => openComposerFor("TODO")}>
-              + New Task
+              + 새 작업
             </button>
-            <button
-              className="orbit-button orbit-button--ghost"
-              type="button"
-              onClick={() => setShowDependencyInspector((value) => !value)}
-              disabled={!selectedItemId}
-            >
-              {showDependencyInspector ? "Hide Dependencies" : "Dependencies"}
-            </button>
-            <button
-              className="orbit-button orbit-button--ghost"
-              type="button"
-              onClick={() => setDetailOpen((value) => !value)}
-              disabled={!selectedItem}
-            >
-              {detailOpen ? "Hide Detail" : "Show Detail"}
+            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/insights")}>
+              AI 평가 보기
             </button>
           </div>
         </div>
@@ -533,30 +544,20 @@ export function BoardPage() {
               {activeSprint.name} · {activeSprint.startDate} ~ {activeSprint.endDate}
             </span>
             <span>
-              Backlog {sprintBacklog.length} · Done {sprintDoneCount}
+              백로그 {sprintBacklog.length} · 완료 {sprintDoneCount}
             </span>
             <button
               className="orbit-button orbit-button--ghost"
               type="button"
               onClick={() => setProjectFilter(projectId, "sprintOnly", !sprintOnly)}
             >
-              {sprintOnly ? "All Tasks" : "Sprint Only"}
+              {sprintOnly ? "전체 보기" : "스프린트만"}
             </button>
             <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint")}>
-              Open Sprint
-            </button>
-            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/insights")}>
-              Open AI Evaluation
+              스프린트 열기
             </button>
           </div>
-        ) : (
-          <div className="orbit-notion-toolbar__meta">
-            <span>No active sprint selected</span>
-            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint")}>
-              Create Sprint
-            </button>
-          </div>
-        )}
+        ) : null}
         {loading ? <p style={{ margin: 0 }}>Loading tasks...</p> : null}
         {error ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{error}</p> : null}
         {mutation.error ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{mutation.error}</p> : null}
@@ -564,78 +565,112 @@ export function BoardPage() {
         {localError ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{localError}</p> : null}
       </section>
 
+      {!activeSprint ? (
+        <article className="orbit-board-empty-sprint">
+          <h3 style={{ margin: 0 }}>활성 스프린트가 없습니다</h3>
+          <p style={{ margin: 0 }}>스프린트를 먼저 시작하면 칸반과 DSU 흐름이 자동으로 연결됩니다.</p>
+          <div>
+            <button className="orbit-button" type="button" onClick={() => navigate("/app/sprint")}>
+              스프린트 시작하기
+            </button>
+          </div>
+        </article>
+      ) : null}
+
       <div className="orbit-notion-main">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={pointerWithin}
-          accessibility={{
-            announcements: {
-              onDragStart: () => "",
-              onDragOver: () => "",
-              onDragEnd: () => "",
-              onDragCancel: () => ""
-            }
-          }}
-          onDragEnd={onDragEnd}
-        >
-          <section className="orbit-notion-board" aria-label="Kanban board">
-            {FLOW_LANES.map((lane) => (
-              <Lane
-                key={lane.status}
-                status={lane.status}
-                title={lane.title}
-                count={filteredByStatus[lane.status].length}
-                composerOpen={composerLane === lane.status}
-                composer={composer}
-                onComposerChange={onComposerChange}
-                onComposerSubmit={submitComposer}
-                onComposerCancel={closeComposer}
-              >
-                {filteredByStatus[lane.status].map((item) => (
-                  <BoardCard
-                    key={item.workItemId}
-                    item={item}
-                    inSprint={sprintBacklogMap.has(item.workItemId)}
-                    isSelected={selectedItemId === item.workItemId}
-                    notePreview={summarizeMarkdown(item.markdownBody ?? "")}
-                    onOpen={openDetails}
-                    onMoveByKeyboard={moveByKeyboard}
-                  />
-                ))}
-              </Lane>
-            ))}
-          </section>
-        </DndContext>
+        <section className="orbit-notion-board-wrap">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={pointerWithin}
+            accessibility={{
+              announcements: {
+                onDragStart: () => "",
+                onDragOver: () => "",
+                onDragEnd: () => "",
+                onDragCancel: () => ""
+              }
+            }}
+            onDragEnd={onDragEnd}
+          >
+            <section className="orbit-notion-board" aria-label="Kanban board">
+              {FLOW_LANES.map((lane) => (
+                <Lane
+                  key={lane.status}
+                  status={lane.status}
+                  title={lane.title}
+                  count={filteredByStatus[lane.status].length}
+                  onQuickAdd={openComposerFor}
+                >
+                  {filteredByStatus[lane.status].map((item) => (
+                    <BoardCard
+                      key={item.workItemId}
+                      item={item}
+                      inSprint={sprintBacklogMap.has(item.workItemId)}
+                      isSelected={selectedItemId === item.workItemId}
+                      notePreview={summarizeMarkdown(item.markdownBody ?? "")}
+                      onOpen={openDetails}
+                      onMoveByKeyboard={moveByKeyboard}
+                    />
+                  ))}
+                </Lane>
+              ))}
+            </section>
+          </DndContext>
+        </section>
 
-        {detailOpen && selectedItem ? (
-          <WorkItemDetailPanel
-            item={selectedItem}
-            sprintLabel={activeSprint?.name ?? null}
-            sprintStateLabel={
-              activeSprint
-                ? `${activeSprint.startDate} ~ ${activeSprint.endDate}`
-                : null
-            }
-            canAddToSprint={!sprintBacklogMap.has(selectedItem.workItemId)}
-            sprintLoading={sprintLoading}
-            onAddToSprint={() => addItemToSprint(selectedItem.workItemId)}
-            onClose={() => setDetailOpen(false)}
-            onArchive={() => archiveItem(selectedItem.workItemId)}
-            onUpdateStatus={(status) => updateStatus(selectedItem.workItemId, status)}
-            onPatch={(patch) => updateItem(selectedItem.workItemId, patch)}
-            onLoadActivity={loadActivity}
+        <aside className="orbit-board-side">
+          <CreateTaskPanel
+            open={composerOpen}
+            composer={composer}
+            onComposerChange={onComposerChange}
+            onSubmit={submitComposer}
+            onClose={closeComposer}
           />
-        ) : null}
-      </div>
 
-      <DependencyInspectorPanel
-        open={showDependencyInspector}
-        selectedWorkItemId={selectedItemId}
-        items={items}
-        edges={dependencyGraph.edges}
-        onClose={() => setShowDependencyInspector(false)}
-        onAddDependency={onAddDependency}
-      />
+          {detailOpen && selectedItem ? (
+            <>
+              <div className="orbit-board-side__toolbar">
+                <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setShowDependencyInspector((value) => !value)}>
+                  {showDependencyInspector ? "의존성 닫기" : "의존성 보기"}
+                </button>
+              </div>
+              <WorkItemDetailPanel
+                item={selectedItem}
+                sprintLabel={activeSprint?.name ?? null}
+                sprintStateLabel={
+                  activeSprint
+                    ? `${activeSprint.startDate} ~ ${activeSprint.endDate}`
+                    : null
+                }
+                canAddToSprint={!sprintBacklogMap.has(selectedItem.workItemId)}
+                sprintLoading={sprintLoading}
+                onAddToSprint={() => addItemToSprint(selectedItem.workItemId)}
+                onClose={() => setDetailOpen(false)}
+                onArchive={() => archiveItem(selectedItem.workItemId)}
+                onUpdateStatus={(status) => updateStatus(selectedItem.workItemId, status)}
+                onPatch={(patch) => updateItem(selectedItem.workItemId, patch)}
+                onLoadActivity={loadActivity}
+              />
+            </>
+          ) : !composerOpen ? (
+            <article className="orbit-board-side__placeholder">
+              <h3 style={{ margin: 0 }}>카드를 선택하세요</h3>
+              <p style={{ margin: 0 }}>
+                카드 상세와 의존성 관리는 오른쪽 패널에서 처리됩니다.
+              </p>
+            </article>
+          ) : null}
+
+          <DependencyInspectorPanel
+            open={showDependencyInspector}
+            selectedWorkItemId={selectedItemId}
+            items={items}
+            edges={dependencyGraph.edges}
+            onClose={() => setShowDependencyInspector(false)}
+            onAddDependency={onAddDependency}
+          />
+        </aside>
+      </div>
 
       {filteredByStatus.ARCHIVED.length > 0 ? (
         <section className="orbit-notion-archive">

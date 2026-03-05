@@ -24,6 +24,13 @@ export function ProjectViewTabs() {
   const { saveDefaultConfiguration, saving, error } = useViewConfigurations(projectId);
 
   const activeView = useMemo(() => resolveViewFromPath(location.pathname), [location.pathname]);
+  const compactLabel: Record<string, string> = {
+    board: "Board",
+    table: "Table",
+    timeline: "Timeline",
+    calendar: "Calendar",
+    dashboard: "Dashboard"
+  };
 
   function onOpenView(path: string, view: ProjectViewType) {
     setView(projectId, view);
@@ -31,7 +38,7 @@ export function ProjectViewTabs() {
   }
 
   return (
-    <article className="orbit-project-tabs" aria-label="Project views">
+    <section className="orbit-project-tabs" aria-label="Project views">
       <nav className="orbit-project-tabs__links" role="tablist" aria-label="Project views">
         {projectViewNavigation.map((item) => (
           <NavLink
@@ -45,24 +52,26 @@ export function ProjectViewTabs() {
               onOpenView(item.to, item.id);
             }}
           >
-            {item.label}
+            {compactLabel[item.id] ?? item.label}
           </NavLink>
         ))}
       </nav>
 
-      <section className="orbit-project-tabs__actions" aria-label="View actions">
+      <div className="orbit-project-tabs__actions" aria-label="View actions">
         <button
-          className="orbit-button orbit-button--ghost"
+          className="orbit-icon-button"
           type="button"
+          title="Save View"
+          aria-label="Save View"
           onClick={() => {
             saveDefaultConfiguration(context.view.toUpperCase(), context.filters).catch(() => undefined);
           }}
           disabled={saving}
         >
-          {saving ? "Saving..." : "Save View"}
+          <span className="material-symbols-outlined">{saving ? "hourglass_top" : "save"}</span>
         </button>
         {error ? <span className="orbit-project-tabs__error">{error}</span> : null}
-      </section>
-    </article>
+      </div>
+    </section>
   );
 }

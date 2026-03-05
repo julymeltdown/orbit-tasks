@@ -102,6 +102,39 @@ select {
   cursor: not-allowed;
 }
 
+.orbit-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  border-radius: var(--orbit-radius-md);
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 92%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 92%, transparent);
+  color: var(--orbit-text);
+  cursor: pointer;
+}
+
+.orbit-icon-button:hover {
+  border-color: var(--orbit-accent);
+  color: var(--orbit-accent);
+}
+
+.orbit-text-button {
+  border: 0;
+  background: transparent;
+  color: var(--orbit-accent);
+  min-height: 2rem;
+  padding: 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.orbit-text-button:hover {
+  text-decoration: underline;
+}
+
 .orbit-button--ghost,
 .orbit-link-button--tab {
   border-color: color-mix(in srgb, var(--orbit-border) 92%, transparent);

@@ -1294,6 +1294,36 @@
 }
 
 @media (max-width: 768px) {
+  /* Mobile flatten mode: remove double-layer wrappers so content keeps usable width. */
+  .orbit-card > .orbit-panel[style*="padding"],
+  .orbit-card > .orbit-card[style*="padding"],
+  .orbit-panel > .orbit-panel[style*="padding"],
+  .orbit-panel > .orbit-card[style*="padding"] {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .orbit-card > .orbit-panel[style*="padding"] > :first-child,
+  .orbit-card > .orbit-card[style*="padding"] > :first-child,
+  .orbit-panel > .orbit-panel[style*="padding"] > :first-child,
+  .orbit-panel > .orbit-card[style*="padding"] > :first-child {
+    margin-top: 0;
+  }
+
+  /* Keep one visual layer for board cards and floating coach bubbles. */
+  .orbit-notion-card,
+  .orbit-ai-widget__bubble {
+    border-width: 1px;
+    background: color-mix(in srgb, var(--orbit-surface-1) 94%, transparent);
+    border-radius: var(--orbit-radius-sm);
+    box-shadow: var(--orbit-shadow-1);
+  }
+
   .orbit-shell {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;

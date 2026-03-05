@@ -1,0 +1,679 @@
+openapi: 3.0.3
+info:
+  title: Orbit Tasks Activation Flow Contract
+  version: 0.3.0
+  description: >-
+    API contract for activation-first onboarding flow, guided empty states,
+    first-task creation, DSU reminders, and AI schedule insight status.
+servers:
+  - url: https://tasksapi.infinitefallcult.trade
+    description: Production API Gateway
+  - url: http://localhost:8080
+    description: Local API Gateway
+paths:
+  /auth/workspace-claims:
+    get:
+      summary: Get available workspace claims for authenticated user
+      operationId: listWorkspaceClaims
+      responses:
+        "200":
+          description: Workspace claims list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkspaceClaim"
+  /api/v2/activation/state:
+    get:
+      summary: Get activation progress state for current user/workspace/project
+      operationId: getActivationState
+      parameters:
+        - in: query
+          name: workspaceId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: projectId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Activation state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivationStateResponse"
+        "404":
+          description: Activation state not found (client may initialize first-session defaults)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v2/activation/events:
+    post:
+      summary: Record activation/onboarding event
+      operationId: recordActivationEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivationEventRequest"
+      responses:
+        "202":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptedResponse"
+  /api/v2/work-items:
+    get:
+      summary: List work items by project and filters
+      operationId: listWorkItemsV2
+      parameters:
+        - in: query
+          name: projectId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: assignee
+          schema:
+            type: string
+        - in: query
+          name: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Work item list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkItem"
+    post:
+      summary: Create first or regular work item
+      operationId: createWorkItemV2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkItemRequest"
+      responses:
+        "200":
+          description: Created work item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkItem"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v2/sprints:
+    post:
+      summary: Create sprint with minimal onboarding defaults
+      operationId: createSprintV2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSprintRequest"
+      responses:
+        "200":
+          description: Sprint created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sprint"
+  /api/v2/dsu/reminders:
+    get:
+      summary: Get DSU reminder state for current user/scope
+      operationId: getDsuReminder
+      parameters:
+        - in: query
+          name: workspaceId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: projectId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: authorId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: DSU reminder state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DsuReminder"
+  /api/v2/insights/evaluations:
+    post:
+      summary: Run schedule intelligence evaluation
+      operationId: runEvaluationV2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluationRequest"
+      responses:
+        "200":
+          description: Evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evaluation"
+  /api/v2/insights/evaluations/latest:
+    get:
+      summary: Get latest evaluation for workspace/project
+      operationId: getLatestEvaluationV2
+      parameters:
+        - in: query
+          name: workspaceId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: projectId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Latest evaluation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evaluation"
+        "404":
+          description: No evaluation exists yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v2/inbox:
+    get:
+      summary: List triage inbox items
+      operationId: listInboxV2
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: filter
+          required: false
+          schema:
+            type: string
+            enum: [all, notifications, requests, mentions, ai_questions]
+      responses:
+        "200":
+          description: Inbox items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InboxItem"
+components:
+  schemas:
+    WorkspaceClaim:
+      type: object
+      required: [workspaceId, workspaceName, role, defaultWorkspace]
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+        workspaceName:
+          type: string
+        role:
+          type: string
+          enum: [WORKSPACE_MEMBER, WORKSPACE_MANAGER, WORKSPACE_ADMIN]
+        defaultWorkspace:
+          type: boolean
+    ActivationStateResponse:
+      type: object
+      required:
+        - workspaceId
+        - projectId
+        - userId
+        - activationStage
+        - navigationProfile
+        - checklist
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+        activationStage:
+          type: string
+          enum: [NOT_STARTED, FIRST_ACTION_DONE, CORE_FLOW_CONTINUED, COMPLETED]
+        navigationProfile:
+          type: string
+          enum: [NOVICE, ADVANCED]
+        completed:
+          type: boolean
+        completionReason:
+          type: string
+          nullable: true
+        checklist:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivationStep"
+        updatedAt:
+          type: string
+          format: date-time
+    ActivationStep:
+      type: object
+      required: [stepCode, title, status, primaryAction]
+      properties:
+        stepCode:
+          type: string
+          enum: [CREATE_TASK, OPEN_BOARD, START_SPRINT, RUN_AI_INSIGHT, TRIAGE_INBOX]
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [LOCKED, AVAILABLE, DONE, SKIPPED]
+        primaryAction:
+          $ref: "#/components/schemas/ActionLink"
+        secondaryActions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActionLink"
+    ActionLink:
+      type: object
+      required: [label, path]
+      properties:
+        label:
+          type: string
+        path:
+          type: string
+    ActivationEventRequest:
+      type: object
+      required: [workspaceId, projectId, userIdHash, sessionId, eventType, route, elapsedMs]
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        userIdHash:
+          type: string
+        sessionId:
+          type: string
+        eventType:
+          type: string
+          enum:
+            - ACTIVATION_VIEW_LOADED
+            - ACTIVATION_PRIMARY_CTA_CLICKED
+            - FIRST_TASK_CREATED
+            - BOARD_FIRST_INTERACTION
+            - SPRINT_ENTERED
+            - INSIGHT_EVALUATION_STARTED
+            - INSIGHT_EVALUATION_COMPLETED
+            - EMPTY_STATE_ACTION_CLICKED
+        route:
+          type: string
+        elapsedMs:
+          type: integer
+          minimum: 0
+        metadata:
+          type: object
+          additionalProperties: true
+    CreateWorkItemRequest:
+      type: object
+      required: [projectId, type, title]
+      properties:
+        projectId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [TASK, STORY, BUG, EPIC]
+        title:
+          type: string
+          minLength: 1
+          maxLength: 240
+        assignee:
+          type: string
+          nullable: true
+        dueAt:
+          type: string
+          nullable: true
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        estimateMinutes:
+          type: integer
+          nullable: true
+        markdownBody:
+          type: string
+          nullable: true
+    WorkItem:
+      type: object
+      required: [workItemId, projectId, type, title, status, createdAt, updatedAt]
+      properties:
+        workItemId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+        assignee:
+          type: string
+          nullable: true
+        dueAt:
+          type: string
+          nullable: true
+        priority:
+          type: string
+          nullable: true
+        estimateMinutes:
+          type: integer
+          nullable: true
+        actualMinutes:
+          type: integer
+          nullable: true
+        blockedReason:
+          type: string
+          nullable: true
+        markdownBody:
+          type: string
+          nullable: true
+        activityCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateSprintRequest:
+      type: object
+      required: [workspaceId, projectId, name, goal, startDate, endDate, capacitySp]
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        goal:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        capacitySp:
+          type: integer
+          minimum: 1
+        dailyCapacityMinutes:
+          type: integer
+          minimum: 60
+    Sprint:
+      type: object
+      required: [sprintId, workspaceId, projectId, name, goal, startDate, endDate, capacitySp, status, freezeState]
+      properties:
+        sprintId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        goal:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        capacitySp:
+          type: integer
+        status:
+          type: string
+        freezeState:
+          type: boolean
+        dailyCapacityMinutes:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    DsuReminder:
+      type: object
+      required: [workspaceId, projectId, authorId, pending, severity, title, message, actionPath]
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        sprintId:
+          type: string
+          nullable: true
+        authorId:
+          type: string
+        pending:
+          type: boolean
+        severity:
+          type: string
+          enum: [INFO, WARNING]
+        title:
+          type: string
+        message:
+          type: string
+        actionPath:
+          type: string
+        dueDate:
+          type: string
+          nullable: true
+        latestSubmittedAt:
+          type: string
+          nullable: true
+    EvaluationRequest:
+      type: object
+      required: [workspaceId, projectId, remainingStoryPoints, availableCapacitySp, blockedCount, atRiskCount]
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        sprintId:
+          type: string
+          nullable: true
+        selectedWorkItemId:
+          type: string
+          nullable: true
+        prompt:
+          type: string
+          nullable: true
+        remainingStoryPoints:
+          type: integer
+          minimum: 0
+        availableCapacitySp:
+          type: integer
+          minimum: 0
+        blockedCount:
+          type: integer
+          minimum: 0
+        atRiskCount:
+          type: integer
+          minimum: 0
+        simulateAiFailure:
+          type: boolean
+          default: false
+    Evaluation:
+      type: object
+      required: [evaluationId, health, topRisks, questions, actions, confidence, fallback, reason]
+      properties:
+        evaluationId:
+          type: string
+        health:
+          type: string
+          enum: [healthy, warning, at_risk, off_track, critical]
+        topRisks:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskItem"
+        questions:
+          type: array
+          items:
+            type: string
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvaluationAction"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        fallback:
+          type: boolean
+        reason:
+          type: string
+    RiskItem:
+      type: object
+      required: [type, summary, impact, recommendedActions, evidence]
+      properties:
+        type:
+          type: string
+        summary:
+          type: string
+        impact:
+          type: string
+        recommendedActions:
+          type: array
+          items:
+            type: string
+        evidence:
+          type: array
+          items:
+            type: string
+    EvaluationAction:
+      type: object
+      required: [actionId, label, status]
+      properties:
+        actionId:
+          type: string
+        label:
+          type: string
+        status:
+          type: string
+        note:
+          type: string
+          nullable: true
+    InboxItem:
+      type: object
+      required: [inboxItemId, userId, kind, sourceType, sourceId, status, read, createdAt]
+      properties:
+        inboxItemId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+        kind:
+          type: string
+        sourceType:
+          type: string
+        sourceId:
+          type: string
+        messageId:
+          type: string
+          nullable: true
+        read:
+          type: boolean
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          nullable: true
+    AcceptedResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [accepted]
+        traceId:
+          type: string
+          nullable: true
+    ErrorResponse:
+      type: object
+      required: [code, message, timestamp]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        traceId:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          nullable: true

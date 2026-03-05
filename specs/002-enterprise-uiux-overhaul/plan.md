@@ -1,309 +1,285 @@
-# Implementation Plan: Orbit Schedule Enterprise UI/UX Re-Architecture
+# Implementation Plan: Orbit Tasks UI/UX + 기능 + API/아키텍처 동시 개편
 
 **Branch**: `002-enterprise-uiux-overhaul` | **Date**: 2026-03-04 | **Spec**: `/home/lhs/dev/tasks/specs/002-enterprise-uiux-overhaul/spec.md`  
-**Input**: Feature specification from `/home/lhs/dev/tasks/specs/002-enterprise-uiux-overhaul/spec.md`
+**Input**: 최신 확정 스펙(2026-03-04) + 코드베이스 정밀 스캔 결과
 
 ## Summary
 
-이번 기능은 "페이지 중심 UI"를 "객체 중심 운영 UI"로 재구축한다.  
-핵심 구현 전략은 다음과 같다.
+이번 개편의 목표는 다음 3가지를 동시에 달성하는 것이다.
 
-1. App Shell 내비게이션을 `Scope(글로벌)`와 `View(로컬)`로 분리한다.
-2. Project Shell 하나를 기준으로 Board/Table/Timeline/Calendar/Dashboard를 동등한 뷰로 통합한다.
-3. 의존성/AI/거버넌스 기능을 기본 캔버스에서 분리해 점진적 공개로 재배치한다.
-4. 백엔드는 gateway 스텁/잔존 SNS 도메인을 정리하고 Orbit 도메인 계약을 우선한다.
-5. 헥사고날 아키텍처 준수와 커버리지 게이트를 명시적 품질 기준으로 적용한다.
+1. **핵심 실행 루프 완성(P0)**  
+   Sprint 생성 → Backlog 편입 → AI Day Plan Draft 생성 → 사용자 편집/Freeze → 실행(Board/Calendar/Timeline) → DSU 제출 → AI 변경 제안 → 사용자 승인 반영 → 헬스 코칭
+2. **API Gateway 인메모리 상태 제거**  
+   Gateway는 인증/권한/오케스트레이션만 담당하고, 상태/도메인 로직은 각 서비스로 위임
+3. **LLM 안전 정책 고정**  
+   `gpt-5.2-pro` + Responses API + strict JSON schema + `store:false` 기본 + 항상 Draft/Confirm/Apply
 
-## Codebase Scan Baseline
+브레이킹 변경을 허용하며(프론트/백엔드 동시 배포 전제), `/api/v2/*`를 기준으로 인터페이스를 재정의한다.
 
-### A. 서비스/테스트/아키텍처 테스트 현황 (실측)
+## Confirmed Decisions
 
-| Service | Main Java | Test Java | Arch Test |
-|---|---:|---:|---:|
-| api-gateway | 119 | 2 | 1 |
-| identity-access-service | 96 | 18 | 1 |
-| profile-service | 24 | 10 | 1 |
-| team-service | 24 | 11 | 1 |
-| workgraph-service | 90 | 19 | 1 |
-| agile-ops-service | 6 | 0 | 0 |
-| collaboration-service | 5 | 0 | 0 |
-| deep-link-service | 4 | 0 | 0 |
-| schedule-intelligence-service | 10 | 2 | 0 |
-| integration-migration-service | 5 | 0 | 0 |
-| notification-service | 21 | 5 | 1 |
-| platform-event-kit | 7 | 0 | 0 |
+1. 구현 범위는 **프론트 + API + 백엔드 아키텍처(+필요 시 스키마)**.
+2. LLM 반영 정책은 **항상 사용자 컨펌 후 적용**.
+3. Phase 1 우선순위는 **Sprint-DSU 루프 완성**.
+4. 채팅 전략은 외부 SaaS 우선이 아니라 **내장 GPT 호출형 코치**.
+5. API 호환성은 **브레이킹 변경 허용**.
 
-### B. 서비스 독립 실행 현황
+## Codebase Scan Baseline (2026-03-04)
 
-헌법상 "서비스 독립 빌드/실행"이 요구되나, 일부 서비스는 `gradlew`가 없다.
+### Frontend 핵심 파일 (실측)
 
-- `gradlew` 있음: api-gateway, auth-service, identity-access-service, notification-service, post-service, profile-service, team-service, workgraph-service, friend-service, platform-event-kit
-- `gradlew` 없음: agile-ops-service, collaboration-service, deep-link-service, integration-migration-service, schedule-intelligence-service
+- 진입/내비: `frontend/orbit-web/src/app/AppShell.tsx`, `router.tsx`, `navigationModel.ts`
+- 프로젝트 뷰: `BoardPage.tsx`, `TablePage.tsx`, `TimelinePage.tsx`, `CalendarPage.tsx`, `DashboardPage.tsx`
+- 스프린트/DSU: `SprintWorkspacePage.tsx`, `DSUComposerPanel.tsx`
+- 협업: `InboxPage.tsx`, `ThreadPanel.tsx`
+- AI: `ScheduleInsightsPage.tsx`, `FloatingAgentWidget.tsx`
 
-### C. 구조 일관성 리스크
+### Backend 핵심 파일 (실측)
 
-1. `team-service`, `workgraph-service` 내부에 `com.example.friend`, `com.example.post`와 `com.orbit.*`가 혼재한다.
-2. 일부 신규 서비스는 `adapters/out`이 없거나 테스트가 없어 헥사고날 완결성이 약하다.
-3. `api-gateway`에 스텁 성격의 일정평가 컨트롤러가 남아 서비스 책임 경계가 모호하다.
+- Gateway 인메모리 상태 포함 컨트롤러:
+  - `backend/orbit-platform/services/api-gateway/src/main/java/com/example/gateway/adapters/in/web/WorkItemController.java`
+  - `.../SprintController.java`
+  - `.../ScheduleEvaluationController.java`
+  - `.../ThreadController.java`
+  - `.../PortfolioController.java`
+  - `.../TeamController.java`
+  - `.../ProjectViewController.java`
+- LLM 클라이언트:
+  - `backend/orbit-platform/services/schedule-intelligence-service/src/main/java/com/orbit/schedule/adapters/out/llm/OpenAiEvaluationClient.java`
 
-### D. 프론트엔드 현황
+### 주요 관찰
 
-1. 라우트는 다수 존재하나 내비 중복(`All Pages`, 우측 링크군)으로 IA 혼선이 발생한다.
-2. 테스트는 `vitest` 기반 최소 단위(`profileCompletion`)만 실행되고, 핵심 UI 상호작용 테스트가 부족하다.
-3. `tests/` 하위 계약/통합/E2E 테스트 자산은 존재하지만, monorepo 통합 실행 스크립트는 약하다.
+1. 프론트는 멀티뷰 구조가 있으나, Sprint Wizard/Day Plan Freeze/DSU Suggest-Apply 루프가 단절되어 있다.
+2. Gateway가 여러 도메인의 상태를 직접 보유하여 서비스 경계가 약하다.
+3. OpenAPI 계약(`contracts/gateway-uiux.openapi.yaml`)과 실제 엔드포인트가 불일치한다.
+4. LLM 호출은 현재 strict schema 기반이 아닌 텍스트 JSON 파싱 의존이 있어 강건성이 낮다.
+5. UUID/내부 식별자 노출, 인박스/협업 triage UX, 모바일 밀도 문제 등 UI 잔여 결함이 있다.
 
 ## Technical Context
 
-**Language/Version**: Java 17 (Spring Boot services), TypeScript 5.9 + React 18 (Vite)  
-**Primary Dependencies**: Spring Boot 4.0.1, Spring Security 7 (Boot 4 계열), Spring gRPC 1.0.2, React Router, Zustand, dnd-kit, Vitest, Playwright  
-**Storage**: PostgreSQL, Redis, local JSON/YAML contracts  
-**Testing**: JUnit5 + ArchUnit + JaCoCo (backend), Vitest (frontend/unit+integration), Playwright (e2e/visual), contract tests (`tests/contract`)  
-**Target Platform**: Responsive Web (Desktop + Mobile Safari/Chrome), K3s 배포 환경  
-**Project Type**: Web application (frontend + backend microservices + API gateway)  
-**Performance Goals**: App Shell 첫 상호작용 p75 2.5s 이내(Desktop), 보드 상태 이동 체감 지연 150ms 이내, API p95 500ms 이내  
+**Language/Version**: Java 17, TypeScript 5.9, React 18  
+**Primary Dependencies**: Spring Boot 4.0.1, Spring Security 7, Spring gRPC 1.0.2, Zustand, dnd-kit, FullCalendar, Vitest, Playwright  
+**Storage**: PostgreSQL, Redis (서비스별), 계약 파일(YAML/OpenAPI)  
+**Testing**: JUnit5 + ArchUnit + JaCoCo, Vitest, Playwright, contract/integration suites  
+**Target Platform**: Responsive Web (Desktop + Mobile Safari/Chrome), K3s  
+**Project Type**: Frontend + API Gateway + Backend microservices  
+**Performance Goals**:
+- Board 상태 전환 UI 반응 p95 < 150ms
+- Gateway API p95 < 500ms
+- 5k work-items 조회/렌더 시 실사용 가능한 스크롤 및 필터 반응성 확보
 **Constraints**:
-- 헥사고날 경계(ports/adapters) 준수
-- 서비스별 독립 빌드/테스트 명령 확보
-- `gpt-5.2-pro` 기반 AI 호출은 폴백 및 정책 강제 필요
-- 모바일 오버플로우/포커스 가림 결함 0건 목표  
-**Scale/Scope**: 워크스페이스 다중 운영, 프로젝트 다수, Work Item 5k+ 기준 UI 안정성
+- Draft/Confirm/Apply 불변 원칙
+- Gateway 무상태화(도메인 상태 미보유)
+- 브레이킹 API를 `/api/v2`로 일괄 승격
+- 모바일(iPhone 12 mini / 15 Pro) 오버플로우/가림 결함 0 목표
 
-## Official Documentation References (Constitution Principle II)
+## Target Architecture
 
-- Spring Security Reference (7.x via Boot 4 line): `https://docs.spring.io/spring-security/reference/`
-- Spring gRPC Reference (1.0.x): `https://docs.spring.io/spring-grpc/reference/`
+### Responsibility Split
+
+- **API Gateway**: 인증/권한/입력검증/오케스트레이션/에러 매핑/응답 표준화
+- **Workgraph Service**: WorkItem/Dependency/Activity
+- **Agile Ops Service**: Sprint/Backlog/DayPlan/DSU normalization
+- **Collaboration Service**: Thread/Message/Mention/Inbox
+- **Schedule Intelligence Service**: Evaluation/LLM orchestration/fallback
+- **Team Service**: Team/Invite/Role
+
+### Error Code Standard
+
+공통 에러코드를 `code` 필드로 통일한다.
+
+- `DEPENDENCY_CYCLE`
+- `LOW_CONFIDENCE`
+- `CONFIRMATION_REQUIRED`
+- `INVALID_SCOPE`
+- `NO_ACTIVE_SPRINT`
+
+## Public API Plan (Breaking, /api/v2)
+
+다음 REST 계약을 canonical source로 사용한다.
+
+| Method | Path | 설명 |
+|---|---|---|
+| POST | /api/v2/work-items | 카드 생성 |
+| PATCH | /api/v2/work-items/{id} | 제목/담당/우선순위/기한/추정/본문 수정 |
+| PATCH | /api/v2/work-items/{id}/status | 상태 전환 |
+| POST | /api/v2/work-items/{id}/dependencies | 의존성 추가 |
+| DELETE | /api/v2/dependencies/{id} | 의존성 제거 |
+| GET | /api/v2/work-items | 필터/검색/뷰용 조회 |
+| GET | /api/v2/work-items/{id}/activity | 활동 로그 조회 |
+| POST | /api/v2/sprints | 스프린트 생성 |
+| POST | /api/v2/sprints/{id}/backlog-items | 스프린트 백로그 편입 |
+| POST | /api/v2/sprints/{id}/day-plan:generate | AI 데일리 플랜 Draft 생성 |
+| PATCH | /api/v2/day-plans/{id} | 일일 계획 편집 |
+| POST | /api/v2/sprints/{id}:freeze | 플랜 동결 |
+| POST | /api/v2/dsu | DSU 원문 저장 |
+| POST | /api/v2/dsu/{id}:suggest | DSU 기반 변경 제안 생성 |
+| POST | /api/v2/dsu/{id}:apply | 승인된 제안만 반영 |
+| POST | /api/v2/insights/evaluations | 일정 헬스 평가 |
+| POST | /api/v2/insights/evaluations/{id}/actions | 권고 수락/편집/무시 |
+| POST | /api/v2/threads | 스레드 생성 |
+| POST | /api/v2/threads/{id}/messages | 메시지 전송 |
+| GET | /api/v2/inbox | 인박스 조회 |
+| PATCH | /api/v2/inbox/{id} | read/resolve 상태 변경 |
+| POST | /api/v2/teams | 팀 생성 |
+| POST | /api/v2/teams/{id}/invites | 멤버 초대 |
+| PATCH | /api/v2/teams/{id}/members/{userId} | 역할 수정 |
+
+## Frontend Model Changes
+
+1. `WorkItem` 확장: `estimateMinutes`, `actualMinutes`, `blockedReason`, `markdownBody`, `activityCount`
+2. `Sprint` 확장: `freezeState`, `dailyCapacityMinutes`
+3. `DSUSuggestion` 신설:
+   - `suggestionId`, `targetType`, `targetId`, `proposedChange`, `confidence`, `reason`, `approved`
+4. `Evaluation` 신설:
+   - `health`, `risks`, `questions`, `actions`, `fallback`, `confidence`
+
+## Data Model / Migration Plan (서비스별 분리)
+
+- Agile Ops:
+  - `day_plan`, `day_plan_item`
+  - `dsu_entry`, `dsu_suggestion`, `dsu_apply_log`
+- Workgraph:
+  - `work_item_activity`
+- Collaboration:
+  - `inbox_item` 확장 (`source_type`, `source_id`, `status`, `resolved_at`)
+- Schedule Intelligence:
+  - `schedule_evaluation` 확장 (`fallback`, `confidence`, `reason`, `context_hash`)
+
+## LLM Pipeline Plan (Draft/Confirm/Apply)
+
+### Model + API
+
+- Model: `gpt-5.2-pro`
+- API: Responses API
+- Output: strict JSON schema
+- Default storage: `store:false`
+- 민감정보 정책: 마스킹 후 전달
+
+### Flow
+
+1. Draft 생성 API 호출
+2. UI에서 제안 목록 렌더
+3. 사용자 승인 목록 선택
+4. Apply API 호출(원자 트랜잭션)
+5. 실패/저신뢰 시 fallback + 질문형 응답
+
+### Fallback
+
+- 429/timeout/schema mismatch 시 deterministic 제안 반환
+- confidence 임계치 미만 시 `LOW_CONFIDENCE` + apply 차단
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
-
 기준 문서: `/home/lhs/dev/tasks/backend/orbit-platform/.specify/memory/constitution.md`
 
-### Gate Review (Pre-Design)
-
-| Gate | Rule | Status | Findings | Remediation in this plan |
+| Gate | Rule | Status | Findings | Action |
 |---|---|---|---|---|
-| G1 | Service autonomy & independent lifecycle | FAIL | 5개 서비스에 `gradlew` 부재로 독립 실행 불가 | Phase 1에서 wrapper/공통 실행 규약 정비 |
-| G2 | Official docs first (Security/gRPC) | PASS | 버전/공식 URL 문서화 가능 | Plan에 참조 URL 고정 |
-| G3 | Versioned contracts | PARTIAL | 계약 파일은 존재하나 gateway route-contract와 실 API 경로 불일치 존재 | Phase 1 계약 재정렬 및 버전 정책 명시 |
-| G4 | Hexagonal architecture enforcement | PARTIAL | 일부 서비스에 arch test 부재/패키지 혼재 | Phase 1에서 ArchUnit + 패키지 정규화 작업 포함 |
+| G1 | 서비스 독립 실행 | PASS | 모든 서비스에 `gradlew` 존재 확인 | 유지 |
+| G2 | 공식 문서 기반 보안/통신 | PASS | Spring Security/Spring gRPC 라인 유지 | 구현 시 문서 기반 검증 |
+| G3 | 계약 우선(버전드) | FAIL | 현재 `/api` 혼재 + 계약/구현 불일치 | `/api/v2` 계약 선반영 후 코드 정렬 |
+| G4 | 헥사고날 경계 | FAIL | Gateway에 도메인 상태/로직 잔존 | Port/Adapter 위임 구조로 전환 |
 
-### Required Quality Gates Before Implementation PR
+## Quality Gates (Hexagonal + Coverage)
 
-1. 신규/변경 서비스는 `gradlew test` 단독 실행 가능해야 함
-2. 각 서비스에 최소 1개 ArchUnit 경계 테스트가 있어야 함
-3. JaCoCo 리포트 생성뿐 아니라 `JacocoCoverageVerification` 임계치가 적용되어야 함
-4. gateway 공개 API와 계약 파일(OpenAPI/route-contract)이 동기화되어야 함
-
-## Project Structure
-
-### Documentation (this feature)
-
-```text
-/home/lhs/dev/tasks/specs/002-enterprise-uiux-overhaul/
-├── plan.md
-├── research.md
-├── data-model.md
-├── quickstart.md
-├── contracts/
-│   └── gateway-uiux.openapi.yaml
-└── tasks.md  # /speckit.tasks에서 생성
-```
-
-### Source Code (repository root)
-
-```text
-/home/lhs/dev/tasks/
-├── backend/
-│   ├── orbit-platform/
-│   │   ├── services/
-│   │   │   ├── api-gateway/
-│   │   │   ├── identity-access-service/
-│   │   │   ├── profile-service/
-│   │   │   ├── team-service/
-│   │   │   ├── workgraph-service/
-│   │   │   ├── agile-ops-service/
-│   │   │   ├── collaboration-service/
-│   │   │   ├── deep-link-service/
-│   │   │   ├── schedule-intelligence-service/
-│   │   │   ├── integration-migration-service/
-│   │   │   └── notification-service/
-│   │   └── docs/
-│   └── boilerplate-springboot-grpc/
-├── frontend/
-│   └── orbit-web/
-│       ├── src/
-│       │   ├── app/
-│       │   ├── pages/
-│       │   ├── components/
-│       │   ├── features/
-│       │   ├── design/
-│       │   └── stores/
-│       └── package.json
-└── tests/
-    ├── contract/
-    ├── integration/
-    └── e2e/
-```
-
-**Structure Decision**: 기존 모노레포 구조를 유지하되, 이번 기능은 `frontend/orbit-web`과 `backend/orbit-platform/services/*`를 함께 수정하는 수직 슬라이스 방식으로 구현한다.
+1. **Gateway 무상태 게이트**: `WorkItemController`, `SprintController`, `ThreadController`, `ScheduleEvaluationController`, `PortfolioController`, `TeamController`, `ProjectViewController`에서 인메모리 컬렉션 필드 제거.
+2. **헥사고날 게이트**: 변경 서비스(api-gateway, workgraph, agile-ops, collaboration, schedule-intelligence, team) 각각에 ArchUnit 경계 테스트 1개 이상 유지.
+3. **Coverage 게이트**:
+   - Backend touched service: line >= 70%, branch >= 55%
+   - Frontend touched package: statements >= 65%
+4. **계약 동기화 게이트**: `/api/v2` OpenAPI와 gateway route-contract이 경로/메서드 기준 1:1 매핑.
+5. **LLM 안전 게이트**: `store:false` 기본, strict schema 불일치 시 fallback 필수, `LOW_CONFIDENCE`에서 apply 차단.
 
 ## Implementation Phases
 
-### Phase 0 - Research & Design Decisions
+### Phase 0 - Contract & Type Freeze
 
-Output: `research.md`
+Deliverables:
+- `/specs/002-enterprise-uiux-overhaul/contracts/gateway-uiux.openapi.yaml` v2
+- 프론트 타입 초안(`WorkItem/Sprint/DSUSuggestion/Evaluation`)
+- 공통 에러 코드 표준 문서
 
-1. IA 분리 전략(Scope vs View) 확정
-2. Assistant 표면 단일화 전략 확정
-3. 의존성 편집 위치 재정의(보드 기본영역에서 분리)
-4. 헥사고날/테스트 커버리지 강화 기준 확정
-5. 계약 파일-실구현 경로 불일치 해결 전략 확정
+### Phase 1 - P0 Sprint-DSU Loop
 
-### Phase 1 - Domain & Contract Design
+Deliverables:
+- Sprint Wizard 3-Step UI
+- Day Plan Draft 생성/편집/Freeze
+- DSU Submit/Suggest/Apply(컨펌 필수)
+- Board/Calendar/Timeline 실행 루프 연결
 
-Outputs: `data-model.md`, `contracts/gateway-uiux.openapi.yaml`, `quickstart.md`
+### Phase 2 - Gateway Delegation Refactor
 
-1. 객체 모델(Workspace/Project/ViewConfig/WorkItem/Sprint/DSU/Thread/Inbox/Portfolio/Evaluation) 정식화
-2. API 계약 표준화(중복/잔존 SNS 경로 제거 계획 포함)
-3. 사용자 핵심 플로우 기반 quickstart 정의
-4. agent context 업데이트(`update-agent-context.sh codex`)
+Deliverables:
+- Gateway 인메모리 제거
+- v2 REST ↔ 서비스 gRPC 매핑 완성
+- 표준 오류 코드 매핑
 
-### Phase 2 - Delivery Plan for /speckit.tasks
+### Phase 3 - Collaboration + Inbox Triage
 
-`tasks.md`에서 아래 6개 트랙으로 분해한다.
+Deliverables:
+- Inbox 탭 분리(Notifications/Requests/Mentions/AI Questions)
+- Resolve + 딥링크 + 스레드 연계
+- Team invite/role 변경 v2 연결
 
-1. IA/AppShell/Router 정비 트랙
-2. Project Shell 멀티뷰 일관화 트랙
-3. Sprint/DSU/Inbox 상호연결 트랙
-4. Portfolio/Insight/AI 패널 UX 트랙
-5. Backend 계약/도메인 정합성 트랙
-6. 테스트/커버리지/아키텍처 게이트 트랙
+### Phase 4 - AI Coach + Evaluation Hardening
 
-## Hexagonal Architecture Enforcement Plan
+Deliverables:
+- 컨텍스트 기반 플로팅 코치
+- strict schema 응답 파싱
+- fallback/low confidence 제어 + 액션 처리
 
-### Target Services (이번 기능 직접 영향)
+### Phase 5 - Mobile/A11y + Performance + Polish
 
-- api-gateway
-- identity-access-service
-- team-service
-- workgraph-service
-- agile-ops-service
-- collaboration-service
-- schedule-intelligence-service
-- deep-link-service
+Deliverables:
+- iPhone 12 mini/15 Pro 대응
+- 수평 스크롤/오버플로우/포커스 가림 결함 제거
+- 핵심 플로우 성능 및 회귀 테스트 통과
 
-### Enforcement Actions
+## Test Strategy
 
-1. 서비스별 패키지 루트 통일(`com.orbit.<service>`) 및 legacy 루트 축소
-2. `application` 레이어에서 adapter 구현 타입 참조 제거
-3. inbound adapter는 application port만 호출
-4. outbound adapter는 application port 구현으로 제한
-5. ArchUnit 규칙 통일 템플릿 도입
+### Frontend
 
-### Known Gaps to Fix
+1. Board: 드래그/키보드 전환/의존성 토글/상세 편집
+2. Sprint Wizard: 생성→백로그→DayPlan→Freeze
+3. DSU: 제출→제안→부분 승인→반영
+4. Inbox: 필터/resolve/딥링크
+5. AI 코치: 컨텍스트/폴백/액션
+6. 모바일: 메뉴 접근성/수평 스크롤/오버플로우 없음
 
-- `team-service`의 `TeamLifecycleService`가 adapter entity를 직접 참조
-- 일부 신규 서비스(agile/collaboration/deep-link/integration-migration/schedule-intelligence)에 arch test 부재
-- 일부 신규 서비스에 테스트 0건
+### Backend
 
-## Test Coverage Strategy
+1. Contract: `/api/v2` request/response schema 고정
+2. Integration: Gateway→서비스 위임 경로 검증
+3. Domain:
+   - dependency cycle 차단
+   - freeze 이후 자동 변경 금지
+   - DSU apply 원자성
+   - low confidence 시 apply 불가
+4. Security:
+   - 권한 없는 mutate 차단
+   - workspace scope 위반 차단
+5. Performance:
+   - 보드 조회(5k items) p95 측정
+   - 평가 API 동시 요청/레이트리밋 폴백
 
-### Baseline
+## Risks & Mitigations
 
-- Backend: JaCoCo 리포트는 대부분 존재, 강제 임계치 없음
-- Frontend: 단위 테스트 1파일(2 tests), 핵심 화면 테스트 부족
-- Cross-service: `tests/contract`, `tests/integration`, `tests/e2e` 자산 존재
+1. 브레이킹 API 전환 중 프론트/백엔드 불일치
+- Mitigation: v2 contract 먼저 고정, 병행 스모크 후 커트오버
 
-### Coverage Gates (이번 기능 목표)
+2. Gateway 리팩터링 시 기능 회귀
+- Mitigation: 컨트롤러 단위 golden contract test + 단계적 위임
 
-1. Backend service line coverage >= 70%, branch >= 55% (`JacocoCoverageVerification`)
-2. 각 핵심 서비스당 ArchUnit 테스트 >= 1
-3. Frontend 핵심 페이지(Board/Sprint/Inbox/AppShell) 컴포넌트 테스트 추가
-4. E2E 최소 3개 핵심 시나리오(로그인 진입, 보드 상태 이동, 스프린트+DSU)
-5. 계약 테스트는 새/변경 API 모두 추가
+3. LLM 출력 불안정
+- Mitigation: strict schema + deterministic fallback + confirm-only apply
 
-### CI/Execution Rules
+4. 모바일 레이아웃 회귀
+- Mitigation: 지정 디바이스 e2e + CSS 상대단위 우선 적용
 
-1. 서비스별 `./gradlew test jacocoTestReport` 실행 가능한 상태 확보
-2. 프론트 `npm test` + 빌드 통과
-3. 계약/통합/E2E 테스트는 변경 영역 기반 선택 실행 + 야간 전체 실행
+## Done Criteria
 
-## API and Contract Alignment Plan
-
-### High-Risk Mismatch Areas
-
-1. `route-contracts.yml` 경로와 실제 gateway endpoint prefix 불일치(`/api` 유무)
-2. aggregation 기본값(`feed-summary`) fallback이 런타임에 노출될 수 있음
-3. schedule evaluation이 gateway 스텁과 schedule-intelligence 서비스에 이중 존재
-
-### Alignment Actions
-
-1. gateway 공개 REST를 OpenAPI 계약에 우선 정렬
-2. `route-contracts.yml`를 OpenAPI 경로와 동일한 canonical path로 일치
-3. 일정평가는 schedule-intelligence 단일 소스로 수렴
-4. deprecated path 목록과 제거 시점 명시
-
-## Risks and Mitigation
-
-| Risk | Impact | Mitigation |
-|---|---|---|
-| IA 대개편으로 사용자 혼란 | 초기 이탈/문의 증가 | 내비 단순화 + 빈상태 가이드 + 릴리스 노트 |
-| 서비스 경계 정리 중 회귀 | 기능 불능 | 계약 테스트 선행 + 단계별 스모크 |
-| Arch/coverage gate 도입 시 빌드 실패 증가 | 개발 속도 저하 | 임계치 단계 적용(초기 낮게 시작 후 상향) |
-| 모바일 레이아웃 회귀 | 핵심 사용성 저하 | iPhone 12 mini/15 Pro 회귀 체크리스트 고정 |
-| AI 실패/품질 변동 | 신뢰 저하 | 폴백 UX + confidence 기준 + 근거 링크 강제 |
-
-## Post-Design Constitution Re-Check (Expected)
-
-Phase 1 산출물 반영 후 목표 상태:
-
-1. G1: PASS (모든 목표 서비스 wrapper/실행 규약 보유)
-2. G2: PASS (공식 문서/버전 참조 plan 및 contracts에 명시)
-3. G3: PASS (OpenAPI + route contract + proto 버전 정합)
-4. G4: PASS (핵심 서비스 아키텍처 테스트 및 경계 준수)
-
-## Complexity Tracking
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| Legacy package 공존(`com.example.*` + `com.orbit.*`) | 기존 기능 유지 중 전환 필요 | 즉시 전면 rename은 회귀 위험이 큼 |
-| 일부 서비스 gradlew 부재 | 초기 스캐폴딩 속도 우선 결과 | 글로벌 gradle 의존은 헌법의 서비스 독립 원칙 위반 |
-| JaCoCo 리포트만 있고 gate 없음 | 초기 개발 단계에서 속도 우선 | 품질 게이트 부재로 회귀 누적 위험이 큼 |
-
-## Implementation Validation & Release Notes (2026-03-04)
-
-### Validation Commands
-
-1. Frontend unit + build
-   - `cd frontend/orbit-web && npm test && npm run build`
-   - Result: PASS
-2. Backend service tests
-   - `./gradlew test --no-daemon` on:
-     - api-gateway
-     - identity-access-service
-     - workgraph-service
-     - agile-ops-service
-     - collaboration-service
-     - deep-link-service
-     - schedule-intelligence-service
-     - integration-migration-service
-   - Result: PASS
-3. Contract + integration suites
-   - `cd frontend/orbit-web && npx vitest run --root ../.. tests/contract tests/integration`
-   - Result: PASS (38 files, 61 tests)
-4. E2E smoke
-   - `cd tests/e2e && npx playwright test -c playwright.config.ts us7-deeplink-auth-bounce.spec.ts --project=chromium`
-   - Result: PASS
-
-### Release Notes Summary
-
-1. Scope-first/app-shell navigation with shared project view tabs and filter context finalized.
-2. Project multiview parity completed for Board/Table/Timeline/Calendar/Dashboard.
-3. Board dependency inspector, keyboard fallback actions, and drag cohesion styling applied.
-4. Sprint no-active empty-state and structured DSU composition flow connected.
-5. Inbox triage filters + resolve actions + deep-link bounce handling stabilized.
-6. Portfolio selector-first flow and drilldown links implemented.
-7. Governance UX improved with admin policy tabs, audit filtering/search, and export flow.
-8. Route contracts, governance OpenAPI, and feature contract snapshot synchronized.
-9. Wrapper/coverage/architecture test baseline hardened across targeted backend services.
+1. P0 루프(스프린트 계획→실행→DSU→컨펌 반영→헬스 코칭) E2E 통과
+2. Gateway 컨트롤러 인메모리 상태 제거
+3. `/api/v2` 계약과 구현 일치
+4. LLM 적용이 Draft/Confirm/Apply로만 동작
+5. 모바일/접근성 회귀 테스트 통과

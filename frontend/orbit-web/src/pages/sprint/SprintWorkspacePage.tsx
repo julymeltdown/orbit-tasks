@@ -264,7 +264,7 @@ export function SprintWorkspacePage() {
   }
 
   return (
-    <section style={{ display: "grid", gap: 14 }}>
+    <section className="orbit-sprint-shell">
       {!sprint ? (
         <EmptyStateCard
           title="No active sprint selected"
@@ -276,12 +276,12 @@ export function SprintWorkspacePage() {
       ) : null}
 
       {error ? (
-        <article className="orbit-card" style={{ padding: 14 }}>
+        <article className="orbit-sprint-banner">
           <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{error}</p>
         </article>
       ) : null}
 
-      <article className="orbit-card" style={{ padding: 16 }}>
+      <article className="orbit-sprint-banner">
         <h2 style={{ marginTop: 0 }}>Sprint Wizard</h2>
         <p style={{ marginTop: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
           Step {step} / 3 · Plan → Backlog → Day Plan Freeze
@@ -338,14 +338,16 @@ export function SprintWorkspacePage() {
         />
       ) : null}
 
-      <DSUComposerPanel onSubmit={submitDsu} />
-      <DSUSuggestionReviewPanel suggestions={suggestions} applying={applying} onApply={applySuggestions} />
+      <section className="orbit-sprint-dsu-grid">
+        <DSUComposerPanel onSubmit={submitDsu} />
+        <DSUSuggestionReviewPanel suggestions={suggestions} applying={applying} onApply={applySuggestions} />
+      </section>
 
-      <article className="orbit-card" style={{ padding: 16 }}>
+      <article className="orbit-sprint-history">
         <h3 style={{ marginTop: 0 }}>DSU History</h3>
         <div style={{ display: "grid", gap: 8 }}>
           {dsuHistory.map((entry) => (
-            <div key={entry.dsuId} className="orbit-panel orbit-animate-card" style={{ padding: 10 }}>
+            <div key={entry.dsuId} className="orbit-sprint-history__item orbit-animate-card">
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                 <strong>{entry.authorId}</strong>
                 <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>

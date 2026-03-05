@@ -77,7 +77,7 @@ export function WorkspaceEntryPage() {
       {!loading && !error && (
         <div className="orbit-workspace-entry__list">
           {claims.map((claim) => (
-            <article key={claim.workspaceId} className="orbit-card orbit-workspace-entry__claim orbit-animate-card">
+            <article key={claim.workspaceId} className="orbit-workspace-entry__claim orbit-animate-card">
               <div>
                 <strong>{claim.workspaceName}</strong>
                 <div className="orbit-workspace-entry__meta">Workspace scope ready</div>

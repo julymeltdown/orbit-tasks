@@ -69,7 +69,7 @@ export function DSUComposerPanel({ onSubmit }: Props) {
   }
 
   return (
-    <article className="orbit-card" style={{ padding: 16, display: "grid", gap: 10 }}>
+    <article className="orbit-dsu-panel">
       <h3 style={{ margin: 0 }}>DSU Composer</h3>
       <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 13 }}>
         Enter yesterday/today/blockers in one note. The service normalizes blocker signal for schedule health.

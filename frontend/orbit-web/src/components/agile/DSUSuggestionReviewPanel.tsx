@@ -32,14 +32,14 @@ export function DSUSuggestionReviewPanel({ suggestions, applying, onApply }: Pro
   }
 
   return (
-    <article className="orbit-card" style={{ padding: 16, display: "grid", gap: 10 }}>
+    <article className="orbit-dsu-panel">
       <h3 style={{ margin: 0 }}>DSU Suggestion Review</h3>
       {normalized.length === 0 ? (
         <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No suggestions yet. Submit DSU and run AI suggest.</p>
       ) : (
         <div style={{ display: "grid", gap: 8 }}>
           {normalized.map((suggestion) => (
-            <label key={suggestion.suggestionId} className="orbit-panel orbit-animate-row" style={{ padding: 10, display: "grid", gap: 6 }}>
+            <label key={suggestion.suggestionId} className="orbit-dsu-suggestion orbit-animate-row">
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
                 <strong>{suggestion.targetType}</strong>
                 <span style={{ fontSize: 12, color: suggestion.confidence < 0.6 ? "var(--orbit-warning)" : "var(--orbit-text-subtle)" }}>

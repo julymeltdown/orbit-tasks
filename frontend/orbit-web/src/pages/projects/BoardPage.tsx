@@ -96,7 +96,7 @@ function Lane({
   });
 
   return (
-    <article className="orbit-card orbit-notion-lane" ref={setNodeRef} data-over={isOver ? "true" : "false"}>
+    <article className="orbit-notion-lane" ref={setNodeRef} data-over={isOver ? "true" : "false"}>
       <header className="orbit-notion-lane__header">
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <h3 className="orbit-notion-lane__title">{title}</h3>
@@ -184,6 +184,16 @@ function BoardCard({
     <article
       ref={setNodeRef}
       className="orbit-panel orbit-notion-card orbit-animate-card"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          onMoveByKeyboard(item.workItemId, "left");
+        } else if (event.key === "ArrowRight") {
+          event.preventDefault();
+          onMoveByKeyboard(item.workItemId, "right");
+        }
+      }}
       style={{
         transform: CSS.Translate.toString(transform),
         opacity: isDragging ? 0.42 : 1,
@@ -207,22 +217,9 @@ function BoardCard({
         </div>
         {notePreview ? <p className="orbit-notion-card__note">{notePreview}</p> : null}
       </button>
-      <button
-        type="button"
-        className="orbit-button orbit-button--ghost"
-        style={{ minHeight: 28, fontSize: 10 }}
-        onKeyDown={(event) => {
-          if (event.key === "ArrowLeft") {
-            event.preventDefault();
-            onMoveByKeyboard(item.workItemId, "left");
-          } else if (event.key === "ArrowRight") {
-            event.preventDefault();
-            onMoveByKeyboard(item.workItemId, "right");
-          }
-        }}
-      >
+      <div className="orbit-notion-card__hint" aria-hidden>
         Move with keyboard ← →
-      </button>
+      </div>
     </article>
   );
 }
@@ -505,7 +502,7 @@ export function BoardPage() {
         title="Task Database"
         subtitle="Board view shares the same query context with table, timeline, calendar, and dashboard."
       />
-      <article className="orbit-card orbit-notion-toolbar">
+      <section className="orbit-notion-toolbar">
         <div className="orbit-notion-toolbar__head">
           <h2 style={{ margin: 0 }}>Board Operations</h2>
           <div className="orbit-notion-toolbar__actions">
@@ -548,6 +545,9 @@ export function BoardPage() {
             <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint")}>
               Open Sprint
             </button>
+            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/insights")}>
+              Open AI Evaluation
+            </button>
           </div>
         ) : (
           <div className="orbit-notion-toolbar__meta">
@@ -562,7 +562,7 @@ export function BoardPage() {
         {mutation.error ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{mutation.error}</p> : null}
         {sprintError ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{sprintError}</p> : null}
         {localError ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{localError}</p> : null}
-      </article>
+      </section>
 
       <div className="orbit-notion-main">
         <DndContext
@@ -638,7 +638,7 @@ export function BoardPage() {
       />
 
       {filteredByStatus.ARCHIVED.length > 0 ? (
-        <article className="orbit-card" style={{ padding: 14 }}>
+        <section className="orbit-notion-archive">
           <h3 style={{ marginTop: 0 }}>Archived</h3>
           <div style={{ display: "grid", gap: 8 }}>
             {filteredByStatus.ARCHIVED.map((item) => (
@@ -656,7 +656,7 @@ export function BoardPage() {
               </button>
             ))}
           </div>
-        </article>
+        </section>
       ) : null}
     </section>
   );

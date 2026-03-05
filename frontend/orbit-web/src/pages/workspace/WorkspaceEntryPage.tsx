@@ -83,9 +83,7 @@ export function WorkspaceEntryPage() {
               >
                 <div>
                   <strong>{claim.workspaceName}</strong>
-                  <div style={{ marginTop: 4, fontSize: 12, color: "var(--orbit-text-subtle)" }}>
-                    {claim.workspaceId}
-                  </div>
+                  <div style={{ marginTop: 4, fontSize: 12, color: "var(--orbit-text-subtle)" }}>Workspace scope ready</div>
                 </div>
                 <div style={{ textAlign: "right", marginLeft: "auto" }}>
                   <div style={{ fontSize: 12, fontWeight: 700 }}>{claim.role}</div>

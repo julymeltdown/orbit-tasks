@@ -18,9 +18,13 @@ interface Result {
 
 export function useEvaluationActions() {
   async function submitAction(payload: Payload): Promise<Result> {
-    return request<Result>("/api/insights/schedule-evaluations/actions", {
+    return request<Result>(`/api/v2/insights/evaluations/${encodeURIComponent(payload.evaluationId)}/actions`, {
       method: "POST",
-      body: payload
+      body: {
+        action: payload.action,
+        note: payload.note,
+        patch: payload.patch
+      }
     });
   }
 

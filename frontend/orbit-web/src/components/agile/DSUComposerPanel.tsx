@@ -1,13 +1,22 @@
 import { useMemo, useState } from "react";
 
 export interface DSUSummary {
+  dsuId?: string;
   blockerCount: number;
   statusSignal: "on_track" | "at_risk";
   asks: string[];
 }
 
+export interface DSUComposePayload {
+  yesterday: string;
+  today: string;
+  blockers: string;
+  asks: string;
+  rawText: string;
+}
+
 interface Props {
-  onSubmit: (rawText: string) => Promise<DSUSummary>;
+  onSubmit: (payload: DSUComposePayload) => Promise<DSUSummary>;
 }
 
 export function DSUComposerPanel({ onSubmit }: Props) {
@@ -40,7 +49,13 @@ export function DSUComposerPanel({ onSubmit }: Props) {
         `블로커: ${blockers || "-"}`,
         `도움요청: ${asks || "-"}`
       ].join("\n");
-      const next = await onSubmit(rawText);
+      const next = await onSubmit({
+        yesterday,
+        today,
+        blockers,
+        asks,
+        rawText
+      });
       setSummary(next);
       setYesterday("");
       setToday("");

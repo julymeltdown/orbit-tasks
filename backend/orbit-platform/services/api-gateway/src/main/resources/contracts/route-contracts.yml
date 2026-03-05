@@ -80,3 +80,133 @@ routes:
     path: /insights/schedule-evaluations
     target: schedule-intelligence-service
     policySet: workspace-manager
+  - id: v2.work-items.list
+    method: GET
+    path: /api/v2/work-items
+    target: workgraph-service
+    policySet: workspace-user
+  - id: v2.work-items.create
+    method: POST
+    path: /api/v2/work-items
+    target: workgraph-service
+    policySet: workspace-user
+  - id: v2.work-items.patch
+    method: PATCH
+    path: /api/v2/work-items/{workItemId}
+    target: workgraph-service
+    policySet: workspace-user
+  - id: v2.work-items.status
+    method: PATCH
+    path: /api/v2/work-items/{workItemId}/status
+    target: workgraph-service
+    policySet: workspace-user
+  - id: v2.work-items.dependencies.create
+    method: POST
+    path: /api/v2/work-items/{workItemId}/dependencies
+    target: workgraph-service
+    policySet: workspace-user
+  - id: v2.dependencies.delete
+    method: DELETE
+    path: /api/v2/dependencies/{dependencyId}
+    target: workgraph-service
+    policySet: workspace-user
+  - id: v2.work-items.activity
+    method: GET
+    path: /api/v2/work-items/{workItemId}/activity
+    target: workgraph-service
+    policySet: workspace-user
+  - id: v2.sprints.create
+    method: POST
+    path: /api/v2/sprints
+    target: agile-ops-service
+    policySet: workspace-user
+  - id: v2.sprints.backlog.add
+    method: POST
+    path: /api/v2/sprints/{sprintId}/backlog-items
+    target: agile-ops-service
+    policySet: workspace-user
+  - id: v2.sprints.backlog.list
+    method: GET
+    path: /api/v2/sprints/{sprintId}/backlog-items
+    target: agile-ops-service
+    policySet: workspace-user
+  - id: v2.sprints.dayplan.generate
+    method: POST
+    path: /api/v2/sprints/{sprintId}/day-plan:generate
+    target: agile-ops-service
+    policySet: workspace-user
+  - id: v2.dayplan.patch
+    method: PATCH
+    path: /api/v2/day-plans/{dayPlanId}
+    target: agile-ops-service
+    policySet: workspace-user
+  - id: v2.sprints.freeze
+    method: POST
+    path: /api/v2/sprints/{sprintId}:freeze
+    target: agile-ops-service
+    policySet: workspace-user
+  - id: v2.dsu.create
+    method: POST
+    path: /api/v2/dsu
+    target: agile-ops-service
+    policySet: workspace-user
+  - id: v2.dsu.suggest
+    method: POST
+    path: /api/v2/dsu/{dsuId}:suggest
+    target: agile-ops-service
+    policySet: workspace-user
+  - id: v2.dsu.apply
+    method: POST
+    path: /api/v2/dsu/{dsuId}:apply
+    target: agile-ops-service
+    policySet: workspace-user
+  - id: v2.inbox.list
+    method: GET
+    path: /api/v2/inbox
+    target: collaboration-service
+    policySet: workspace-user
+  - id: v2.inbox.patch
+    method: PATCH
+    path: /api/v2/inbox/{inboxItemId}
+    target: collaboration-service
+    policySet: workspace-user
+  - id: v2.threads.create
+    method: POST
+    path: /api/v2/threads
+    target: collaboration-service
+    policySet: workspace-user
+  - id: v2.threads.messages.create
+    method: POST
+    path: /api/v2/threads/{threadId}/messages
+    target: collaboration-service
+    policySet: workspace-user
+  - id: v2.threads.messages.list
+    method: GET
+    path: /api/v2/threads/{threadId}/messages
+    target: collaboration-service
+    policySet: workspace-user
+  - id: v2.teams.create
+    method: POST
+    path: /api/v2/teams
+    target: team-service
+    policySet: workspace-admin
+  - id: v2.teams.invite
+    method: POST
+    path: /api/v2/teams/{teamId}/invites
+    target: team-service
+    policySet: workspace-admin
+  - id: v2.teams.member.patch
+    method: PATCH
+    path: /api/v2/teams/{teamId}/members/{userId}
+    target: team-service
+    policySet: workspace-admin
+  - id: v2.insights.evaluate
+    method: POST
+    path: /api/v2/insights/evaluations
+    target: schedule-intelligence-service
+    policySet: workspace-manager
+  - id: v2.insights.actions
+    method: POST
+    path: /api/v2/insights/evaluations/{evaluationId}/actions
+    target: schedule-intelligence-service
+    policySet: workspace-manager

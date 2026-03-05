@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { request } from "@/lib/http/client";
-import { DSUComposerPanel, DSUSummary } from "@/components/agile/DSUComposerPanel";
+import { DSUComposerPanel, type DSUComposePayload, type DSUSummary } from "@/components/agile/DSUComposerPanel";
+import { DSUSuggestionReviewPanel } from "@/components/agile/DSUSuggestionReviewPanel";
+import { SprintWizardStepBacklog } from "@/components/agile/SprintWizardStepBacklog";
+import { SprintWizardStepDayPlan } from "@/components/agile/SprintWizardStepDayPlan";
+import { SprintWizardStepInfo } from "@/components/agile/SprintWizardStepInfo";
 import { EmptyStateCard } from "@/components/common/EmptyStateCard";
+import { useDsuSuggestions } from "@/features/agile/hooks/useDsuSuggestions";
+import { type BacklogItemView, type DayPlanView, type SprintView, useSprintPlanning } from "@/features/agile/hooks/useSprintPlanning";
+import type { DSUSuggestion } from "@/features/workitems/types";
 import { useAuthStore } from "@/stores/authStore";
 import { useProjectStore } from "@/stores/projectStore";
 import { useProjectViewStore } from "@/stores/projectViewStore";
@@ -9,33 +15,18 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
 
-interface SprintView {
-  sprintId: string;
-  workspaceId: string;
-  projectId: string;
-  name: string;
-  goal: string;
-  startDate: string;
-  endDate: string;
-  capacitySp: number;
-  status: string;
-}
+type WizardStep = 1 | 2 | 3;
 
-interface BacklogItemView {
-  backlogItemId: string;
-  workItemId: string;
-  rank: number;
-  status: string;
-}
-
-interface DsuView {
+interface SprintDsuEntry {
   dsuId: string;
-  sprintId: string;
   authorId: string;
   rawText: string;
-  blockerCount: number;
-  statusSignal: "on_track" | "at_risk";
   createdAt: string;
+}
+
+function hasBlockerSignal(text: string): boolean {
+  const lowered = text.toLowerCase();
+  return lowered.includes("block") || lowered.includes("막힘") || lowered.includes("대기") || lowered.includes("승인");
 }
 
 export function SprintWorkspacePage() {
@@ -43,62 +34,80 @@ export function SprintWorkspacePage() {
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
   const setProjectFilter = useProjectViewStore((state) => state.setFilter);
-  const { items: workItems } = useWorkItems(projectId);
+  const { items: workItems, load: reloadWorkItems } = useWorkItems(projectId);
   const { activeSprint, setActiveSprint } = useActiveSprint(activeWorkspaceId, projectId);
+  const sprintPlanning = useSprintPlanning();
+  const dsuApi = useDsuSuggestions();
 
-  const [sprint, setSprint] = useState<SprintView | null>(null);
-  const [backlog, setBacklog] = useState<BacklogItemView[]>([]);
-  const [dsuHistory, setDsuHistory] = useState<DsuView[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<WizardStep>(1);
   const [loading, setLoading] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const [sprintName, setSprintName] = useState("Sprint Orbit");
-  const [goal, setGoal] = useState("결제 리팩토링 완료 및 릴리스 준비");
+  const [goal, setGoal] = useState("핵심 릴리스 범위 완료");
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState(new Date(Date.now() + 11 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
   const [capacitySp, setCapacitySp] = useState(18);
-  const [selectedWorkItemId, setSelectedWorkItemId] = useState("");
-  const [rank, setRank] = useState(1);
-  const [backlogStatus, setBacklogStatus] = useState("READY");
+  const [dailyCapacityMinutes, setDailyCapacityMinutes] = useState(360);
+
+  const [sprint, setSprint] = useState<SprintView | null>(null);
+  const [backlog, setBacklog] = useState<BacklogItemView[]>([]);
+  const [dayPlans, setDayPlans] = useState<DayPlanView[]>([]);
+  const [dsuHistory, setDsuHistory] = useState<SprintDsuEntry[]>([]);
+  const [suggestions, setSuggestions] = useState<DSUSuggestion[]>([]);
+  const [lastDsuId, setLastDsuId] = useState<string | null>(null);
 
   const canCreateSprint = useMemo(() => {
     return Boolean(activeWorkspaceId && projectId && sprintName.trim() && goal.trim() && startDate && endDate);
   }, [activeWorkspaceId, projectId, sprintName, goal, startDate, endDate]);
 
-  async function loadBacklogAndDsu(sprintId: string) {
-    const [nextBacklog, nextDsu] = await Promise.all([
-      request<BacklogItemView[]>(`/api/agile/sprints/${sprintId}/backlog`),
-      request<DsuView[]>(`/api/agile/sprints/${sprintId}/dsu`)
+  async function loadSprintContext(sprintId: string) {
+    const [nextBacklog, nextDayPlans, nextDsu] = await Promise.all([
+      sprintPlanning.listBacklog(sprintId),
+      sprintPlanning.listDayPlans(sprintId),
+      sprintPlanning.listSprintDsu(sprintId)
     ]);
     setBacklog(nextBacklog);
+    setDayPlans(nextDayPlans);
     setDsuHistory(nextDsu);
   }
 
   useEffect(() => {
-    if (!activeWorkspaceId || !projectId || sprint || !activeSprint?.sprintId) {
+    if (!activeWorkspaceId || !projectId || !activeSprint?.sprintId) {
       return;
     }
-    setSprint({
-      sprintId: activeSprint.sprintId,
-      workspaceId: activeWorkspaceId,
-      projectId,
-      name: activeSprint.name,
-      goal: activeSprint.goal,
-      startDate: activeSprint.startDate,
-      endDate: activeSprint.endDate,
-      capacitySp: activeSprint.capacitySp,
-      status: "ACTIVE"
+    setSprint((current) => {
+      if (current?.sprintId === activeSprint.sprintId) {
+        return current;
+      }
+      return {
+        sprintId: activeSprint.sprintId,
+        workspaceId: activeWorkspaceId,
+        projectId,
+        name: activeSprint.name,
+        goal: activeSprint.goal,
+        startDate: activeSprint.startDate,
+        endDate: activeSprint.endDate,
+        capacitySp: activeSprint.capacitySp,
+        status: "ACTIVE",
+        freezeState: false,
+        dailyCapacityMinutes: dailyCapacityMinutes,
+        createdAt: activeSprint.updatedAt,
+        updatedAt: activeSprint.updatedAt
+      };
     });
     setSprintName(activeSprint.name);
     setGoal(activeSprint.goal);
     setStartDate(activeSprint.startDate);
     setEndDate(activeSprint.endDate);
-    setCapacitySp(activeSprint.capacitySp);
-    loadBacklogAndDsu(activeSprint.sprintId).catch((e) => {
-      setError(e instanceof Error ? e.message : "Failed to load active sprint context");
+    loadSprintContext(activeSprint.sprintId).catch((e) => {
+      setError(e instanceof Error ? e.message : "Failed to load sprint context");
     });
-  }, [activeWorkspaceId, projectId, sprint, activeSprint]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWorkspaceId, projectId, activeSprint?.sprintId]);
 
-  async function createSprint() {
+  async function createSprintAndContinue() {
     if (!activeWorkspaceId) {
       setError("No active workspace selected");
       return;
@@ -107,21 +116,18 @@ export function SprintWorkspacePage() {
       setError("Fill all sprint fields");
       return;
     }
-
     setLoading(true);
     setError(null);
     try {
-      const created = await request<SprintView>("/api/agile/sprints", {
-        method: "POST",
-        body: {
-          workspaceId: activeWorkspaceId,
-          projectId,
-          name: sprintName.trim(),
-          goal: goal.trim(),
-          startDate,
-          endDate,
-          capacitySp
-        }
+      const created = await sprintPlanning.createSprint({
+        workspaceId: activeWorkspaceId,
+        projectId,
+        name: sprintName.trim(),
+        goal: goal.trim(),
+        startDate,
+        endDate,
+        capacitySp,
+        dailyCapacityMinutes
       });
       setSprint(created);
       setActiveSprint({
@@ -131,10 +137,11 @@ export function SprintWorkspacePage() {
         startDate: created.startDate,
         endDate: created.endDate,
         capacitySp: created.capacitySp,
-        updatedAt: new Date().toISOString()
+        updatedAt: created.updatedAt
       });
-      await loadBacklogAndDsu(created.sprintId);
+      await loadSprintContext(created.sprintId);
       setProjectFilter(projectId, "sprintOnly", true);
+      setStep(2);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create sprint");
     } finally {
@@ -142,56 +149,119 @@ export function SprintWorkspacePage() {
     }
   }
 
-  async function addBacklogItem() {
+  async function addBacklogItem(workItemId: string) {
     if (!sprint) {
-      setError("Create sprint first");
       return;
     }
-    if (!selectedWorkItemId) {
-      setError("Select a work item");
-      return;
-    }
+    const nextRank = backlog.length > 0 ? Math.max(...backlog.map((entry) => entry.rank)) + 1 : 1;
+    setLoading(true);
     setError(null);
     try {
-      await request(`/api/agile/sprints/${sprint.sprintId}/backlog`, {
-        method: "POST",
-        body: {
-          workItemId: selectedWorkItemId,
-          rank,
-          status: backlogStatus
-        }
+      await sprintPlanning.addBacklogItem(sprint.sprintId, {
+        workItemId,
+        rank: nextRank,
+        status: "READY"
       });
-      await loadBacklogAndDsu(sprint.sprintId);
-      setRank((prev) => prev + 1);
+      await loadSprintContext(sprint.sprintId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to add backlog item");
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function submitDsu(rawText: string): Promise<DSUSummary> {
+  async function generateDayPlan() {
     if (!sprint) {
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const generated = await sprintPlanning.generateDayPlan(sprint.sprintId, {
+        dailyCapacityMinutes
+      });
+      setDayPlans(generated);
+      if (generated.length > 0) {
+        setStep(3);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to generate day plan");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function patchDayPlan(dayPlanId: string, patch: { plannedMinutes?: number; bufferMinutes?: number; locked?: boolean }) {
+    setError(null);
+    try {
+      const updated = await sprintPlanning.patchDayPlan(dayPlanId, patch);
+      setDayPlans((prev) => prev.map((plan) => (plan.dayPlanId === updated.dayPlanId ? updated : plan)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update day plan");
+    }
+  }
+
+  async function freezeSprintPlan() {
+    if (!sprint) {
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const updated = await sprintPlanning.freezeSprint(sprint.sprintId, true);
+      setSprint(updated);
+      setProjectFilter(projectId, "sprintOnly", true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to freeze sprint");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function submitDsu(payload: DSUComposePayload): Promise<DSUSummary> {
+    if (!sprint || !activeWorkspaceId) {
       throw new Error("Sprint not initialized");
     }
-    const dsu = await request<{
-      blockerCount: number;
-      statusSignal: "on_track" | "at_risk";
-    }>(`/api/agile/sprints/${sprint.sprintId}/dsu`, {
-      method: "POST",
-      body: {
-        authorId: userId,
-        rawText
-      }
+    const entry = await dsuApi.createDsu({
+      workspaceId: activeWorkspaceId,
+      projectId,
+      sprintId: sprint.sprintId,
+      authorId: userId,
+      rawText: payload.rawText
     });
-    await loadBacklogAndDsu(sprint.sprintId);
+    const nextSuggestions = await dsuApi.suggest(entry.dsuId);
+    setLastDsuId(entry.dsuId);
+    setSuggestions(nextSuggestions);
+    await loadSprintContext(sprint.sprintId);
 
+    const blockerCount = hasBlockerSignal(payload.rawText) ? 1 : 0;
     return {
-      blockerCount: dsu.blockerCount,
-      statusSignal: dsu.statusSignal,
-      asks:
-        dsu.statusSignal === "at_risk"
-          ? ["인프라 승인 ETA 확인", "플랜B 배포 조건 확인"]
-          : ["내일 목표 범위 확정"]
+      dsuId: entry.dsuId,
+      blockerCount,
+      statusSignal: blockerCount > 0 ? "at_risk" : "on_track",
+      asks: payload.asks.trim() ? [payload.asks.trim()] : []
     };
+  }
+
+  async function applySuggestions(items: Array<{ suggestionId: string; approved: boolean; overrideChange?: Record<string, unknown> }>) {
+    if (!lastDsuId) {
+      throw new Error("No DSU suggestion to apply");
+    }
+    setApplying(true);
+    setError(null);
+    try {
+      await dsuApi.apply(lastDsuId, userId, items);
+      if (sprint) {
+        await loadSprintContext(sprint.sprintId);
+      }
+      await reloadWorkItems();
+      setSuggestions((prev) => prev.map((item) => ({ ...item, approved: items.find((target) => target.suggestionId === item.suggestionId)?.approved ?? item.approved })));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to apply DSU suggestions");
+      throw e;
+    } finally {
+      setApplying(false);
+    }
   }
 
   return (
@@ -199,97 +269,96 @@ export function SprintWorkspacePage() {
       {!sprint ? (
         <EmptyStateCard
           title="No active sprint selected"
-          description="Create a sprint first, then connect backlog and DSU updates to the board execution loop."
+          description="Start sprint planning first, then generate and freeze day plans before running execution."
           actions={[
-            { label: "Create Sprint", onClick: createSprint },
             { label: "Open Board", onClick: () => setProjectFilter(projectId, "sprintOnly", false), variant: "ghost" }
           ]}
         />
       ) : null}
-      <article className="orbit-card" style={{ padding: 20 }}>
-        <h2 style={{ marginTop: 0 }}>Sprint Workspace</h2>
-        {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
-          <input className="orbit-input" value={sprintName} onChange={(event) => setSprintName(event.target.value)} placeholder="Sprint name" />
-          <input className="orbit-input" value={goal} onChange={(event) => setGoal(event.target.value)} placeholder="Sprint goal" />
-          <input className="orbit-input" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-          <input className="orbit-input" type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
-          <input
-            className="orbit-input"
-            type="number"
-            min={1}
-            value={capacitySp}
-            onChange={(event) => setCapacitySp(Number(event.target.value))}
-            placeholder="SP"
-          />
-          <button className="orbit-button" type="button" onClick={createSprint} disabled={loading || !canCreateSprint}>
-            {loading ? "Creating..." : "Create Sprint"}
-          </button>
-        </div>
-
-        {sprint ? (
-          <div className="orbit-panel orbit-animate-card" style={{ padding: 12, marginTop: 10 }}>
-            <strong>{sprint.name}</strong> · {sprint.startDate} ~ {sprint.endDate} · Capacity {sprint.capacitySp} SP
-            <div style={{ color: "var(--orbit-text-subtle)", fontSize: 14, marginTop: 6 }}>{sprint.goal}</div>
-          </div>
-        ) : null}
-      </article>
+      {error ? (
+        <article className="orbit-card" style={{ padding: 14 }}>
+          <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{error}</p>
+        </article>
+      ) : null}
 
       <article className="orbit-card" style={{ padding: 16 }}>
-        <h3 style={{ marginTop: 0 }}>Backlog</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
-          <select className="orbit-input" value={selectedWorkItemId} onChange={(event) => setSelectedWorkItemId(event.target.value)}>
-            <option value="">Select work item...</option>
-            {workItems
-              .filter((item) => item.status !== "ARCHIVED")
-              .map((item) => (
-                <option key={item.workItemId} value={item.workItemId}>
-                  {item.title}
-                </option>
-              ))}
-          </select>
-          <input className="orbit-input" type="number" min={1} value={rank} onChange={(event) => setRank(Number(event.target.value))} />
-          <select className="orbit-input" value={backlogStatus} onChange={(event) => setBacklogStatus(event.target.value)}>
-            <option value="READY">READY</option>
-            <option value="IN_PROGRESS">IN_PROGRESS</option>
-            <option value="DONE">DONE</option>
-            <option value="REMOVED">REMOVED</option>
-          </select>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={addBacklogItem} disabled={!sprint}>
-            Add
-          </button>
-        </div>
-        <ul style={{ margin: "10px 0 0", paddingLeft: 18 }}>
-          {backlog.map((item) => (
-            <li key={item.backlogItemId}>
-              WorkItem {item.workItemId.slice(0, 8)} · Rank {item.rank} · {item.status}
-            </li>
-          ))}
-          {backlog.length === 0 ? <li style={{ color: "var(--orbit-text-subtle)" }}>No backlog entries yet.</li> : null}
-        </ul>
+        <h2 style={{ marginTop: 0 }}>Sprint Wizard</h2>
+        <p style={{ marginTop: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
+          Step {step} / 3 · Plan → Backlog → Day Plan Freeze
+        </p>
       </article>
 
-      <div>
-        <DSUComposerPanel onSubmit={submitDsu} />
-        <article className="orbit-card" style={{ padding: 16, marginTop: 12 }}>
-          <h3 style={{ marginTop: 0 }}>DSU History</h3>
-          <div style={{ display: "grid", gap: 8 }}>
-            {dsuHistory.map((entry) => (
-              <div key={entry.dsuId} className="orbit-panel orbit-animate-card" style={{ padding: 10 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                  <strong>{entry.authorId}</strong>
-                  <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
-                    {new Date(entry.createdAt).toLocaleString()} · {entry.statusSignal}
-                  </span>
-                </div>
-                <p style={{ margin: "6px 0 0", whiteSpace: "pre-wrap" }}>{entry.rawText}</p>
+      {step === 1 ? (
+        <SprintWizardStepInfo
+          sprintName={sprintName}
+          goal={goal}
+          startDate={startDate}
+          endDate={endDate}
+          capacitySp={capacitySp}
+          dailyCapacityMinutes={dailyCapacityMinutes}
+          loading={loading}
+          onChange={(patch) => {
+            if (patch.sprintName !== undefined) setSprintName(patch.sprintName);
+            if (patch.goal !== undefined) setGoal(patch.goal);
+            if (patch.startDate !== undefined) setStartDate(patch.startDate);
+            if (patch.endDate !== undefined) setEndDate(patch.endDate);
+            if (patch.capacitySp !== undefined) setCapacitySp(patch.capacitySp);
+            if (patch.dailyCapacityMinutes !== undefined) setDailyCapacityMinutes(patch.dailyCapacityMinutes);
+          }}
+          onNext={createSprintAndContinue}
+        />
+      ) : null}
+
+      {step === 2 ? (
+        <SprintWizardStepBacklog
+          workItems={workItems}
+          backlog={backlog}
+          loading={loading}
+          onAddBacklog={addBacklogItem}
+          onPrevious={() => setStep(1)}
+          onNext={() => {
+            setStep(3);
+            if (dayPlans.length === 0) {
+              generateDayPlan().catch(() => undefined);
+            }
+          }}
+        />
+      ) : null}
+
+      {step === 3 ? (
+        <SprintWizardStepDayPlan
+          workItems={workItems}
+          dayPlans={dayPlans}
+          freezeState={Boolean(sprint?.freezeState)}
+          loading={loading}
+          onGenerate={generateDayPlan}
+          onPatch={patchDayPlan}
+          onFreeze={freezeSprintPlan}
+          onPrevious={() => setStep(2)}
+        />
+      ) : null}
+
+      <DSUComposerPanel onSubmit={submitDsu} />
+      <DSUSuggestionReviewPanel suggestions={suggestions} applying={applying} onApply={applySuggestions} />
+
+      <article className="orbit-card" style={{ padding: 16 }}>
+        <h3 style={{ marginTop: 0 }}>DSU History</h3>
+        <div style={{ display: "grid", gap: 8 }}>
+          {dsuHistory.map((entry) => (
+            <div key={entry.dsuId} className="orbit-panel orbit-animate-card" style={{ padding: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <strong>{entry.authorId}</strong>
+                <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
+                  {new Date(entry.createdAt).toLocaleString()}
+                </span>
               </div>
-            ))}
-            {dsuHistory.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No DSU submitted yet.</p> : null}
-          </div>
-        </article>
-      </div>
+              <p style={{ margin: "6px 0 0", whiteSpace: "pre-wrap" }}>{entry.rawText}</p>
+            </div>
+          ))}
+          {dsuHistory.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No DSU submitted yet.</p> : null}
+        </div>
+      </article>
     </section>
   );
 }

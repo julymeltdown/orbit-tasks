@@ -3,6 +3,7 @@ import { request } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/authStore";
 import { useProjectStore } from "@/stores/projectStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { displayWorkItemTitle } from "@/features/workitems/display";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 
 interface ThreadView {
@@ -48,7 +49,7 @@ export function ThreadPanel({ focusThreadId = null }: Props) {
       setMessages([]);
       return;
     }
-    request<MessageView[]>(`/api/collaboration/threads/${thread.threadId}/messages`)
+    request<MessageView[]>(`/api/v2/threads/${thread.threadId}/messages`)
       .then(setMessages)
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load thread messages"));
   }, [thread?.threadId]);
@@ -72,7 +73,7 @@ export function ThreadPanel({ focusThreadId = null }: Props) {
     }
     setError(null);
     try {
-      const created = await request<ThreadView>("/api/collaboration/threads", {
+      const created = await request<ThreadView>("/api/v2/threads", {
         method: "POST",
         body: {
           workspaceId,
@@ -92,14 +93,14 @@ export function ThreadPanel({ focusThreadId = null }: Props) {
   async function sendMessage() {
     if (!thread || !draft.trim()) return;
     try {
-      await request(`/api/collaboration/threads/${thread.threadId}/messages`, {
+      await request(`/api/v2/threads/${thread.threadId}/messages`, {
         method: "POST",
         body: {
           authorId: userId,
           body: draft
         }
       });
-      const next = await request<MessageView[]>(`/api/collaboration/threads/${thread.threadId}/messages`);
+      const next = await request<MessageView[]>(`/api/v2/threads/${thread.threadId}/messages`);
       setMessages(next);
       setDraft("");
     } catch (e) {
@@ -148,7 +149,7 @@ export function ThreadPanel({ focusThreadId = null }: Props) {
           <option value="">Select work item...</option>
           {availableWorkItems.map((item) => (
             <option key={item.workItemId} value={item.workItemId}>
-              {item.title}
+              {displayWorkItemTitle(item.title)}
             </option>
           ))}
         </select>

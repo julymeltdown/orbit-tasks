@@ -4,6 +4,7 @@ import com.example.gateway.application.dto.ErrorResponse;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -17,6 +18,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class RestExceptionHandler {
+    private static final Map<String, HttpStatus> BUSINESS_STATUS = Map.of(
+            "DEPENDENCY_CYCLE", HttpStatus.CONFLICT,
+            "LOW_CONFIDENCE", HttpStatus.UNPROCESSABLE_ENTITY,
+            "CONFIRMATION_REQUIRED", HttpStatus.CONFLICT,
+            "INVALID_SCOPE", HttpStatus.FORBIDDEN,
+            "NO_ACTIVE_SPRINT", HttpStatus.NOT_FOUND
+    );
 
     @ExceptionHandler(StatusRuntimeException.class)
     public ResponseEntity<ErrorResponse> handleGrpc(StatusRuntimeException ex) {
@@ -42,8 +50,18 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegal(IllegalArgumentException ex) {
-        return ResponseEntity.badRequest()
-                .body(errorResponse(HttpStatus.BAD_REQUEST, ex.getMessage()));
+        String code = Optional.ofNullable(ex.getMessage()).orElse("GATEWAY_BAD_REQUEST");
+        HttpStatus status = BUSINESS_STATUS.getOrDefault(code, HttpStatus.BAD_REQUEST);
+        String message = switch (code) {
+            case "DEPENDENCY_CYCLE" -> "Dependency cycle detected";
+            case "LOW_CONFIDENCE" -> "Suggestion confidence is too low to apply";
+            case "CONFIRMATION_REQUIRED" -> "No approved suggestion to apply";
+            case "INVALID_SCOPE" -> "Invalid workspace or project scope";
+            case "NO_ACTIVE_SPRINT" -> "No active sprint found";
+            default -> ex.getMessage();
+        };
+        return ResponseEntity.status(status)
+                .body(errorResponse(status, code, message));
     }
 
     @ExceptionHandler(Exception.class)
@@ -70,7 +88,11 @@ public class RestExceptionHandler {
     }
 
     private ErrorResponse errorResponse(HttpStatus status, String message) {
-        return new ErrorResponse(errorCode(status), message, traceId(), Instant.now(), null);
+        return errorResponse(status, errorCode(status), message);
+    }
+
+    private ErrorResponse errorResponse(HttpStatus status, String code, String message) {
+        return new ErrorResponse(code, message, traceId(), Instant.now(), null);
     }
 
     private String traceId() {

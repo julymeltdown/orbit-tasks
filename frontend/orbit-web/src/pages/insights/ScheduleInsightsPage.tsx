@@ -4,29 +4,16 @@ import { request } from "@/lib/http/client";
 import { AICoachPanel } from "@/components/insights/AICoachPanel";
 import { ScheduleHealthCards } from "@/components/insights/ScheduleHealthCards";
 import { useEvaluationActions } from "@/features/insights/hooks/useEvaluationActions";
+import type { Evaluation } from "@/features/workitems/types";
 import { useProjectStore } from "@/stores/projectStore";
+import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-
-interface Evaluation {
-  evaluationId: string;
-  health: string;
-  topRisks: Array<{
-    type: string;
-    summary: string;
-    impact: string;
-    recommendedActions: string[];
-    evidence: string[];
-  }>;
-  questions: string[];
-  confidence: number;
-  fallback: boolean;
-  reason: string;
-}
 
 export function ScheduleInsightsPage() {
   const location = useLocation();
   const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
+  const selectedWorkItemId = useProjectViewStore((state) => state.getContext(projectId).selectedWorkItemId);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,12 +32,13 @@ export function ScheduleInsightsPage() {
     setLoading(true);
     setError(null);
     try {
-      const next = await request<Evaluation>("/api/insights/schedule-evaluations", {
+      const next = await request<Evaluation>("/api/v2/insights/evaluations", {
         method: "POST",
         body: {
           workspaceId,
           projectId,
           sprintId: "",
+          selectedWorkItemId,
           remainingStoryPoints,
           availableCapacitySp,
           blockedCount,
@@ -84,7 +72,7 @@ export function ScheduleInsightsPage() {
       <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
         <h2 style={{ marginTop: 0 }}>Schedule Intelligence</h2>
         <p style={{ marginTop: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
-          Context · {location.pathname} · workspace {workspaceId ?? "not-selected"}
+          Context · {location.pathname} · workspace {workspaceId ?? "not-selected"} · selected {selectedWorkItemId ?? "none"}
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 8 }}>
           <input
@@ -145,6 +133,7 @@ export function ScheduleInsightsPage() {
       <div style={{ gridColumn: "span 4", display: "grid", gap: 10 }}>
         <AICoachPanel
           questions={evaluation?.questions ?? []}
+          actions={evaluation?.actions ?? []}
           reason={evaluation?.reason ?? "not_run"}
           onRun={runEvaluation}
           loading={loading}

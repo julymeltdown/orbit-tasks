@@ -18,14 +18,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/collaboration")
+@RequestMapping
 public class ThreadController {
     private final Map<UUID, ThreadView> threads = new ConcurrentHashMap<>();
     private final Map<UUID, List<MessageView>> messagesByThread = new ConcurrentHashMap<>();
     private final Map<String, List<InboxItemView>> inboxByUser = new ConcurrentHashMap<>();
 
-    @PostMapping("/threads")
-    public ThreadView createThread(@Valid @RequestBody CreateThreadRequest request) {
+    // legacy compatibility
+    @PostMapping("/api/collaboration/threads")
+    public ThreadView createThreadLegacy(@Valid @RequestBody CreateThreadRequest request) {
+        return createThreadV2(request);
+    }
+
+    @PostMapping("/api/v2/threads")
+    public ThreadView createThreadV2(@Valid @RequestBody CreateThreadRequest request) {
         ThreadView thread = new ThreadView(
                 UUID.randomUUID(),
                 UUID.fromString(request.workspaceId()),
@@ -39,8 +45,14 @@ public class ThreadController {
         return thread;
     }
 
-    @PostMapping("/threads/{threadId}/messages")
-    public MessageView postMessage(@PathVariable UUID threadId, @Valid @RequestBody PostMessageRequest request) {
+    // legacy compatibility
+    @PostMapping("/api/collaboration/threads/{threadId}/messages")
+    public MessageView postMessageLegacy(@PathVariable UUID threadId, @Valid @RequestBody PostMessageRequest request) {
+        return postMessageV2(threadId, request);
+    }
+
+    @PostMapping("/api/v2/threads/{threadId}/messages")
+    public MessageView postMessageV2(@PathVariable UUID threadId, @Valid @RequestBody PostMessageRequest request) {
         requireThread(threadId);
         MessageView message = new MessageView(UUID.randomUUID(), threadId, request.authorId(), request.body(), Instant.now().toString());
         messagesByThread.computeIfAbsent(threadId, ignored -> new ArrayList<>()).add(message);
@@ -49,63 +61,100 @@ public class ThreadController {
             inboxByUser.computeIfAbsent(mentioned, ignored -> new ArrayList<>()).add(new InboxItemView(
                     UUID.randomUUID(),
                     mentioned,
-                    threadId,
-                    message.messageId(),
                     "MENTION",
+                    "THREAD",
+                    threadId.toString(),
+                    message.messageId().toString(),
                     false,
                     "OPEN",
-                    Instant.now().toString()));
+                    Instant.now().toString(),
+                    null));
         }
-
         return message;
     }
 
-    @GetMapping("/threads/{threadId}/messages")
-    public List<MessageView> listMessages(@PathVariable UUID threadId) {
+    // legacy compatibility
+    @GetMapping("/api/collaboration/threads/{threadId}/messages")
+    public List<MessageView> listMessagesLegacy(@PathVariable UUID threadId) {
+        return listMessagesV2(threadId);
+    }
+
+    @GetMapping("/api/v2/threads/{threadId}/messages")
+    public List<MessageView> listMessagesV2(@PathVariable UUID threadId) {
         requireThread(threadId);
         return List.copyOf(messagesByThread.getOrDefault(threadId, List.of()));
     }
 
-    @GetMapping("/inbox")
-    public List<InboxItemView> inbox(@RequestParam String userId) {
-        return List.copyOf(inboxByUser.getOrDefault(userId, List.of()));
+    // legacy compatibility
+    @GetMapping("/api/collaboration/inbox")
+    public List<InboxItemView> inboxLegacy(@RequestParam String userId) {
+        return inboxV2(userId, "all");
     }
 
-    @PatchMapping("/inbox/{notificationId}/read")
-    public InboxItemView markRead(@PathVariable UUID notificationId, @Valid @RequestBody MarkReadRequest request) {
-        return updateInboxState(notificationId, request.userId(), true, null);
+    @GetMapping("/api/v2/inbox")
+    public List<InboxItemView> inboxV2(@RequestParam String userId,
+                                       @RequestParam(defaultValue = "all") String filter) {
+        List<InboxItemView> source = List.copyOf(inboxByUser.getOrDefault(userId, List.of()));
+        if ("all".equalsIgnoreCase(filter)) {
+            return source;
+        }
+        if ("mentions".equalsIgnoreCase(filter)) {
+            return source.stream().filter(item -> "MENTION".equals(item.kind())).toList();
+        }
+        if ("requests".equalsIgnoreCase(filter)) {
+            return source.stream().filter(item -> "REQUEST".equals(item.kind())).toList();
+        }
+        if ("notifications".equalsIgnoreCase(filter)) {
+            return source.stream().filter(item -> "NOTIFICATION".equals(item.kind())).toList();
+        }
+        if ("ai_questions".equalsIgnoreCase(filter)) {
+            return source.stream().filter(item -> "AI_QUESTION".equals(item.kind())).toList();
+        }
+        return source;
     }
 
-    @PatchMapping("/inbox/{notificationId}/resolve")
-    public InboxItemView resolve(@PathVariable UUID notificationId, @Valid @RequestBody ResolveInboxRequest request) {
-        return updateInboxState(notificationId, request.userId(), true, "RESOLVED");
+    // legacy compatibility
+    @PatchMapping("/api/collaboration/inbox/{notificationId}/read")
+    public InboxItemView markReadLegacy(@PathVariable UUID notificationId, @Valid @RequestBody MarkReadRequest request) {
+        return patchInboxV2(notificationId, new PatchInboxRequest(request.userId(), "READ", null));
     }
 
-    private InboxItemView updateInboxState(UUID notificationId, String userId, boolean read, String status) {
-        List<InboxItemView> current = inboxByUser.getOrDefault(userId, List.of());
+    // legacy compatibility
+    @PatchMapping("/api/collaboration/inbox/{notificationId}/resolve")
+    public InboxItemView resolveLegacy(@PathVariable UUID notificationId, @Valid @RequestBody ResolveInboxRequest request) {
+        return patchInboxV2(notificationId, new PatchInboxRequest(request.userId(), "RESOLVED", request.note()));
+    }
+
+    @PatchMapping("/api/v2/inbox/{inboxItemId}")
+    public InboxItemView patchInboxV2(@PathVariable UUID inboxItemId,
+                                      @Valid @RequestBody PatchInboxRequest request) {
+        List<InboxItemView> current = inboxByUser.getOrDefault(request.userId(), List.of());
         for (int i = 0; i < current.size(); i++) {
             InboxItemView item = current.get(i);
-            if (item.notificationId().equals(notificationId)) {
+            if (item.inboxItemId().equals(inboxItemId)) {
+                String status = request.status() == null || request.status().isBlank() ? item.status() : request.status();
                 InboxItemView updated = new InboxItemView(
-                        item.notificationId(),
+                        item.inboxItemId(),
                         item.userId(),
-                        item.threadId(),
+                        item.kind(),
+                        item.sourceType(),
+                        item.sourceId(),
                         item.messageId(),
-                        item.type(),
-                        read,
-                        status == null ? item.status() : status,
-                        item.createdAt());
+                        "READ".equalsIgnoreCase(status) || "RESOLVED".equalsIgnoreCase(status),
+                        status.toUpperCase(),
+                        item.createdAt(),
+                        "RESOLVED".equalsIgnoreCase(status) ? Instant.now().toString() : item.resolvedAt());
                 current.set(i, updated);
                 return updated;
             }
         }
-        throw new IllegalArgumentException("Notification not found");
+        throw new IllegalArgumentException("INVALID_SCOPE");
     }
 
     private ThreadView requireThread(UUID threadId) {
         ThreadView thread = threads.get(threadId);
         if (thread == null) {
-            throw new IllegalArgumentException("Thread not found");
+            throw new IllegalArgumentException("INVALID_SCOPE");
         }
         return thread;
     }
@@ -133,7 +182,10 @@ public class ThreadController {
     public record MarkReadRequest(@NotBlank String userId) {
     }
 
-    public record ResolveInboxRequest(@NotBlank String userId) {
+    public record ResolveInboxRequest(@NotBlank String userId, String note) {
+    }
+
+    public record PatchInboxRequest(@NotBlank String userId, String status, String note) {
     }
 
     public record ThreadView(UUID threadId, UUID workspaceId, UUID workItemId, String title, String createdBy, String status, String createdAt) {
@@ -142,6 +194,17 @@ public class ThreadController {
     public record MessageView(UUID messageId, UUID threadId, String authorId, String body, String createdAt) {
     }
 
-    public record InboxItemView(UUID notificationId, String userId, UUID threadId, UUID messageId, String type, boolean read, String status, String createdAt) {
+    public record InboxItemView(
+            UUID inboxItemId,
+            String userId,
+            String kind,
+            String sourceType,
+            String sourceId,
+            String messageId,
+            boolean read,
+            String status,
+            String createdAt,
+            String resolvedAt
+    ) {
     }
 }

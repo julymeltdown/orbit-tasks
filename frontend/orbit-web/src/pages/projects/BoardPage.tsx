@@ -1,6 +1,4 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import {
   DndContext,
   type DragEndEvent,
@@ -20,11 +18,12 @@ import { useProjectStore } from "@/stores/projectStore";
 import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
-import { useWorkItemNotes } from "@/features/workitems/hooks/useWorkItemNotes";
+import { displayWorkItemTitle } from "@/features/workitems/display";
 import { type WorkItem, type WorkItemPriority, type WorkItemStatus, type WorkItemType, useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import { ProjectViewTabs } from "@/components/projects/ProjectViewTabs";
 import { ProjectFilterBar } from "@/components/projects/ProjectFilterBar";
 import { DependencyInspectorPanel } from "@/components/projects/DependencyInspectorPanel";
+import { WorkItemDetailPanel } from "@/components/projects/WorkItemDetailPanel";
 
 const FLOW_LANES: Array<{ status: WorkItemStatus; title: string }> = [
   { status: "TODO", title: "Backlog" },
@@ -200,7 +199,7 @@ function BoardCard({
       </div>
 
       <button className="orbit-notion-card__body" type="button" onClick={() => onOpen(item.workItemId)}>
-        <strong>{item.title}</strong>
+        <strong>{displayWorkItemTitle(item.title)}</strong>
         <div className="orbit-notion-card__meta">
           <span>{item.type}</span>
           <span>{item.assignee || "unassigned"}</span>
@@ -239,17 +238,13 @@ export function BoardPage() {
   const setSelectedWorkItem = useProjectViewStore((state) => state.setSelectedWorkItem);
   const { activeSprint } = useActiveSprint(activeWorkspaceId, projectId);
 
-  const { items, dependencyGraph, loading, error, mutation, createItem, updateStatus, addDependency, archiveItem } = useWorkItems(projectId);
-  const { notes, getNote, setNote } = useWorkItemNotes(activeWorkspaceId, projectId);
+  const { items, dependencyGraph, loading, error, mutation, createItem, updateStatus, updateItem, addDependency, loadActivity, archiveItem } = useWorkItems(projectId);
 
   const [composerLane, setComposerLane] = useState<WorkItemStatus | null>(null);
   const [composer, setComposer] = useState<ComposerState>(() => makeComposer(userId));
   const [showDependencyInspector, setShowDependencyInspector] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [noteDraft, setNoteDraft] = useState("");
-  const [noteMode, setNoteMode] = useState<"edit" | "preview">("edit");
-  const [noteDirty, setNoteDirty] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [sprintBacklog, setSprintBacklog] = useState<BacklogItemView[]>([]);
   const [sprintLoading, setSprintLoading] = useState(false);
@@ -325,27 +320,6 @@ export function BoardPage() {
   }, [itemIndex, projectId, selectedItemId, setSelectedWorkItem]);
 
   useEffect(() => {
-    if (!selectedItemId) {
-      setNoteDraft("");
-      setNoteDirty(false);
-      return;
-    }
-    setNoteDraft(getNote(selectedItemId));
-    setNoteDirty(false);
-  }, [selectedItemId, getNote]);
-
-  useEffect(() => {
-    if (!selectedItemId || !noteDirty) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setNote(selectedItemId, noteDraft);
-      setNoteDirty(false);
-    }, 350);
-    return () => window.clearTimeout(timer);
-  }, [selectedItemId, noteDraft, noteDirty, setNote]);
-
-  useEffect(() => {
     if (!activeSprint?.sprintId) {
       setSprintBacklog([]);
       setSprintError(null);
@@ -355,7 +329,7 @@ export function BoardPage() {
     let cancelled = false;
     setSprintLoading(true);
     setSprintError(null);
-    request<BacklogItemView[]>(`/api/agile/sprints/${activeSprint.sprintId}/backlog`)
+    request<BacklogItemView[]>(`/api/v2/sprints/${activeSprint.sprintId}/backlog-items`)
       .then((response) => {
         if (!cancelled) {
           setSprintBacklog(response);
@@ -451,7 +425,7 @@ export function BoardPage() {
     setSprintLoading(true);
     setLocalError(null);
     try {
-      await request(`/api/agile/sprints/${activeSprint.sprintId}/backlog`, {
+      await request(`/api/v2/sprints/${activeSprint.sprintId}/backlog-items`, {
         method: "POST",
         body: {
           workItemId,
@@ -459,7 +433,7 @@ export function BoardPage() {
           status: "READY"
         }
       });
-      const refreshed = await request<BacklogItemView[]>(`/api/agile/sprints/${activeSprint.sprintId}/backlog`);
+      const refreshed = await request<BacklogItemView[]>(`/api/v2/sprints/${activeSprint.sprintId}/backlog-items`);
       setSprintBacklog(refreshed);
     } catch (e) {
       setLocalError(e instanceof Error ? e.message : "Failed to add item to sprint");
@@ -623,7 +597,7 @@ export function BoardPage() {
                     item={item}
                     inSprint={sprintBacklogMap.has(item.workItemId)}
                     isSelected={selectedItemId === item.workItemId}
-                    notePreview={summarizeMarkdown(notes[item.workItemId] ?? "")}
+                    notePreview={summarizeMarkdown(item.markdownBody ?? "")}
                     onOpen={openDetails}
                     onMoveByKeyboard={moveByKeyboard}
                   />
@@ -634,104 +608,23 @@ export function BoardPage() {
         </DndContext>
 
         {detailOpen && selectedItem ? (
-          <aside className="orbit-card orbit-notion-detail">
-            <>
-              <header className="orbit-notion-detail__header">
-                <p className="orbit-notion-detail__label">Detail</p>
-                <div className="orbit-notion-detail__head-row">
-                  <h3>{selectedItem.title}</h3>
-                  <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setDetailOpen(false)}>
-                    Close
-                  </button>
-                </div>
-              </header>
-              <div className="orbit-notion-detail__meta">
-                <span className="orbit-notion-pill">{selectedItem.type}</span>
-                <span className="orbit-notion-pill">{selectedItem.priority ?? "MEDIUM"}</span>
-                <span className="orbit-notion-pill">{selectedItem.assignee || "unassigned"}</span>
-              </div>
-              <div className="orbit-notion-detail__actions">
-                <select
-                  className="orbit-input"
-                  value={selectedItem.status}
-                  onChange={(event) => updateStatus(selectedItem.workItemId, event.target.value as WorkItemStatus)}
-                >
-                  <option value="TODO">TODO</option>
-                  <option value="IN_PROGRESS">IN_PROGRESS</option>
-                  <option value="REVIEW">REVIEW</option>
-                  <option value="DONE">DONE</option>
-                  <option value="ARCHIVED">ARCHIVED</option>
-                </select>
-                <button className="orbit-button orbit-button--ghost" type="button" onClick={() => archiveItem(selectedItem.workItemId)}>
-                  Archive
-                </button>
-              </div>
-
-              <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
-                Due date: {selectedItem.dueAt ? new Date(selectedItem.dueAt).toLocaleDateString() : "Not set"}
-              </div>
-              {activeSprint ? (
-                <div className="orbit-panel orbit-notion-sprint-inline">
-                  <div>
-                    <strong style={{ fontSize: 13 }}>{activeSprint.name}</strong>
-                    <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
-                      {activeSprint.startDate} ~ {activeSprint.endDate}
-                    </div>
-                  </div>
-                  {sprintBacklogMap.has(selectedItem.workItemId) ? (
-                    <span className="orbit-notion-pill">
-                      In Sprint · {sprintBacklogMap.get(selectedItem.workItemId)?.status ?? "READY"}
-                    </span>
-                  ) : (
-                    <button className="orbit-button orbit-button--ghost" type="button" onClick={() => addItemToSprint(selectedItem.workItemId)} disabled={sprintLoading}>
-                      Add To Sprint
-                    </button>
-                  )}
-                </div>
-              ) : null}
-
-              <section className="orbit-notion-markdown">
-                <div className="orbit-notion-markdown__tabs">
-                  <button
-                    className={`orbit-button orbit-button--ghost${noteMode === "edit" ? " is-active" : ""}`}
-                    type="button"
-                    onClick={() => setNoteMode("edit")}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className={`orbit-button orbit-button--ghost${noteMode === "preview" ? " is-active" : ""}`}
-                    type="button"
-                    onClick={() => setNoteMode("preview")}
-                  >
-                    Preview
-                  </button>
-                  <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--orbit-text-subtle)" }}>
-                    {noteDirty ? "Saving..." : "Saved"}
-                  </span>
-                </div>
-                {noteMode === "edit" ? (
-                  <textarea
-                    className="orbit-input orbit-notion-markdown__editor"
-                    value={noteDraft}
-                    onChange={(event) => {
-                      setNoteDraft(event.target.value);
-                      setNoteDirty(true);
-                    }}
-                    placeholder={"# Notes\n- Write with markdown\n- Use checklists\n\n```ts\nconsole.log('hello');\n```"}
-                  />
-                ) : (
-                  <div className="orbit-panel orbit-markdown-preview">
-                    {noteDraft.trim().length > 0 ? (
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{noteDraft}</ReactMarkdown>
-                    ) : (
-                      <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No markdown notes yet.</p>
-                    )}
-                  </div>
-                )}
-              </section>
-            </>
-          </aside>
+          <WorkItemDetailPanel
+            item={selectedItem}
+            sprintLabel={activeSprint?.name ?? null}
+            sprintStateLabel={
+              activeSprint
+                ? `${activeSprint.startDate} ~ ${activeSprint.endDate}`
+                : null
+            }
+            canAddToSprint={!sprintBacklogMap.has(selectedItem.workItemId)}
+            sprintLoading={sprintLoading}
+            onAddToSprint={() => addItemToSprint(selectedItem.workItemId)}
+            onClose={() => setDetailOpen(false)}
+            onArchive={() => archiveItem(selectedItem.workItemId)}
+            onUpdateStatus={(status) => updateStatus(selectedItem.workItemId, status)}
+            onPatch={(patch) => updateItem(selectedItem.workItemId, patch)}
+            onLoadActivity={loadActivity}
+          />
         ) : null}
       </div>
 
@@ -758,7 +651,7 @@ export function BoardPage() {
                 }}
                 className="orbit-panel orbit-notion-archive-item"
               >
-                <strong>{item.title}</strong>
+                <strong>{displayWorkItemTitle(item.title)}</strong>
                 <span style={{ color: "var(--orbit-text-subtle)", fontSize: 12 }}>Click to restore to TODO</span>
               </button>
             ))}

@@ -5,6 +5,7 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { WorkItemStatus, WorkItemType, useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import { ProjectViewTabs } from "@/components/projects/ProjectViewTabs";
 import { ProjectFilterBar } from "@/components/projects/ProjectFilterBar";
+import { displayWorkItemTitle } from "@/features/workitems/display";
 
 const STATUS_OPTIONS: WorkItemStatus[] = ["TODO", "IN_PROGRESS", "REVIEW", "DONE", "ARCHIVED"];
 
@@ -14,7 +15,7 @@ export function TablePage() {
   const viewContext = useProjectViewStore((state) => state.getContext(projectId));
   const setView = useProjectViewStore((state) => state.setView);
   const setFilter = useProjectViewStore((state) => state.setFilter);
-  const { items, loading, error, mutation, createItem, updateStatus, archiveItem } = useWorkItems(projectId);
+  const { items, loading, error, mutation, createItem, updateStatus, updateItem, archiveItem } = useWorkItems(projectId);
 
   const [title, setTitle] = useState("");
   const [assignee, setAssignee] = useState("");
@@ -120,8 +121,28 @@ export function TablePage() {
             <tbody>
               {visible.map((item) => (
                 <tr key={item.workItemId} className="orbit-animate-row" style={{ borderBottom: "1px solid var(--orbit-border)" }}>
-                  <td style={{ padding: "10px 0" }}>{item.title}</td>
-                  <td>{item.type}</td>
+                  <td style={{ padding: "10px 0" }}>
+                    <input
+                      className="orbit-input"
+                      value={displayWorkItemTitle(item.title)}
+                      onChange={(event) => {
+                        const nextTitle = event.target.value;
+                        updateItem(item.workItemId, { title: nextTitle }).catch(() => undefined);
+                      }}
+                    />
+                  </td>
+                  <td>
+                    <select
+                      className="orbit-input"
+                      value={item.type}
+                      onChange={(event) => updateItem(item.workItemId, { type: event.target.value as WorkItemType })}
+                    >
+                      <option value="TASK">Task</option>
+                      <option value="STORY">Story</option>
+                      <option value="BUG">Bug</option>
+                      <option value="EPIC">Epic</option>
+                    </select>
+                  </td>
                   <td>
                     <select
                       className="orbit-input"
@@ -136,8 +157,25 @@ export function TablePage() {
                       ))}
                     </select>
                   </td>
-                  <td>{item.assignee || "-"}</td>
-                  <td>{item.dueAt ? new Date(item.dueAt).toLocaleDateString() : "-"}</td>
+                  <td>
+                    <input
+                      className="orbit-input"
+                      value={item.assignee ?? ""}
+                      placeholder="Assignee"
+                      onChange={(event) => {
+                        const next = event.target.value.trim();
+                        updateItem(item.workItemId, { assignee: next.length > 0 ? next : null }).catch(() => undefined);
+                      }}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      className="orbit-input"
+                      type="date"
+                      value={item.dueAt ? new Date(item.dueAt).toISOString().slice(0, 10) : ""}
+                      onChange={(event) => updateItem(item.workItemId, { dueAt: event.target.value || null }).catch(() => undefined)}
+                    />
+                  </td>
                   <td>
                     {item.status !== "ARCHIVED" ? (
                       <button className="orbit-button orbit-button--ghost" type="button" onClick={() => archiveItem(item.workItemId)}>

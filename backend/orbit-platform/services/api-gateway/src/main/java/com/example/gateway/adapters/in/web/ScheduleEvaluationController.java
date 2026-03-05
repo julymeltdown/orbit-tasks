@@ -4,22 +4,30 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/insights")
+@RequestMapping
 public class ScheduleEvaluationController {
     private final Map<UUID, ScheduleEvaluationResponse> evaluations = new ConcurrentHashMap<>();
 
-    @PostMapping("/schedule-evaluations")
-    public ScheduleEvaluationResponse evaluate(@Valid @RequestBody ScheduleEvaluationRequest request) {
+    // legacy compatibility
+    @PostMapping("/api/insights/schedule-evaluations")
+    public ScheduleEvaluationResponse evaluateLegacy(@Valid @RequestBody ScheduleEvaluationRequest request) {
+        return evaluateV2(request);
+    }
+
+    @PostMapping("/api/v2/insights/evaluations")
+    public ScheduleEvaluationResponse evaluateV2(@Valid @RequestBody ScheduleEvaluationRequest request) {
         int loadDelta = request.remainingStoryPoints() - request.availableCapacitySp();
         boolean overload = loadDelta > 0;
         boolean blocked = request.blockedCount() > 0;
@@ -33,37 +41,58 @@ public class ScheduleEvaluationController {
                 overload ? "Remaining scope exceeds capacity" : blocked ? "External approval pending" : "At-risk drift detected",
                 overload ? "Milestone slip risk" : "Sprint goal may miss",
                 List.of("Rebalance scope", "Assign owner", "Track ETA"),
-                List.of("WORKGRAPH", "DSU", "SPRINT")));
+                List.of("WORKGRAPH", "DSU", "SPRINT")
+        ));
 
-        List<String> questions = List.of(
-                "Can we reduce scope this week?",
-                "Who owns blocker removal and by when?");
+        List<String> questions = new ArrayList<>();
+        questions.add("Can we reduce scope this week?");
+        questions.add("Who owns blocker removal and by when?");
+        if (request.selectedWorkItemId() != null && !request.selectedWorkItemId().isBlank()) {
+            questions.add("Does the selected work item need a dependency review?");
+        }
+
+        List<ActionItem> actions = List.of(
+                new ActionItem("ACTION_SCOPE_REBALANCE", "Rebalance scope for this sprint", "draft", null),
+                new ActionItem("ACTION_BLOCKER_OWNER", "Assign blocker owner and ETA", "draft", null)
+        );
 
         ScheduleEvaluationResponse response = new ScheduleEvaluationResponse(
                 UUID.randomUUID().toString(),
                 health,
                 risks,
                 questions,
+                actions,
                 confidence,
                 request.simulateAiFailure(),
-                request.simulateAiFailure() ? "fallback_rules_only" : "ok");
+                request.simulateAiFailure() ? "fallback_rules_only" : "ok"
+        );
         evaluations.put(UUID.fromString(request.projectId()), response);
         return response;
     }
 
-    @PostMapping("/schedule-evaluations/actions")
-    public EvaluationActionResponse action(@Valid @RequestBody EvaluationActionRequest request) {
+    // legacy compatibility
+    @PostMapping("/api/insights/schedule-evaluations/actions")
+    public EvaluationActionResponse actionLegacy(@Valid @RequestBody EvaluationActionRequest request) {
+        return actionV2(request.evaluationId(), request);
+    }
+
+    @PostMapping("/api/v2/insights/evaluations/{evaluationId}/actions")
+    public EvaluationActionResponse actionV2(@PathVariable String evaluationId,
+                                             @Valid @RequestBody EvaluationActionRequest request) {
         return new EvaluationActionResponse(
-                request.evaluationId(),
+                evaluationId,
                 request.action(),
                 request.note() == null ? "" : request.note(),
-                "recorded");
+                "recorded"
+        );
     }
 
     public record ScheduleEvaluationRequest(
             @NotBlank String workspaceId,
             @NotBlank String projectId,
             String sprintId,
+            String selectedWorkItemId,
+            String prompt,
             @Min(0) int remainingStoryPoints,
             @Min(0) int availableCapacitySp,
             @Min(0) int blockedCount,
@@ -81,11 +110,20 @@ public class ScheduleEvaluationController {
     ) {
     }
 
+    public record ActionItem(
+            String actionId,
+            String label,
+            String status,
+            String note
+    ) {
+    }
+
     public record ScheduleEvaluationResponse(
             String evaluationId,
             String health,
             List<RiskItem> topRisks,
             List<String> questions,
+            List<ActionItem> actions,
             @Min(0) @Max(1) double confidence,
             boolean fallback,
             String reason
@@ -93,7 +131,7 @@ public class ScheduleEvaluationController {
     }
 
     public record EvaluationActionRequest(
-            @NotBlank String evaluationId,
+            String evaluationId,
             @NotBlank String action,
             String note,
             Map<String, Object> patch

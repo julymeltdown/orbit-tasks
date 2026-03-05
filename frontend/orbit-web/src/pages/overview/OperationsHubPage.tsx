@@ -95,8 +95,6 @@ export function OperationsHubPage() {
     ];
   }, [byStatus, items.length]);
 
-  const projectToken = activeWorkspaceId ? projectId.slice(0, 8) : "not-selected";
-
   function ensureWorkspaceThenNavigate(path: string) {
     if (!activeWorkspaceId) {
       navigate(`/app/workspace/select?returnTo=${encodeURIComponent(path)}`);
@@ -116,7 +114,7 @@ export function OperationsHubPage() {
           <div className="orbit-ops-hub__workspace">
             <strong>{activeWorkspace?.workspaceName ?? "No workspace selected"}</strong>
             <span>
-              {activeWorkspace?.role ?? "WORKSPACE_MEMBER"} · Project {projectToken}
+              {activeWorkspace?.role ?? "WORKSPACE_MEMBER"} · Project context ready
             </span>
             <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/workspace/select")}>
               Change Workspace

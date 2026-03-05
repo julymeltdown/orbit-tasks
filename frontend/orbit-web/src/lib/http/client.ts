@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/stores/authStore";
+import { resolveApiErrorMessage } from "@/lib/http/errorCodes";
 
 export class HttpError extends Error {
   readonly status: number;
@@ -36,7 +37,7 @@ function normalizeError(status: number, payload: unknown): HttpError {
   const fallback = "Request failed";
   if (payload && typeof payload === "object") {
     const candidate = payload as { message?: string; code?: string };
-    const message = candidate.message ?? fallback;
+    const message = resolveApiErrorMessage(candidate.code, candidate.message ?? fallback);
     const code = candidate.code ?? `HTTP_${status}`;
     return new HttpError(message, status, code, payload);
   }

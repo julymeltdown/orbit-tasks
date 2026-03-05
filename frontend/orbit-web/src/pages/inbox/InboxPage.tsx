@@ -1,42 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { HttpError, request } from "@/lib/http/client";
+import { request } from "@/lib/http/client";
 import { ThreadPanel } from "@/components/collaboration/ThreadPanel";
 import { InboxFilterBar, type InboxFilter } from "@/components/collaboration/InboxFilterBar";
 import { useAuthStore } from "@/stores/authStore";
 
-interface GatewayNotification {
-  id: string;
-  userId: string;
-  type: string;
-  payloadJson: string;
-  createdAt: string;
-  readAt: string | null;
-}
-
-interface NotificationFeedResponse {
-  items: GatewayNotification[];
-  nextCursor: string | null;
-}
-
-interface CollaborationInboxItem {
-  notificationId: string;
-  userId: string;
-  threadId: string;
-  messageId: string;
-  type: string;
-  read: boolean;
-  createdAt: string;
-}
-
 interface InboxItem {
-  id: string;
-  type: string;
-  createdAt: string;
+  inboxItemId: string;
+  userId: string;
+  kind: "NOTIFICATION" | "REQUEST" | "MENTION" | "AI_QUESTION" | string;
+  sourceType: string;
+  sourceId: string;
+  messageId: string;
   read: boolean;
-  threadId: string | null;
-  messageId: string | null;
-  source: "notifications" | "collaboration";
+  status: "OPEN" | "READ" | "RESOLVED" | string;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+function toApiFilter(filter: InboxFilter): string {
+  if (filter === "all") return "all";
+  if (filter === "notifications") return "notifications";
+  if (filter === "requests") return "requests";
+  if (filter === "mentions") return "mentions";
+  return "ai_questions";
 }
 
 export function InboxPage() {
@@ -48,16 +35,7 @@ export function InboxPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function parsePayload(payloadJson: string): { threadId?: string; messageId?: string } {
-    try {
-      const parsed = JSON.parse(payloadJson) as { threadId?: string; messageId?: string };
-      return parsed ?? {};
-    } catch {
-      return {};
-    }
-  }
-
-  async function loadInbox() {
+  async function loadInbox(nextFilter: InboxFilter = filter) {
     if (!userId) {
       setError("Missing user session");
       return;
@@ -65,52 +43,21 @@ export function InboxPage() {
     setLoading(true);
     setError(null);
     try {
-      const feed = await request<NotificationFeedResponse>("/api/notifications?limit=50");
-      const mapped: InboxItem[] = feed.items.map((entry) => {
-        const payload = parsePayload(entry.payloadJson);
-        const normalizedType = entry.type.toUpperCase();
-        return {
-          id: entry.id,
-          type: normalizedType,
-          createdAt: entry.createdAt,
-          read: Boolean(entry.readAt),
-          threadId: payload.threadId ?? null,
-          messageId: payload.messageId ?? null,
-          source: "notifications"
-        };
-      });
-      setItems(mapped);
-      return;
-    } catch (e) {
-      // Fall back to collaboration inbox when notification service endpoint is unavailable for this environment.
-      if (!(e instanceof HttpError) || (e.status !== 404 && e.status !== 500 && e.status !== 503)) {
-        setError(e instanceof Error ? e.message : "Failed to load inbox");
-      }
-    } finally {
-      setLoading(false);
-    }
-
-    try {
-      const legacy = await request<CollaborationInboxItem[]>(`/api/collaboration/inbox?userId=${encodeURIComponent(userId)}`);
-      setItems(
-        legacy.map((entry) => ({
-          id: entry.notificationId,
-          type: entry.type.toUpperCase(),
-          createdAt: entry.createdAt,
-          read: entry.read,
-          threadId: entry.threadId,
-          messageId: entry.messageId,
-          source: "collaboration"
-        }))
+      const result = await request<InboxItem[]>(
+        `/api/v2/inbox?userId=${encodeURIComponent(userId)}&filter=${encodeURIComponent(toApiFilter(nextFilter))}`
       );
+      setItems(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load inbox");
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadInbox().catch(() => undefined);
-  }, [userId]);
+    loadInbox(filter).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, filter]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -120,42 +67,45 @@ export function InboxPage() {
     }
   }, [location.search]);
 
-  async function markRead(item: InboxItem) {
+  async function patchItem(item: InboxItem, status: "READ" | "RESOLVED") {
     try {
-      if (item.source === "notifications") {
-        await request(`/api/notifications/${item.id}/read`, { method: "PATCH" });
-      } else {
-        await request(`/api/collaboration/inbox/${item.id}/read`, {
-          method: "PATCH",
-          body: {
-            userId
-          }
-        });
-      }
-      setItems((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, read: true } : entry)));
+      const updated = await request<InboxItem>(`/api/v2/inbox/${item.inboxItemId}`, {
+        method: "PATCH",
+        body: {
+          userId,
+          status
+        }
+      });
+      setItems((prev) => prev.map((entry) => (entry.inboxItemId === updated.inboxItemId ? updated : entry)));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to mark read");
+      setError(e instanceof Error ? e.message : "Failed to update inbox item");
     }
   }
 
   async function markAllRead() {
+    const unread = items.filter((entry) => !entry.read);
+    if (unread.length === 0) {
+      return;
+    }
     try {
-      await request("/api/notifications/read-all", { method: "PATCH" });
-      setItems((prev) => prev.map((item) => ({ ...item, read: true })));
+      await Promise.all(
+        unread.map((item) =>
+          request<InboxItem>(`/api/v2/inbox/${item.inboxItemId}`, {
+            method: "PATCH",
+            body: {
+              userId,
+              status: "READ"
+            }
+          })
+        )
+      );
+      await loadInbox(filter);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to mark all read");
+      setError(e instanceof Error ? e.message : "Failed to mark all as read");
     }
   }
 
-  const unreadCount = items.filter((item) => !item.read).length;
-  const filteredItems = items.filter((item) => {
-    if (filter === "all") return true;
-    if (filter === "notifications") return item.source === "notifications";
-    if (filter === "requests") return item.type.includes("REQUEST");
-    if (filter === "mentions") return item.type.includes("MENTION");
-    if (filter === "ai_questions") return item.type.includes("AI");
-    return true;
-  });
+  const unreadCount = useMemo(() => items.filter((item) => !item.read).length, [items]);
 
   return (
     <section className="orbit-shell__content-grid">
@@ -166,30 +116,39 @@ export function InboxPage() {
           onChange={setFilter}
           unreadCount={unreadCount}
           onMarkAllRead={markAllRead}
-          onRefresh={() => loadInbox()}
+          onRefresh={() => loadInbox(filter)}
         />
         {loading ? <p>Loading inbox...</p> : null}
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
+
         <div style={{ display: "grid", gap: 8 }}>
-          {filteredItems.length === 0 ? <p>No notifications yet.</p> : null}
-          {filteredItems.map((item) => (
-            <div key={item.id} className="orbit-panel orbit-animate-card" style={{ padding: 10, display: "grid", gap: 6 }}>
-              <strong>
-                {item.type} {!item.read ? <span style={{ color: "var(--orbit-accent)" }}>•</span> : null}
-              </strong>
+          {items.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No inbox items.</p> : null}
+
+          {items.map((item) => (
+            <div key={item.inboxItemId} className="orbit-panel orbit-animate-card" style={{ padding: 10, display: "grid", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <strong>{item.kind}</strong>
+                {!item.read ? <span style={{ color: "var(--orbit-accent)" }}>Unread</span> : null}
+                <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--orbit-text-subtle)" }}>{item.status}</span>
+              </div>
               <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
-                Thread {item.threadId?.slice(0, 8) ?? "-"} · Message {item.messageId?.slice(0, 8) ?? "-"}
+                Source: {item.sourceType} · {new Date(item.createdAt).toLocaleString()}
               </span>
-              <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{new Date(item.createdAt).toLocaleString()}</span>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button className="orbit-button orbit-button--ghost" type="button" onClick={() => markRead(item)}>
+              {item.resolvedAt ? (
+                <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
+                  Resolved: {new Date(item.resolvedAt).toLocaleString()}
+                </span>
+              ) : null}
+
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button className="orbit-button orbit-button--ghost" type="button" onClick={() => patchItem(item, "READ")}>
                   {item.read ? "Read" : "Mark Read"}
                 </button>
-                <button className="orbit-button orbit-button--ghost" type="button" onClick={() => markRead(item)}>
+                <button className="orbit-button orbit-button--ghost" type="button" onClick={() => patchItem(item, "RESOLVED")}>
                   Resolve
                 </button>
-                {item.threadId ? (
-                  <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setFocusThreadId(item.threadId)}>
+                {item.sourceType === "THREAD" ? (
+                  <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setFocusThreadId(item.sourceId)}>
                     Open Thread
                   </button>
                 ) : null}

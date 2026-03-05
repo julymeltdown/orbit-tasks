@@ -1,148 +1,36 @@
 openapi: 3.0.3
 info:
-  title: Orbit Schedule UI/UX Gateway Contract
-  version: 0.1.0
-  description: >
-    Canonical public REST contract for the UI/UX re-architecture.
-    This contract defines scope navigation, project view parity, sprint/DSU loop,
-    collaboration inbox, and schedule evaluation APIs.
+  title: Orbit Tasks Gateway v2 Contract
+  version: 2.0.0
+  description: Public REST contract for Sprint-DSU loop, work item multiview CRUD, collaboration triage, and schedule intelligence.
 servers:
   - url: https://tasksapi.infinitefallcult.trade
-    description: Public production gateway
+    description: Production gateway
   - url: http://localhost:8080
     description: Local gateway
 paths:
-  /api/workspaces/me:
-    get:
-      summary: List workspaces available to current user
-      operationId: listMyWorkspaces
-      responses:
-        "200":
-          description: Workspace list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkspaceSummary"
-  /api/workspaces:
-    post:
-      summary: Create workspace
-      operationId: createWorkspace
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateWorkspaceRequest"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WorkspaceSummary"
-  /api/workspaces/{workspaceId}/members/invitations:
-    post:
-      summary: Invite workspace member
-      operationId: inviteWorkspaceMember
-      parameters:
-        - $ref: "#/components/parameters/WorkspaceId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/InviteMemberRequest"
-      responses:
-        "202":
-          description: Invitation accepted
-  /api/projects:
-    get:
-      summary: List projects in workspace
-      operationId: listProjects
-      parameters:
-        - name: workspaceId
-          in: query
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Project list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ProjectSummary"
-    post:
-      summary: Create project
-      operationId: createProject
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateProjectRequest"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProjectSummary"
-  /api/projects/{projectId}/view-configurations:
-    get:
-      summary: List saved view configurations
-      operationId: listViewConfigurations
-      parameters:
-        - $ref: "#/components/parameters/ProjectId"
-      responses:
-        "200":
-          description: View configurations
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ViewConfiguration"
-    post:
-      summary: Create view configuration
-      operationId: createViewConfiguration
-      parameters:
-        - $ref: "#/components/parameters/ProjectId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ViewConfigurationUpsertRequest"
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ViewConfiguration"
-  /api/work-items:
+  /api/v2/work-items:
     get:
       summary: List work items
-      operationId: listWorkItems
+      operationId: listWorkItemsV2
       parameters:
-        - name: projectId
-          in: query
-          required: false
+        - in: query
+          name: projectId
           schema:
             type: string
             format: uuid
-        - name: view
-          in: query
-          required: false
+        - in: query
+          name: status
           schema:
             type: string
-            enum: [BOARD, TABLE, TIMELINE, CALENDAR, DASHBOARD]
+        - in: query
+          name: assignee
+          schema:
+            type: string
+        - in: query
+          name: query
+          schema:
+            type: string
       responses:
         "200":
           description: Work item list
@@ -154,7 +42,7 @@ paths:
                   $ref: "#/components/schemas/WorkItem"
     post:
       summary: Create work item
-      operationId: createWorkItem
+      operationId: createWorkItemV2
       requestBody:
         required: true
         content:
@@ -162,20 +50,19 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateWorkItemRequest"
       responses:
-        "201":
+        "200":
           description: Created
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkItem"
-  /api/work-items/dependency-graph:
+  /api/v2/work-items/dependency-graph:
     get:
-      summary: Fetch dependency graph for active project scope
-      operationId: dependencyGraph
+      summary: Fetch dependency graph
+      operationId: getDependencyGraphV2
       parameters:
-        - name: projectId
-          in: query
-          required: false
+        - in: query
+          name: projectId
           schema:
             type: string
             format: uuid
@@ -186,10 +73,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DependencyGraph"
-  /api/work-items/{workItemId}:
+  /api/v2/work-items/{workItemId}:
     patch:
-      summary: Update work item
-      operationId: patchWorkItem
+      summary: Patch work item
+      operationId: patchWorkItemV2
       parameters:
         - $ref: "#/components/parameters/WorkItemId"
       requestBody:
@@ -205,23 +92,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkItem"
-  /api/work-items/bulk:
+  /api/v2/work-items/{workItemId}/status:
     patch:
-      summary: Bulk update work items
-      operationId: bulkPatchWorkItems
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/BulkPatchWorkItemsRequest"
-      responses:
-        "200":
-          description: Bulk mutation result
-  /api/work-items/{workItemId}/dependencies:
-    post:
-      summary: Create dependency
-      operationId: createDependency
+      summary: Patch status only
+      operationId: patchWorkItemStatusV2
       parameters:
         - $ref: "#/components/parameters/WorkItemId"
       requestBody:
@@ -229,99 +103,409 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDependencyRequest"
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
       responses:
-        "201":
-          description: Created
+        "200":
+          description: Updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Dependency"
-  /api/work-items/{workItemId}/dependencies/{dependencyId}:
+                $ref: "#/components/schemas/WorkItem"
+  /api/v2/work-items/{workItemId}/dependencies:
+    post:
+      summary: Add dependency
+      operationId: addDependencyV2
+      parameters:
+        - $ref: "#/components/parameters/WorkItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [toWorkItemId]
+              properties:
+                toWorkItemId:
+                  type: string
+                  format: uuid
+                type:
+                  type: string
+      responses:
+        "200":
+          description: Created dependency
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DependencyEdge"
+  /api/v2/dependencies/{dependencyId}:
     delete:
       summary: Delete dependency
-      operationId: deleteDependency
+      operationId: deleteDependencyV2
       parameters:
-        - $ref: "#/components/parameters/WorkItemId"
-        - name: dependencyId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "204":
-          description: Deleted
-  /api/sprints/active:
-    get:
-      summary: Get active sprint for workspace/project
-      operationId: getActiveSprint
-      parameters:
-        - name: workspaceId
-          in: query
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: projectId
-          in: query
+        - in: path
+          name: dependencyId
           required: true
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: Active sprint
+          description: Deleted
+  /api/v2/work-items/{workItemId}/activity:
+    get:
+      summary: List work item activity
+      operationId: listWorkItemActivityV2
+      parameters:
+        - $ref: "#/components/parameters/WorkItemId"
+      responses:
+        "200":
+          description: Activity
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SprintSummary"
-        "404":
-          description: No active sprint
-  /api/dsu-extractions:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkItemActivity"
+  /api/v2/sprints:
     post:
-      summary: Extract structured DSU signals
-      operationId: extractDsuSignals
+      summary: Create sprint
+      operationId: createSprintV2
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DsuExtractionRequest"
+              $ref: "#/components/schemas/CreateSprintRequest"
       responses:
         "200":
-          description: DSU extraction result
+          description: Sprint
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DsuSignal"
-  /api/collaboration/inbox:
+                $ref: "#/components/schemas/Sprint"
+  /api/v2/sprints/{sprintId}/backlog-items:
     get:
-      summary: List collaboration inbox items
-      operationId: listInboxItems
+      summary: List sprint backlog
+      operationId: listSprintBacklogV2
       parameters:
-        - name: kind
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [ALL, NOTIFICATION, REQUEST, MENTION, AI_QUESTION]
+        - $ref: "#/components/parameters/SprintId"
       responses:
         "200":
-          description: Inbox list
+          description: Backlog items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BacklogItem"
+    post:
+      summary: Add sprint backlog item
+      operationId: addSprintBacklogItemV2
+      parameters:
+        - $ref: "#/components/parameters/SprintId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workItemId, rank]
+              properties:
+                workItemId:
+                  type: string
+                  format: uuid
+                rank:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        "200":
+          description: Backlog item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BacklogItem"
+  /api/v2/sprints/{sprintId}/day-plan:generate:
+    post:
+      summary: Generate day plan draft
+      operationId: generateDayPlanV2
+      parameters:
+        - $ref: "#/components/parameters/SprintId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dailyCapacityMinutes:
+                  type: integer
+                bufferMinutes:
+                  type: integer
+      responses:
+        "200":
+          description: Day plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DayPlan"
+  /api/v2/sprints/{sprintId}/day-plans:
+    get:
+      summary: List day plans
+      operationId: listDayPlansV2
+      parameters:
+        - $ref: "#/components/parameters/SprintId"
+      responses:
+        "200":
+          description: Day plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DayPlan"
+  /api/v2/day-plans/{dayPlanId}:
+    patch:
+      summary: Patch day plan
+      operationId: patchDayPlanV2
+      parameters:
+        - in: path
+          name: dayPlanId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plannedMinutes:
+                  type: integer
+                bufferMinutes:
+                  type: integer
+                locked:
+                  type: boolean
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DayPlan"
+  /api/v2/sprints/{sprintId}:freeze:
+    post:
+      summary: Freeze sprint plan
+      operationId: freezeSprintV2
+      parameters:
+        - $ref: "#/components/parameters/SprintId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                freeze:
+                  type: boolean
+      responses:
+        "200":
+          description: Sprint
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sprint"
+  /api/v2/dsu:
+    post:
+      summary: Create DSU entry
+      operationId: createDsuV2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDsuRequest"
+      responses:
+        "200":
+          description: DSU entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DsuEntry"
+  /api/v2/dsu/{dsuId}:suggest:
+    post:
+      summary: Generate DSU suggestions
+      operationId: suggestDsuV2
+      parameters:
+        - in: path
+          name: dsuId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DsuSuggestion"
+  /api/v2/dsu/{dsuId}:apply:
+    post:
+      summary: Apply approved DSU suggestions
+      operationId: applyDsuV2
+      parameters:
+        - in: path
+          name: dsuId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actorId, suggestions]
+              properties:
+                actorId:
+                  type: string
+                suggestions:
+                  type: array
+                  items:
+                    type: object
+                    required: [suggestionId, approved]
+                    properties:
+                      suggestionId:
+                        type: string
+                        format: uuid
+                      approved:
+                        type: boolean
+                      overrideChange:
+                        type: object
+                        additionalProperties: true
+      responses:
+        "200":
+          description: Apply result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dsuId:
+                    type: string
+                  appliedCount:
+                    type: integer
+                  skippedCount:
+                    type: integer
+                  status:
+                    type: string
+  /api/v2/threads:
+    post:
+      summary: Create thread
+      operationId: createThreadV2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workspaceId, workItemId, title, createdBy]
+              properties:
+                workspaceId:
+                  type: string
+                  format: uuid
+                workItemId:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                createdBy:
+                  type: string
+      responses:
+        "200":
+          description: Thread
+  /api/v2/threads/{threadId}/messages:
+    get:
+      summary: List thread messages
+      operationId: listThreadMessagesV2
+      parameters:
+        - in: path
+          name: threadId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Messages
+    post:
+      summary: Post thread message
+      operationId: postThreadMessageV2
+      parameters:
+        - in: path
+          name: threadId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [authorId, body]
+              properties:
+                authorId:
+                  type: string
+                body:
+                  type: string
+      responses:
+        "200":
+          description: Message
+  /api/v2/inbox:
+    get:
+      summary: List inbox items by filter
+      operationId: listInboxV2
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: filter
+          schema:
+            type: string
+            enum: [all, notifications, requests, mentions, ai_questions]
+      responses:
+        "200":
+          description: Inbox items
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/InboxItem"
-  /api/collaboration/inbox/{itemId}/resolve:
-    post:
-      summary: Resolve inbox item
-      operationId: resolveInboxItem
+  /api/v2/inbox/{inboxItemId}:
+    patch:
+      summary: Patch inbox status
+      operationId: patchInboxItemV2
       parameters:
-        - name: itemId
-          in: path
+        - in: path
+          name: inboxItemId
           required: true
           schema:
             type: string
@@ -331,14 +515,139 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResolveInboxItemRequest"
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+                status:
+                  type: string
+                note:
+                  type: string
       responses:
         "200":
-          description: Resolved
-  /api/insights/schedule-evaluations:
+          description: Updated inbox item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxItem"
+  /api/v2/teams:
+    post:
+      summary: Create team
+      operationId: createTeamV2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workspaceId, name, createdBy]
+              properties:
+                workspaceId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                createdBy:
+                  type: string
+      responses:
+        "200":
+          description: Team
+  /api/v2/teams/{teamId}/members:
+    get:
+      summary: List team members
+      operationId: listTeamMembersV2
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Team members
+  /api/v2/teams/{teamId}/invites:
+    get:
+      summary: List team invites
+      operationId: listTeamInvitesV2
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Team invites
+    post:
+      summary: Create team invite
+      operationId: inviteTeamMemberV2
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invitee, role, invitedBy]
+              properties:
+                invitee:
+                  type: string
+                role:
+                  type: string
+                invitedBy:
+                  type: string
+                metadata:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "200":
+          description: Invite
+  /api/v2/teams/{teamId}/members/{userId}:
+    patch:
+      summary: Patch team member role
+      operationId: patchTeamMemberV2
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role, actorRole]
+              properties:
+                role:
+                  type: string
+                actorRole:
+                  type: string
+                note:
+                  type: string
+      responses:
+        "200":
+          description: Member
+  /api/v2/insights/evaluations:
     post:
       summary: Run schedule evaluation
-      operationId: createScheduleEvaluation
+      operationId: runScheduleEvaluationV2
       requestBody:
         required: true
         content:
@@ -347,367 +656,223 @@ paths:
               $ref: "#/components/schemas/ScheduleEvaluationRequest"
       responses:
         "200":
-          description: Evaluation result
+          description: Evaluation
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ScheduleEvaluation"
-  /api/insights/schedule-evaluations/{evaluationId}:
-    get:
-      summary: Get schedule evaluation detail
-      operationId: getScheduleEvaluation
+  /api/v2/insights/evaluations/{evaluationId}/actions:
+    post:
+      summary: Submit evaluation action
+      operationId: submitEvaluationActionV2
       parameters:
-        - name: evaluationId
-          in: path
+        - in: path
+          name: evaluationId
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: Evaluation detail
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ScheduleEvaluation"
-  /api/insights/schedule-evaluations/actions:
-    post:
-      summary: Record action taken on evaluation
-      operationId: recordEvaluationAction
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EvaluationActionRequest"
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                note:
+                  type: string
+                patch:
+                  type: object
+                  additionalProperties: true
       responses:
         "200":
-          description: Action accepted
-  /api/portfolio/list:
-    get:
-      summary: List portfolios by workspace
-      operationId: listPortfolios
-      parameters:
-        - name: workspaceId
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Portfolio list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/PortfolioListItem"
-    post:
-      summary: Create portfolio
-      operationId: createPortfolio
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreatePortfolioRequest"
-      responses:
-        "201":
-          description: Portfolio created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PortfolioListItem"
+          description: Action result
+
 components:
   parameters:
-    WorkspaceId:
-      name: workspaceId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-    ProjectId:
-      name: projectId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
     WorkItemId:
-      name: workItemId
       in: path
+      name: workItemId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SprintId:
+      in: path
+      name: sprintId
       required: true
       schema:
         type: string
         format: uuid
   schemas:
-    WorkspaceSummary:
+    WorkItem:
       type: object
-      required: [workspaceId, name, role, defaultWorkspace]
+      required: [workItemId, projectId, type, title, status, createdAt, updatedAt]
       properties:
-        workspaceId:
+        workItemId:
           type: string
           format: uuid
-        name:
-          type: string
-        role:
-          type: string
-        defaultWorkspace:
-          type: boolean
-    CreateWorkspaceRequest:
-      type: object
-      required: [name]
-      properties:
-        name:
-          type: string
-          minLength: 2
-          maxLength: 60
-    InviteMemberRequest:
-      type: object
-      required: [email, role]
-      properties:
-        email:
-          type: string
-          format: email
-        role:
-          type: string
-    ProjectSummary:
-      type: object
-      required: [projectId, workspaceId, name, status]
-      properties:
         projectId:
           type: string
           format: uuid
-        workspaceId:
+        type:
           type: string
-          format: uuid
-        name:
+        title:
           type: string
         status:
           type: string
-    CreateProjectRequest:
+        assignee:
+          type: string
+          nullable: true
+        startAt:
+          type: string
+          nullable: true
+        dueAt:
+          type: string
+          nullable: true
+        priority:
+          type: string
+          nullable: true
+        estimateMinutes:
+          type: integer
+          nullable: true
+        actualMinutes:
+          type: integer
+          nullable: true
+        blockedReason:
+          type: string
+          nullable: true
+        markdownBody:
+          type: string
+          nullable: true
+        activityCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    CreateWorkItemRequest:
       type: object
-      required: [workspaceId, name]
+      required: [projectId, type, title]
       properties:
-        workspaceId:
-          type: string
-          format: uuid
-        name:
-          type: string
-    ViewConfiguration:
-      type: object
-      required: [viewConfigId, projectId, viewType, filters]
-      properties:
-        viewConfigId:
-          type: string
         projectId:
           type: string
           format: uuid
-        viewType:
+        type:
           type: string
-        filters:
-          type: object
-          additionalProperties: true
-        sort:
-          type: object
-          additionalProperties: true
-        groupBy:
+        title:
           type: string
-          nullable: true
-        isDefault:
-          type: boolean
-    ViewConfigurationUpsertRequest:
+        assignee:
+          type: string
+        startAt:
+          type: string
+        dueAt:
+          type: string
+        priority:
+          type: string
+        estimateMinutes:
+          type: integer
+        actualMinutes:
+          type: integer
+        blockedReason:
+          type: string
+        markdownBody:
+          type: string
+    PatchWorkItemRequest:
       type: object
-      required: [viewType, filters]
       properties:
-        viewType:
+        type:
           type: string
-        filters:
-          type: object
-          additionalProperties: true
-        sort:
-          type: object
-          additionalProperties: true
-        groupBy:
+        title:
+          type: string
+        status:
+          type: string
+        assignee:
           type: string
           nullable: true
-        isDefault:
-          type: boolean
+        startAt:
+          type: string
+          nullable: true
+        dueAt:
+          type: string
+          nullable: true
+        priority:
+          type: string
+          nullable: true
+        estimateMinutes:
+          type: integer
+          nullable: true
+        actualMinutes:
+          type: integer
+          nullable: true
+        blockedReason:
+          type: string
+          nullable: true
+        markdownBody:
+          type: string
+          nullable: true
+    DependencyEdge:
+      type: object
+      properties:
+        dependencyId:
+          type: string
+        fromWorkItemId:
+          type: string
+        toWorkItemId:
+          type: string
+        type:
+          type: string
+        createdAt:
+          type: string
     DependencyGraph:
       type: object
-      required: [nodes, edges]
       properties:
         nodes:
           type: array
           items:
-            $ref: "#/components/schemas/DependencyNode"
+            type: object
+            properties:
+              workItemId:
+                type: string
+              title:
+                type: string
+              status:
+                type: string
+              upstreamCount:
+                type: integer
+              downstreamCount:
+                type: integer
         edges:
           type: array
           items:
             $ref: "#/components/schemas/DependencyEdge"
-    DependencyNode:
+    WorkItemActivity:
       type: object
-      required: [workItemId, status]
       properties:
+        activityId:
+          type: string
         workItemId:
           type: string
-          format: uuid
-        status:
+        action:
           type: string
-    DependencyEdge:
-      type: object
-      required: [fromWorkItemId, toWorkItemId]
-      properties:
-        fromWorkItemId:
+        actorId:
           type: string
-          format: uuid
-        toWorkItemId:
-          type: string
-          format: uuid
-    PortfolioListItem:
-      type: object
-      required: [portfolioId, name, status, projectCount, updatedAt]
-      properties:
-        portfolioId:
-          type: string
-        name:
-          type: string
-        status:
-          type: string
-        projectCount:
-          type: integer
-        updatedAt:
-          type: string
-    CreatePortfolioRequest:
-      type: object
-      required: [workspaceId, name]
-      properties:
-        workspaceId:
-          type: string
-        name:
-          type: string
-    WorkItem:
-      type: object
-      required: [workItemId, projectId, title, type, status, priority]
-      properties:
-        workItemId:
-          type: string
-          format: uuid
-        projectId:
-          type: string
-          format: uuid
-        title:
-          type: string
-        description:
-          type: string
-          nullable: true
-        type:
-          type: string
-        status:
-          type: string
-        priority:
-          type: string
-        assigneeId:
-          type: string
-          nullable: true
-        startAt:
-          type: string
-          format: date-time
-          nullable: true
-        dueAt:
-          type: string
-          format: date-time
-          nullable: true
-    CreateWorkItemRequest:
-      type: object
-      required: [projectId, title, type]
-      properties:
-        projectId:
-          type: string
-          format: uuid
-        title:
-          type: string
-        type:
-          type: string
-        priority:
-          type: string
-        assigneeId:
-          type: string
-          nullable: true
-        startAt:
-          type: string
-          format: date-time
-          nullable: true
-        dueAt:
-          type: string
-          format: date-time
-          nullable: true
-    PatchWorkItemRequest:
-      type: object
-      properties:
-        title:
-          type: string
-        status:
-          type: string
-        priority:
-          type: string
-        assigneeId:
-          type: string
-          nullable: true
-        startAt:
-          type: string
-          format: date-time
-          nullable: true
-        dueAt:
-          type: string
-          format: date-time
-          nullable: true
-    BulkPatchWorkItemsRequest:
-      type: object
-      required: [itemIds, patch]
-      properties:
-        itemIds:
-          type: array
-          items:
-            type: string
-            format: uuid
-        patch:
+        payload:
           type: object
           additionalProperties: true
-    CreateDependencyRequest:
+        createdAt:
+          type: string
+    Sprint:
       type: object
-      required: [toWorkItemId]
-      properties:
-        toWorkItemId:
-          type: string
-          format: uuid
-        type:
-          type: string
-    Dependency:
-      type: object
-      required: [dependencyId, fromWorkItemId, toWorkItemId, type]
-      properties:
-        dependencyId:
-          type: string
-          format: uuid
-        fromWorkItemId:
-          type: string
-          format: uuid
-        toWorkItemId:
-          type: string
-          format: uuid
-        type:
-          type: string
-    SprintSummary:
-      type: object
-      required: [sprintId, projectId, name, goal, startDate, endDate, status]
       properties:
         sprintId:
           type: string
-          format: uuid
+        workspaceId:
+          type: string
         projectId:
           type: string
-          format: uuid
         name:
           type: string
         goal:
@@ -718,90 +883,191 @@ components:
         endDate:
           type: string
           format: date
+        capacitySp:
+          type: integer
         status:
           type: string
-    DsuExtractionRequest:
+        freezeState:
+          type: boolean
+        dailyCapacityMinutes:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    CreateSprintRequest:
       type: object
-      required: [workspaceId, projectId, rawText]
+      required: [workspaceId, projectId, name, goal, startDate, endDate, capacitySp]
       properties:
         workspaceId:
           type: string
-          format: uuid
         projectId:
           type: string
-          format: uuid
+        name:
+          type: string
+        goal:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        capacitySp:
+          type: integer
+        dailyCapacityMinutes:
+          type: integer
+    BacklogItem:
+      type: object
+      properties:
+        backlogItemId:
+          type: string
         sprintId:
           type: string
-          format: uuid
-          nullable: true
-        rawText:
+        workItemId:
           type: string
-    DsuSignal:
+        rank:
+          type: integer
+        status:
+          type: string
+        createdAt:
+          type: string
+    DayPlan:
       type: object
-      required: [blockers, asks, confidence]
       properties:
-        blockers:
+        dayPlanId:
+          type: string
+        sprintId:
+          type: string
+        day:
+          type: string
+          format: date
+        locked:
+          type: boolean
+        plannedMinutes:
+          type: integer
+        bufferMinutes:
+          type: integer
+        items:
           type: array
           items:
             type: object
-            additionalProperties: true
-        asks:
-          type: array
-          items:
-            type: string
-        linkedWorkItemIds:
-          type: array
-          items:
-            type: string
-            format: uuid
+            properties:
+              dayPlanItemId:
+                type: string
+              dayPlanId:
+                type: string
+              workItemId:
+                type: string
+              plannedMinutes:
+                type: integer
+              orderIndex:
+                type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    CreateDsuRequest:
+      type: object
+      required: [workspaceId, projectId, authorId, rawText]
+      properties:
+        workspaceId:
+          type: string
+        projectId:
+          type: string
+        sprintId:
+          type: string
+        authorId:
+          type: string
+        rawText:
+          type: string
+    DsuEntry:
+      type: object
+      properties:
+        dsuId:
+          type: string
+        workspaceId:
+          type: string
+        projectId:
+          type: string
+        sprintId:
+          type: string
+        authorId:
+          type: string
+        rawText:
+          type: string
+        createdAt:
+          type: string
+    DsuSuggestion:
+      type: object
+      properties:
+        suggestionId:
+          type: string
+        dsuId:
+          type: string
+        targetType:
+          type: string
+        targetId:
+          type: string
+        proposedChange:
+          type: object
+          additionalProperties: true
         confidence:
           type: number
+        reason:
+          type: string
+        approved:
+          type: boolean
     InboxItem:
       type: object
-      required: [inboxItemId, kind, status, title, deepLink]
       properties:
         inboxItemId:
           type: string
-          format: uuid
+        userId:
+          type: string
         kind:
           type: string
+        sourceType:
+          type: string
+        sourceId:
+          type: string
+        messageId:
+          type: string
+        read:
+          type: boolean
         status:
           type: string
-        title:
+        createdAt:
           type: string
-        summary:
-          type: string
-        deepLink:
-          type: string
-    ResolveInboxItemRequest:
-      type: object
-      required: [action]
-      properties:
-        action:
-          type: string
-          enum: [READ, RESOLVED]
-        note:
+        resolvedAt:
           type: string
           nullable: true
     ScheduleEvaluationRequest:
       type: object
-      required: [workspaceId, projectId]
+      required: [workspaceId, projectId, remainingStoryPoints, availableCapacitySp, blockedCount, atRiskCount]
       properties:
         workspaceId:
           type: string
-          format: uuid
         projectId:
           type: string
-          format: uuid
         sprintId:
           type: string
-          format: uuid
-          nullable: true
+        selectedWorkItemId:
+          type: string
+        prompt:
+          type: string
+        remainingStoryPoints:
+          type: integer
+        availableCapacitySp:
+          type: integer
+        blockedCount:
+          type: integer
+        atRiskCount:
+          type: integer
         simulateAiFailure:
           type: boolean
     ScheduleEvaluation:
       type: object
-      required: [evaluationId, health, topRisks, questions, confidence, fallback, reason]
       properties:
         evaluationId:
           type: string
@@ -811,26 +1077,41 @@ components:
           type: array
           items:
             type: object
-            additionalProperties: true
+            properties:
+              type:
+                type: string
+              summary:
+                type: string
+              impact:
+                type: string
+              recommendedActions:
+                type: array
+                items:
+                  type: string
+              evidence:
+                type: array
+                items:
+                  type: string
         questions:
           type: array
           items:
             type: string
+        actions:
+          type: array
+          items:
+            type: object
+            properties:
+              actionId:
+                type: string
+              label:
+                type: string
+              status:
+                type: string
+              note:
+                type: string
         confidence:
           type: number
         fallback:
           type: boolean
         reason:
           type: string
-    EvaluationActionRequest:
-      type: object
-      required: [evaluationId, action]
-      properties:
-        evaluationId:
-          type: string
-        action:
-          type: string
-          enum: [accept, dismiss, ask]
-        note:
-          type: string
-          nullable: true

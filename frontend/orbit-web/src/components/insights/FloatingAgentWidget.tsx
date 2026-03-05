@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { request } from "@/lib/http/client";
 import { useProjectStore } from "@/stores/projectStore";
+import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useEvaluationActions } from "@/features/insights/hooks/useEvaluationActions";
 import { useFocusContainment } from "@/components/common/useFocusContainment";
@@ -18,6 +19,7 @@ interface Evaluation {
     evidence: string[];
   }>;
   questions: string[];
+  actions: Array<{ label?: string; status?: string; note?: string }>;
   confidence: number;
   fallback: boolean;
   reason: string;
@@ -46,6 +48,7 @@ function writeOpen(open: boolean) {
 export function FloatingAgentWidget() {
   const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
+  const selectedWorkItemId = useProjectViewStore((state) => state.getContext(projectId).selectedWorkItemId);
   const { submitAction } = useEvaluationActions();
 
   const [open, setOpen] = useState(readOpen());
@@ -84,12 +87,14 @@ export function FloatingAgentWidget() {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      const result = await request<Evaluation>("/api/insights/schedule-evaluations", {
+      const result = await request<Evaluation>("/api/v2/insights/evaluations", {
         method: "POST",
         body: {
           workspaceId,
           projectId,
           sprintId: "",
+          selectedWorkItemId,
+          prompt: draft.trim(),
           remainingStoryPoints: 21,
           availableCapacitySp: 18,
           blockedCount: 1,
@@ -156,9 +161,9 @@ export function FloatingAgentWidget() {
 
           {evaluation ? (
             <div className="orbit-panel" style={{ padding: 10 }}>
-              <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)", marginBottom: 6 }}>
-                Health {evaluation.health} · confidence {(evaluation.confidence * 100).toFixed(0)}%
-              </div>
+            <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)", marginBottom: 6 }}>
+                Health {evaluation.health} · confidence {(evaluation.confidence * 100).toFixed(0)}% · {selectedWorkItemId ? "work item context" : "project context"}
+            </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button className="orbit-button orbit-button--ghost" type="button" onClick={acceptTopRisk}>
                   Accept Top Action

@@ -5,6 +5,7 @@ import { useProjectStore } from "@/stores/projectStore";
 import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { WorkItemStatus, useWorkItems } from "@/features/workitems/hooks/useWorkItems";
+import { displayWorkItemTitle } from "@/features/workitems/display";
 
 const STATUS_STEPS: WorkItemStatus[] = ["TODO", "IN_PROGRESS", "REVIEW", "DONE", "ARCHIVED"];
 
@@ -22,7 +23,7 @@ export function TimelinePage() {
   const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
   const viewContext = useProjectViewStore((state) => state.getContext(projectId));
   const setView = useProjectViewStore((state) => state.setView);
-  const { items, loading, error, updateStatus } = useWorkItems(projectId);
+  const { items, loading, error, updateStatus, updateItem } = useWorkItems(projectId);
 
   useEffect(() => {
     setView(projectId, "timeline");
@@ -80,7 +81,7 @@ export function TimelinePage() {
             return (
               <div key={item.workItemId} className="orbit-panel orbit-animate-card" style={{ padding: 10, display: "grid", gap: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                  <strong>{item.title}</strong>
+                  <strong>{displayWorkItemTitle(item.title)}</strong>
                   <select
                     className="orbit-input"
                     value={item.status}
@@ -96,6 +97,26 @@ export function TimelinePage() {
                 </div>
                 <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
                   {start.toLocaleDateString()} → {end.toLocaleDateString()} · {item.assignee || "unassigned"}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
+                  <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
+                    Start
+                    <input
+                      className="orbit-input"
+                      type="date"
+                      value={item.startAt ? new Date(item.startAt).toISOString().slice(0, 10) : ""}
+                      onChange={(event) => updateItem(item.workItemId, { startAt: event.target.value || null }).catch(() => undefined)}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
+                    Due
+                    <input
+                      className="orbit-input"
+                      type="date"
+                      value={item.dueAt ? new Date(item.dueAt).toISOString().slice(0, 10) : ""}
+                      onChange={(event) => updateItem(item.workItemId, { dueAt: event.target.value || null }).catch(() => undefined)}
+                    />
+                  </label>
                 </div>
                 <div style={{ position: "relative", height: 12, border: "1px solid var(--orbit-border)", background: "var(--orbit-surface-1)" }}>
                   <div

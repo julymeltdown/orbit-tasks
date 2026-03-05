@@ -1,5 +1,12 @@
 version: 1
 recipes:
+  - id: feed-summary
+    description: Legacy feed summary placeholder recipe for compatibility.
+    timeoutMs: 900
+    cacheTtlMs: 5000
+    fanout:
+      - service: post-service
+        operation: listFeedSummary
   - id: my-work-home
     description: Aggregate tasks, unread notifications, and active mentions for app shell home.
     timeoutMs: 1200
@@ -35,3 +42,16 @@ recipes:
         operation: getSprintSignals
       - service: workgraph-service
         operation: getDependencyHealth
+  - id: project-operations-hub-v2
+    description: Aggregate board, sprint, inbox, and evaluation signals for operations hub.
+    timeoutMs: 1400
+    cacheTtlMs: 12000
+    fanout:
+      - service: workgraph-service
+        operation: listWorkItemsV2
+      - service: agile-ops-service
+        operation: listActiveSprintSignals
+      - service: collaboration-service
+        operation: listInboxV2
+      - service: schedule-intelligence-service
+        operation: evaluateScheduleV2

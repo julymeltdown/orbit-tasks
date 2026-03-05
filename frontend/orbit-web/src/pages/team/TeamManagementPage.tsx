@@ -13,6 +13,16 @@ interface TeamView {
   createdAt: string;
 }
 
+interface InviteView {
+  inviteId: string;
+  teamId: string;
+  invitee: string;
+  role: string;
+  invitedBy: string;
+  status: string;
+  createdAt: string;
+}
+
 export function TeamManagementPage() {
   const userId = useAuthStore((state) => state.userId) ?? "admin@orbit.local";
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
@@ -21,6 +31,7 @@ export function TeamManagementPage() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [team, setTeam] = useState<TeamView | null>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [invites, setInvites] = useState<InviteView[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [teamName, setTeamName] = useState("Core Delivery");
   const [invitee, setInvitee] = useState("");
@@ -62,6 +73,7 @@ export function TeamManagementPage() {
     if (!selectedTeamId) {
       setTeam(null);
       setMembers([]);
+      setInvites([]);
       return;
     }
     const selected = teamRegistry.find((candidate) => candidate.teamId === selectedTeamId) ?? null;
@@ -72,8 +84,14 @@ export function TeamManagementPage() {
     if (!team?.teamId) {
       return;
     }
-    request<TeamMember[]>(`/api/teams/${team.teamId}/members`)
-      .then((list) => setMembers(list))
+    Promise.all([
+      request<TeamMember[]>(`/api/v2/teams/${team.teamId}/members`),
+      request<InviteView[]>(`/api/v2/teams/${team.teamId}/invites`)
+    ])
+      .then(([memberList, inviteList]) => {
+        setMembers(memberList);
+        setInvites(inviteList);
+      })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load team members"));
   }, [team?.teamId]);
 
@@ -96,7 +114,7 @@ export function TeamManagementPage() {
     setLoading(true);
     setError(null);
     try {
-      const created = await request<TeamView>("/api/teams", {
+      const created = await request<TeamView>("/api/v2/teams", {
         method: "POST",
         body: {
           workspaceId: activeWorkspaceId,
@@ -124,17 +142,26 @@ export function TeamManagementPage() {
       setError("Invitee is required");
       return;
     }
+    const normalizedInvitee = invitee.trim();
+    const inviteePattern = /^([a-zA-Z0-9._-]+|[^\s@]+@[^\s@]+\.[^\s@]+)$/;
+    if (!inviteePattern.test(normalizedInvitee)) {
+      setError("Use email or handle (letters, numbers, . _ -)");
+      return;
+    }
     setError(null);
     try {
-      const created = await request<TeamMember>(`/api/teams/${team.teamId}/members`, {
+      const created = await request<InviteView>(`/api/v2/teams/${team.teamId}/invites`, {
         method: "POST",
         body: {
-          userId: invitee.trim(),
+          invitee: normalizedInvitee,
           role: inviteRole,
-          invitedBy: userId
+          invitedBy: userId,
+          metadata: {
+            source: "team-management-page"
+          }
         }
       });
-      setMembers((prev) => [created, ...prev]);
+      setInvites((prev) => [created, ...prev]);
       setInvitee("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Invite failed");
@@ -188,7 +215,7 @@ export function TeamManagementPage() {
               Active team: <strong>{team.name}</strong>
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8, marginBottom: 12 }}>
-              <input className="orbit-input" value={invitee} onChange={(event) => setInvitee(event.target.value)} placeholder="Invite user id or handle" />
+              <input className="orbit-input" value={invitee} onChange={(event) => setInvitee(event.target.value)} placeholder="Invite email or handle" />
               <select className="orbit-input" value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}>
                 <option value="TEAM_MEMBER">TEAM_MEMBER</option>
                 <option value="TEAM_ADMIN">TEAM_ADMIN</option>
@@ -199,6 +226,24 @@ export function TeamManagementPage() {
               </button>
             </div>
             <TeamDirectoryPanel members={members} onRoleChange={onRoleChange} onRemove={onRemove} />
+            <article className="orbit-card" style={{ padding: 16, marginTop: 12 }}>
+              <h3 style={{ marginTop: 0 }}>Pending Invites</h3>
+              <div style={{ display: "grid", gap: 8 }}>
+                {invites.map((invite) => (
+                  <div
+                    key={invite.inviteId}
+                    className="orbit-panel orbit-animate-row"
+                    style={{ padding: 10, display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}
+                  >
+                    <strong>{invite.invitee}</strong>
+                    <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
+                      {invite.role} · {invite.status} · {new Date(invite.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+                {invites.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No pending invites.</p> : null}
+              </div>
+            </article>
           </>
         ) : (
           <p>Select a team to manage members.</p>

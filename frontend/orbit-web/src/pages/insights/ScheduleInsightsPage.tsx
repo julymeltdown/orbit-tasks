@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { HttpError, request } from "@/lib/http/client";
 import { useEvaluationActions } from "@/features/insights/hooks/useEvaluationActions";
+import { deriveInsightSignals } from "@/features/insights/insightSignals";
+import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
+import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import type { Evaluation } from "@/features/workitems/types";
 import { useProjectStore } from "@/stores/projectStore";
 import { useProjectViewStore } from "@/stores/projectViewStore";
@@ -51,19 +54,33 @@ export function ScheduleInsightsPage() {
   const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
   const selectedWorkItemId = useProjectViewStore((state) => state.getContext(projectId).selectedWorkItemId);
+  const { items } = useWorkItems(projectId);
+  const { activeSprint } = useActiveSprint(workspaceId, projectId);
+  const signals = useMemo(() => deriveInsightSignals(items, activeSprint?.capacitySp), [items, activeSprint?.capacitySp]);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [remainingStoryPoints, setRemainingStoryPoints] = useState(21);
-  const [availableCapacitySp, setAvailableCapacitySp] = useState(18);
-  const [blockedCount, setBlockedCount] = useState(1);
-  const [atRiskCount, setAtRiskCount] = useState(1);
+  const [remainingStoryPoints, setRemainingStoryPoints] = useState(0);
+  const [availableCapacitySp, setAvailableCapacitySp] = useState(0);
+  const [blockedCount, setBlockedCount] = useState(0);
+  const [atRiskCount, setAtRiskCount] = useState(0);
+  const [metricsDirty, setMetricsDirty] = useState(false);
   const [simulateAiFailure, setSimulateAiFailure] = useState(false);
   const [applyingAction, setApplyingAction] = useState(false);
   const { submitAction } = useEvaluationActions();
   const activeWorkspaceName = useMemo(() => {
     return claims.find((claim) => claim.workspaceId === workspaceId)?.workspaceName ?? "Workspace";
   }, [claims, workspaceId]);
+
+  useEffect(() => {
+    if (metricsDirty) {
+      return;
+    }
+    setRemainingStoryPoints(signals.remainingStoryPoints);
+    setAvailableCapacitySp(signals.availableCapacitySp);
+    setBlockedCount(signals.blockedCount);
+    setAtRiskCount(signals.atRiskCount);
+  }, [metricsDirty, signals]);
 
   useEffect(() => {
     if (!workspaceId || !projectId) {
@@ -150,13 +167,34 @@ export function ScheduleInsightsPage() {
 
   const coachSummary = useMemo(() => {
     if (!evaluation) {
-      return "Run evaluation to generate risk diagnosis and draft mitigations.";
+      if (remainingStoryPoints === 0) {
+        return "활성 작업이 아직 없습니다. 작업을 추가한 뒤 평가를 실행하면 코칭이 생성됩니다.";
+      }
+      return `현재 입력 기준: 남은 ${remainingStoryPoints}SP, 가용 ${availableCapacitySp}SP, 블로커 ${blockedCount}개, 위험 ${atRiskCount}개`;
     }
     if (evaluation.topRisks.length === 0) {
       return "Current workload trend is stable. Keep blocker count low and monitor capacity drift.";
     }
     return evaluation.topRisks[0].impact;
-  }, [evaluation]);
+  }, [atRiskCount, availableCapacitySp, blockedCount, evaluation, remainingStoryPoints]);
+
+  const heroBadgeLabel = useMemo(() => {
+    if (!evaluation) {
+      return remainingStoryPoints > 0 ? "Live Metrics Ready" : "Awaiting Signals";
+    }
+    if (evaluation.fallback) {
+      return "Fallback Diagnostics";
+    }
+    return `${evaluation.health.replace(/_/g, " ")} · Live`;
+  }, [evaluation, remainingStoryPoints]);
+
+  function resetMetricsFromSignals() {
+    setMetricsDirty(false);
+    setRemainingStoryPoints(signals.remainingStoryPoints);
+    setAvailableCapacitySp(signals.availableCapacitySp);
+    setBlockedCount(signals.blockedCount);
+    setAtRiskCount(signals.atRiskCount);
+  }
 
   return (
     <section className="orbit-insights-layout">
@@ -164,7 +202,7 @@ export function ScheduleInsightsPage() {
         <div className="orbit-insights-hero__title">
           <div className="orbit-insights-hero__badge">
             <span className="material-symbols-outlined">verified</span>
-            <span>System Optimized</span>
+            <span>{heroBadgeLabel}</span>
           </div>
           <h2>Schedule Intelligence</h2>
           <p>
@@ -180,6 +218,9 @@ export function ScheduleInsightsPage() {
             <span className="material-symbols-outlined">auto_awesome</span>
             <span>{loading ? "Evaluating..." : "Run Evaluation"}</span>
           </button>
+          <button className="orbit-button orbit-button--ghost" type="button" onClick={resetMetricsFromSignals}>
+            Use live metrics
+          </button>
         </div>
       </header>
 
@@ -192,7 +233,10 @@ export function ScheduleInsightsPage() {
             type="number"
             min={0}
             value={remainingStoryPoints}
-            onChange={(event) => setRemainingStoryPoints(Number(event.target.value))}
+            onChange={(event) => {
+              setMetricsDirty(true);
+              setRemainingStoryPoints(Number(event.target.value));
+            }}
           />
         </label>
         <label className="orbit-insights-metric">
@@ -203,7 +247,10 @@ export function ScheduleInsightsPage() {
             type="number"
             min={0}
             value={availableCapacitySp}
-            onChange={(event) => setAvailableCapacitySp(Number(event.target.value))}
+            onChange={(event) => {
+              setMetricsDirty(true);
+              setAvailableCapacitySp(Number(event.target.value));
+            }}
           />
         </label>
         <label className="orbit-insights-metric">
@@ -214,7 +261,10 @@ export function ScheduleInsightsPage() {
             type="number"
             min={0}
             value={blockedCount}
-            onChange={(event) => setBlockedCount(Number(event.target.value))}
+            onChange={(event) => {
+              setMetricsDirty(true);
+              setBlockedCount(Number(event.target.value));
+            }}
           />
         </label>
         <label className="orbit-insights-metric">
@@ -225,7 +275,10 @@ export function ScheduleInsightsPage() {
             type="number"
             min={0}
             value={atRiskCount}
-            onChange={(event) => setAtRiskCount(Number(event.target.value))}
+            onChange={(event) => {
+              setMetricsDirty(true);
+              setAtRiskCount(Number(event.target.value));
+            }}
           />
         </label>
         <label className="orbit-insights-toggle">
@@ -288,7 +341,15 @@ export function ScheduleInsightsPage() {
           <p className="orbit-insights-side__summary">{coachSummary}</p>
           <div className="orbit-insights-side__meta">
             <span>Confidence {confidenceScore}%</span>
-            {evaluation?.fallback ? <span>Fallback result</span> : <span>Primary model</span>}
+            {evaluation ? (
+              evaluation.fallback ? (
+                <span>Fallback result</span>
+              ) : (
+                <span>Primary model</span>
+              )
+            ) : (
+              <span>Awaiting run</span>
+            )}
           </div>
 
           <div className="orbit-insights-side__actions">
@@ -330,7 +391,11 @@ export function ScheduleInsightsPage() {
         </header>
         <div className="orbit-insights-risks__grid">
           {(evaluation?.topRisks ?? []).length === 0 ? (
-            <p className="orbit-insights-empty">Run evaluation to populate risk diagnostics and evidence links.</p>
+            <p className="orbit-insights-empty">
+              {remainingStoryPoints > 0
+                ? "아직 평가 결과가 없습니다. Run Evaluation으로 리스크 상세와 evidence 링크를 생성하세요."
+                : "작업 데이터가 누적되면 리스크 카드가 자동으로 생성됩니다."}
+            </p>
           ) : (
             (evaluation?.topRisks ?? []).map((risk) => (
               <article key={`${risk.type}-${risk.summary}`} className={`orbit-insights-risk orbit-insights-risk--${risk.type.toLowerCase()}`}>

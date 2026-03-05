@@ -5,6 +5,9 @@ import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useEvaluationActions } from "@/features/insights/hooks/useEvaluationActions";
 import { useFocusContainment } from "@/components/common/useFocusContainment";
+import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
+import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
+import { deriveInsightSignals } from "@/features/insights/insightSignals";
 
 const OPEN_KEY = "orbit.ai.widget.open";
 
@@ -50,10 +53,13 @@ export function FloatingAgentWidget() {
   const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
   const selectedWorkItemId = useProjectViewStore((state) => state.getContext(projectId).selectedWorkItemId);
   const { submitAction } = useEvaluationActions();
+  const { items } = useWorkItems(projectId);
+  const { activeSprint } = useActiveSprint(workspaceId, projectId);
+  const signals = useMemo(() => deriveInsightSignals(items, activeSprint?.capacitySp), [items, activeSprint?.capacitySp]);
 
   const [open, setOpen] = useState(readOpen());
   const [loading, setLoading] = useState(false);
-  const [draft, setDraft] = useState("이번 스프린트는 일정 내 완료 가능할까?");
+  const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +68,13 @@ export function FloatingAgentWidget() {
   const unreadHints = useMemo(() => {
     return evaluation?.questions.length ?? 0;
   }, [evaluation?.questions.length]);
+
+  const draftPlaceholder = useMemo(() => {
+    if (signals.remainingStoryPoints === 0) {
+      return "오늘 리스크를 평가해줘";
+    }
+    return `남은 ${signals.remainingStoryPoints}SP 기준으로 이번 스프린트 일정 리스크를 진단해줘`;
+  }, [signals.remainingStoryPoints]);
 
   function toggle() {
     const next = !open;
@@ -75,14 +88,15 @@ export function FloatingAgentWidget() {
       return;
     }
     if (!draft.trim()) {
-      return;
+      setDraft(draftPlaceholder);
     }
     setLoading(true);
     setError(null);
+    const prompt = (draft.trim() || draftPlaceholder).trim();
     const userMessage: ChatMessage = {
       id: `${Date.now()}-u`,
       role: "user",
-      text: draft.trim()
+      text: prompt
     };
     setMessages((prev) => [...prev, userMessage]);
 
@@ -94,11 +108,11 @@ export function FloatingAgentWidget() {
           projectId,
           sprintId: "",
           selectedWorkItemId,
-          prompt: draft.trim(),
-          remainingStoryPoints: 21,
-          availableCapacitySp: 18,
-          blockedCount: 1,
-          atRiskCount: 1,
+          prompt,
+          remainingStoryPoints: signals.remainingStoryPoints,
+          availableCapacitySp: signals.availableCapacitySp,
+          blockedCount: signals.blockedCount,
+          atRiskCount: signals.atRiskCount,
           simulateAiFailure: false
         }
       });
@@ -179,7 +193,7 @@ export function FloatingAgentWidget() {
               className="orbit-input"
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
-              placeholder="Ask Orbit Agent..."
+              placeholder={draftPlaceholder}
             />
             <button className="orbit-button" type="button" onClick={runAssistant} disabled={loading}>
               {loading ? "..." : "Send"}

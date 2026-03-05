@@ -10,7 +10,9 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import type { Evaluation } from "@/features/workitems/types";
 import { useEvaluationActions } from "@/features/insights/hooks/useEvaluationActions";
+import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
 import { fetchDsuReminder, type DsuReminder } from "@/features/agile/hooks/useDsuReminder";
+import { deriveInsightSignals } from "@/features/insights/insightSignals";
 import {
   canAccessNavItem,
   projectViewNavigation,
@@ -28,6 +30,7 @@ export function AppShell() {
   const loadClaims = useWorkspaceStore((state) => state.loadClaims);
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
   const { byStatus, items } = useWorkItems(projectId);
+  const { activeSprint } = useActiveSprint(activeWorkspaceId, projectId);
   const { submitAction } = useEvaluationActions();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const menuRef = useFocusContainment(mobileNavOpen);
@@ -61,6 +64,7 @@ export function AppShell() {
   const totalWorkItems = useMemo(() => items.filter((item) => item.status !== "ARCHIVED").length, [items]);
   const doneWorkItems = byStatus.DONE.length;
   const progressPercent = totalWorkItems > 0 ? Math.round((doneWorkItems / totalWorkItems) * 100) : 0;
+  const insightSignals = useMemo(() => deriveInsightSignals(items, activeSprint?.capacitySp), [items, activeSprint?.capacitySp]);
   const topRisk = latestEvaluation?.topRisks[0] ?? null;
   const secondaryRisk = latestEvaluation?.topRisks[1] ?? null;
 
@@ -72,8 +76,31 @@ export function AppShell() {
     if (location.pathname.startsWith("/app/projects/dashboard")) return "Dashboard";
     if (location.pathname.startsWith("/app/sprint")) return "Sprint Workspace";
     if (location.pathname.startsWith("/app/inbox")) return "Collaboration Inbox";
-    return "Studio Pipeline";
-  }, [location.pathname]);
+    return activeWorkspaceName ? `${activeWorkspaceName} Workspace` : "Workspace";
+  }, [activeWorkspaceName, location.pathname]);
+
+  const sidebarCoachMessage = useMemo(() => {
+    if (topRisk) {
+      return topRisk.recommendedActions?.[0] ?? topRisk.impact;
+    }
+    if (insightSignals.remainingStoryPoints === 0) {
+      return "작업을 생성하면 AI가 일정 흐름과 리스크를 분석합니다.";
+    }
+    return `남은 ${insightSignals.remainingStoryPoints}SP, 블로커 ${insightSignals.blockedCount}개를 기준으로 평가를 실행하세요.`;
+  }, [insightSignals.blockedCount, insightSignals.remainingStoryPoints, topRisk]);
+
+  const secondaryRiskSummary = useMemo(() => {
+    if (secondaryRisk) {
+      return secondaryRisk.impact;
+    }
+    if (insightSignals.atRiskCount > 0) {
+      return `현재 위험 신호 ${insightSignals.atRiskCount}개가 감지되었습니다. Insights에서 상세 평가를 실행하세요.`;
+    }
+    if (insightSignals.remainingStoryPoints === 0) {
+      return "추가 작업 데이터가 쌓이면 보조 리스크 신호가 자동으로 표시됩니다.";
+    }
+    return "보조 리스크는 최신 평가 이후 자동 표시됩니다.";
+  }, [insightSignals.atRiskCount, insightSignals.remainingStoryPoints, secondaryRisk]);
 
   useEffect(() => {
     if (!activeWorkspaceId || !projectId) {
@@ -214,9 +241,7 @@ export function AppShell() {
             <span className="material-symbols-outlined">auto_awesome</span>
             <span>AI Coach</span>
           </div>
-          <p>
-            {activeWorkspaceName}의 일정 흐름을 분석하고, 지연 가능성이 높은 작업부터 우선순위를 제안합니다.
-          </p>
+          <p>{sidebarCoachMessage}</p>
         </section>
       </aside>
 
@@ -322,18 +347,22 @@ export function AppShell() {
             ) : null}
             {!evaluationLoading && !evaluationError && !topRisk ? (
               <>
-                <h4>No Evaluation Yet</h4>
-                <p>Run the AI evaluation first, then latest guidance will appear here.</p>
+                <h4>{totalWorkItems > 0 ? "Evaluation Pending" : "No Work Items Yet"}</h4>
+                <p>
+                  {totalWorkItems > 0
+                    ? `현재 ${insightSignals.remainingStoryPoints}SP / 블로커 ${insightSignals.blockedCount}개 상태입니다.`
+                    : "보드에서 작업을 생성하면 AI 평가 카드가 자동으로 활성화됩니다."}
+                </p>
                 <button className="orbit-link-button orbit-link-button--tab" type="button" onClick={() => navigate("/app/insights")}>
-                  Open Insights
+                  Run Evaluation
                 </button>
               </>
             ) : null}
           </article>
 
           <article className="orbit-shell__rail-widget orbit-shell__rail-widget--warn">
-            <h4>{secondaryRisk?.summary ?? "No Secondary Risk"}</h4>
-            <p>{secondaryRisk?.impact ?? "Additional risk signals will appear after new evaluations run."}</p>
+            <h4>{secondaryRisk?.summary ?? "Secondary Signal"}</h4>
+            <p>{secondaryRiskSummary}</p>
           </article>
         </div>
       </aside>

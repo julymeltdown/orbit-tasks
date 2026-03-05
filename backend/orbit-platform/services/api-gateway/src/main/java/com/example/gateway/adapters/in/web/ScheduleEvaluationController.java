@@ -44,9 +44,10 @@ public class ScheduleEvaluationController {
         boolean overload = loadDelta > 0;
         boolean blocked = request.blockedCount() > 0;
         boolean atRisk = request.atRiskCount() > 0;
+        boolean noSignals = request.remainingStoryPoints() == 0 && request.blockedCount() == 0 && request.atRiskCount() == 0;
 
-        String health = blocked || overload ? "at_risk" : atRisk ? "warning" : "healthy";
-        double confidence = request.simulateAiFailure() ? 0.42 : blocked ? 0.74 : 0.68;
+        String health = noSignals ? "warning" : blocked || overload ? "at_risk" : atRisk ? "warning" : "healthy";
+        double confidence = request.simulateAiFailure() ? 0.42 : noSignals ? 0.51 : blocked ? 0.74 : 0.68;
 
         List<RiskItem> risks = List.of(new RiskItem(
                 overload ? "capacity_overload" : blocked ? "external_dependency" : "flow_variance",
@@ -68,6 +69,8 @@ public class ScheduleEvaluationController {
                 new ActionItem("ACTION_BLOCKER_OWNER", "Assign blocker owner and ETA", "draft", null)
         );
 
+        String reason = normalizeReason(request.simulateAiFailure() ? "fallback_rules_only" : noSignals ? "no_data" : "llm_success", request.simulateAiFailure());
+
         ScheduleEvaluationResponse response = new ScheduleEvaluationResponse(
                 UUID.randomUUID().toString(),
                 health,
@@ -76,7 +79,7 @@ public class ScheduleEvaluationController {
                 actions,
                 confidence,
                 request.simulateAiFailure(),
-                request.simulateAiFailure() ? "fallback_rules_only" : "ok"
+                reason
         );
         historyService.save(toSnapshot(request, response));
         return response;
@@ -170,8 +173,19 @@ public class ScheduleEvaluationController {
                         .toList(),
                 snapshot.confidence(),
                 snapshot.fallback(),
-                snapshot.reason()
+                normalizeReason(snapshot.reason(), snapshot.fallback())
         );
+    }
+
+    private String normalizeReason(String reason, boolean fallback) {
+        if (reason == null || reason.isBlank()) {
+            return fallback ? "deterministic_fallback" : "llm_success";
+        }
+        return switch (reason) {
+            case "ok" -> "llm_success";
+            case "fallback_rules_only" -> "deterministic_fallback";
+            default -> reason;
+        };
     }
 
     public record ScheduleEvaluationRequest(

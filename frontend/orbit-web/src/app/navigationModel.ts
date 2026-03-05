@@ -4,6 +4,7 @@ export interface ScopeNavItem {
   id: ScopeNavSection;
   label: string;
   to: string;
+  icon: string;
   minRole?: "WORKSPACE_MEMBER" | "WORKSPACE_MANAGER" | "WORKSPACE_ADMIN";
 }
 
@@ -13,6 +14,7 @@ export interface ProjectViewItem {
   id: ProjectViewType;
   label: string;
   to: string;
+  icon: string;
 }
 
 const ROLE_WEIGHT: Record<string, number> = {
@@ -22,20 +24,20 @@ const ROLE_WEIGHT: Record<string, number> = {
 };
 
 export const scopeNavigation: ScopeNavItem[] = [
-  { id: "my-work", label: "My Work", to: "/app" },
-  { id: "workspaces", label: "Workspaces", to: "/app/workspace/select" },
-  { id: "portfolio", label: "Portfolio", to: "/app/portfolio", minRole: "WORKSPACE_MANAGER" },
-  { id: "insights", label: "Insights", to: "/app/insights" },
-  { id: "integrations", label: "Integrations", to: "/app/integrations/import", minRole: "WORKSPACE_MANAGER" },
-  { id: "admin", label: "Admin", to: "/app/admin/compliance", minRole: "WORKSPACE_ADMIN" }
+  { id: "my-work", label: "Dashboard", to: "/app", icon: "dashboard" },
+  { id: "workspaces", label: "Workspace", to: "/app/workspace/select", icon: "workspaces" },
+  { id: "portfolio", label: "Portfolio", to: "/app/portfolio", icon: "account_tree", minRole: "WORKSPACE_MANAGER" },
+  { id: "insights", label: "AI Insights", to: "/app/insights", icon: "psychology" },
+  { id: "integrations", label: "Integrations", to: "/app/integrations/import", icon: "hub", minRole: "WORKSPACE_MANAGER" },
+  { id: "admin", label: "Admin", to: "/app/admin/compliance", icon: "admin_panel_settings", minRole: "WORKSPACE_ADMIN" }
 ];
 
 export const projectViewNavigation: ProjectViewItem[] = [
-  { id: "board", label: "Board", to: "/app/projects/board" },
-  { id: "table", label: "Table", to: "/app/projects/table" },
-  { id: "timeline", label: "Timeline", to: "/app/projects/timeline" },
-  { id: "calendar", label: "Calendar", to: "/app/projects/calendar" },
-  { id: "dashboard", label: "Dashboard", to: "/app/projects/dashboard" }
+  { id: "board", label: "Project Board", to: "/app/projects/board", icon: "view_kanban" },
+  { id: "table", label: "Table", to: "/app/projects/table", icon: "table_view" },
+  { id: "timeline", label: "Timeline", to: "/app/projects/timeline", icon: "timeline" },
+  { id: "calendar", label: "Calendar", to: "/app/projects/calendar", icon: "calendar_month" },
+  { id: "dashboard", label: "Dashboard", to: "/app/projects/dashboard", icon: "space_dashboard" }
 ];
 
 export function canAccessNavItem(role: string | null | undefined, item: ScopeNavItem): boolean {
@@ -74,4 +76,3 @@ export function resolveScopeLabel(pathname: string): string {
   }
   return "My Work";
 }
-

@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200..700&display=swap");
 
 * {
   box-sizing: border-box;
@@ -13,87 +14,187 @@ body,
 }
 
 body {
-  font-family: "Inter", sans-serif;
-  background: radial-gradient(circle at 50% -30%, rgba(0, 102, 255, 0.12), transparent 42%), var(--orbit-bg);
+  font-family: "Public Sans", sans-serif;
   color: var(--orbit-text);
+  background:
+    radial-gradient(circle at 100% -20%, color-mix(in srgb, var(--orbit-accent) 14%, transparent), transparent 42%),
+    radial-gradient(circle at -20% 120%, color-mix(in srgb, var(--orbit-accent) 10%, transparent), transparent 46%),
+    var(--orbit-bg);
+  line-height: 1.45;
 }
 
-.orbit-panel {
-  border: 1px solid var(--orbit-border);
-  background: linear-gradient(165deg, color-mix(in oklab, var(--orbit-surface-1) 90%, white 10%), var(--orbit-surface-2));
-  box-shadow: var(--orbit-shadow-1);
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 450,
+    "GRAD" 0,
+    "opsz" 24;
+  line-height: 1;
 }
 
-[data-theme="dark"] .orbit-panel {
-  background: linear-gradient(165deg, color-mix(in oklab, var(--orbit-surface-1) 82%, black 18%), var(--orbit-surface-2));
+a,
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
 .orbit-card {
-  border: 1px solid var(--orbit-border);
-  background: var(--orbit-surface-1);
+  border-radius: var(--orbit-radius-md);
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 82%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 70%, transparent);
+  backdrop-filter: blur(12px);
   box-shadow: var(--orbit-shadow-1);
 }
 
-.orbit-button {
+.orbit-panel {
+  border-radius: var(--orbit-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 75%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 88%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--orbit-shadow-1);
+}
+
+.orbit-button,
+.orbit-link-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.45rem;
+  text-decoration: none;
+  border-radius: var(--orbit-radius-md);
   border: 1px solid var(--orbit-accent);
   background: var(--orbit-accent);
-  color: #ffffff;
+  color: #fff;
+  min-height: 2.5rem;
+  padding: 0.58rem 1rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 11px;
-  line-height: 1;
-  padding: 12px 18px;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
 }
 
-.orbit-button:hover {
+.orbit-button:hover,
+.orbit-link-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 0 1px var(--orbit-accent), 0 0 24px color-mix(in srgb, var(--orbit-accent-glow) 45%, transparent);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--orbit-accent) 28%, transparent);
 }
 
-.orbit-button:active {
+.orbit-button:active,
+.orbit-link-button:active {
   transform: translateY(0);
 }
 
-.orbit-button--ghost {
-  border-color: var(--orbit-border);
-  background: var(--orbit-surface-2);
+.orbit-button:disabled,
+.orbit-link-button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.orbit-button--ghost,
+.orbit-link-button--tab {
+  border-color: color-mix(in srgb, var(--orbit-border) 92%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 92%, transparent);
   color: var(--orbit-text);
+  box-shadow: none;
+}
+
+.orbit-link-button--accent {
+  border-color: var(--orbit-accent);
+  background: var(--orbit-accent);
+  color: #fff;
+}
+
+.orbit-link-button--tab.is-active {
+  border-color: color-mix(in srgb, var(--orbit-accent) 75%, transparent);
+  color: var(--orbit-accent);
+  background: color-mix(in srgb, var(--orbit-accent) 12%, var(--orbit-surface-1));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orbit-accent) 25%, transparent);
 }
 
 .orbit-input {
   width: 100%;
-  border: 1px solid var(--orbit-border);
-  background: var(--orbit-surface-1);
+  border-radius: var(--orbit-radius-md);
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 90%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 92%, transparent);
   color: var(--orbit-text);
-  padding: 12px 14px;
-  font-size: 14px;
+  min-height: 2.65rem;
+  padding: 0.62rem 0.82rem;
+  font-size: 0.92rem;
+}
+
+.orbit-input::placeholder {
+  color: color-mix(in srgb, var(--orbit-text-subtle) 78%, transparent);
 }
 
 .orbit-input:focus {
   outline: none;
-  border-color: var(--orbit-accent);
-  box-shadow: 0 0 0 1px var(--orbit-accent);
-}
-
-.orbit-heading-xl {
-  font-size: clamp(2rem, 4vw, 4.5rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
-  line-height: 0.9;
+  border-color: color-mix(in srgb, var(--orbit-accent) 70%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--orbit-accent) 20%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--orbit-accent) 35%, transparent);
 }
 
 .orbit-neon-line {
-  display: inline-block;
-  width: 64px;
+  width: 4rem;
   height: 2px;
-  background: var(--orbit-accent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--orbit-accent-glow) 50%, transparent);
+  border-radius: var(--orbit-radius-full);
+  background: linear-gradient(90deg, var(--orbit-accent), var(--orbit-accent-2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--orbit-accent-glow) 45%, transparent);
+}
+
+.orbit-animate-card {
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.orbit-animate-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--orbit-shadow-2);
+}
+
+.orbit-animate-row {
+  transition: background-color 140ms ease;
+}
+
+.orbit-animate-row:hover {
+  background: color-mix(in srgb, var(--orbit-accent) 8%, transparent);
+}
+
+.orbit-text-subtle {
+  color: var(--orbit-text-subtle);
+}
+
+.orbit-accent {
+  color: var(--orbit-accent);
+}
+
+.orbit-danger {
+  color: var(--orbit-danger);
+}
+
+.orbit-success {
+  color: var(--orbit-success);
+}
+
+.orbit-warning {
+  color: var(--orbit-warning);
+}
+
+.orbit-border {
+  border-color: var(--orbit-border);
+}
+
+.orbit-surface-1 {
+  background: var(--orbit-surface-1);
 }

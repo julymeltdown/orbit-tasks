@@ -1,46 +1,49 @@
 :root {
   color-scheme: light;
 
-  --orbit-bg: #ffffff;
-  --orbit-surface-1: #f6f9ff;
-  --orbit-surface-2: #edf3ff;
-  --orbit-surface-3: #e1ecff;
-  --orbit-text: #0a1224;
-  --orbit-text-subtle: #4e5f85;
-  --orbit-border: #b8cdfa;
-  --orbit-accent: #0055ff;
-  --orbit-accent-2: #0037ff;
-  --orbit-accent-glow: #0066ff;
-  --orbit-danger: #db1b4d;
-  --orbit-success: #007a5a;
-  --orbit-warning: #9d6f00;
-  --orbit-info: #0a4cc2;
+  --orbit-bg: #f8f6f6;
+  --orbit-surface-1: #ffffff;
+  --orbit-surface-2: #f1f5f9;
+  --orbit-surface-3: #e2e8f0;
+  --orbit-text: #0f172a;
+  --orbit-text-subtle: #475569;
+  --orbit-border: #cbd5e1;
+  --orbit-accent: #1e3a8a;
+  --orbit-accent-2: #1d4ed8;
+  --orbit-accent-glow: #1e40af;
+  --orbit-danger: #b91c1c;
+  --orbit-success: #15803d;
+  --orbit-warning: #b45309;
+  --orbit-info: #1d4ed8;
 
-  --orbit-sidebar-w: 232px;
+  --orbit-sidebar-w: 16rem;
   --orbit-panel-w: 360px;
-  --orbit-radius: 0;
-  --orbit-shadow-1: 0 8px 24px rgba(12, 32, 79, 0.12);
-  --orbit-shadow-2: 0 20px 50px rgba(5, 20, 64, 0.18);
+  --orbit-radius-sm: 0.75rem;
+  --orbit-radius-md: 1.25rem;
+  --orbit-radius-lg: 2rem;
+  --orbit-radius-full: 9999px;
+  --orbit-shadow-1: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --orbit-shadow-2: 0 18px 46px rgba(15, 23, 42, 0.14);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --orbit-bg: #050b17;
-  --orbit-surface-1: #0a1427;
-  --orbit-surface-2: #0f1c35;
-  --orbit-surface-3: #132447;
-  --orbit-text: #f3f7ff;
-  --orbit-text-subtle: #9cb0d9;
-  --orbit-border: #20407b;
-  --orbit-accent: #2d7bff;
-  --orbit-accent-2: #1a5fff;
-  --orbit-accent-glow: #4d90ff;
-  --orbit-danger: #ff4a6e;
-  --orbit-success: #21b58b;
-  --orbit-warning: #f5b400;
-  --orbit-info: #7fb2ff;
+  --orbit-bg: #221610;
+  --orbit-surface-1: #2c1f19;
+  --orbit-surface-2: #352620;
+  --orbit-surface-3: #402f28;
+  --orbit-text: #f8fafc;
+  --orbit-text-subtle: #cbd5e1;
+  --orbit-border: #4b3a33;
+  --orbit-accent: #3b82f6;
+  --orbit-accent-2: #2563eb;
+  --orbit-accent-glow: #60a5fa;
+  --orbit-danger: #fb7185;
+  --orbit-success: #4ade80;
+  --orbit-warning: #fb923c;
+  --orbit-info: #93c5fd;
 
-  --orbit-shadow-1: 0 10px 32px rgba(0, 0, 0, 0.45);
-  --orbit-shadow-2: 0 28px 72px rgba(0, 0, 0, 0.58);
+  --orbit-shadow-1: 0 10px 28px rgba(0, 0, 0, 0.34);
+  --orbit-shadow-2: 0 24px 56px rgba(0, 0, 0, 0.48);
 }

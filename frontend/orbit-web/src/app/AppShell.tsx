@@ -43,6 +43,18 @@ export function AppShell() {
     [activeRole]
   );
   const showProjectViews = location.pathname.startsWith("/app/projects");
+  const [query, setQuery] = useState("");
+
+  const heroTitle = useMemo(() => {
+    if (location.pathname.startsWith("/app/projects/board")) return "Cinematic Board";
+    if (location.pathname.startsWith("/app/projects/timeline")) return "Timeline";
+    if (location.pathname.startsWith("/app/projects/table")) return "Table";
+    if (location.pathname.startsWith("/app/projects/calendar")) return "Calendar";
+    if (location.pathname.startsWith("/app/projects/dashboard")) return "Dashboard";
+    if (location.pathname.startsWith("/app/sprint")) return "Sprint Workspace";
+    if (location.pathname.startsWith("/app/inbox")) return "Collaboration Inbox";
+    return "Studio Pipeline";
+  }, [location.pathname]);
 
   async function signOut() {
     try {
@@ -61,48 +73,22 @@ export function AppShell() {
         Skip to content
       </a>
 
-      <header className="orbit-shell__top" role="banner">
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <strong style={{ fontSize: 20, letterSpacing: "-0.03em" }}>ORBIT</strong>
-          <span className="orbit-neon-line" />
-          <button
-            className="orbit-button orbit-button--ghost orbit-workspace-pill"
-            type="button"
-            onClick={() => navigate("/app/workspace/select")}
-            title="Select workspace"
-          >
-            {activeWorkspaceName}
-          </button>
-          <span className="orbit-shell__scope-label">{scopeLabel}</span>
-        </div>
-
-        <div className="orbit-shell__top-actions">
-          <button
-            className="orbit-button orbit-button--ghost orbit-mobile-menu-button"
-            type="button"
-            onClick={() => setMobileNavOpen((value) => !value)}
-            aria-expanded={mobileNavOpen}
-            aria-controls="orbit-side-nav"
-          >
-            {mobileNavOpen ? "Close" : "Menu"}
-          </button>
-
-          <ThemeToggleButton variant="shell" />
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={signOut}>
-            Sign Out
-          </button>
-          <button className="orbit-button orbit-desktop-only" type="button" onClick={() => navigate("/app/projects/board")}>
-            New Work Item
-          </button>
-        </div>
-      </header>
-
       <aside
         className={`orbit-shell__side${mobileNavOpen ? " is-open" : ""}`}
         id="orbit-side-nav"
         aria-label="Global navigation"
         ref={menuRef as any}
       >
+        <div className="orbit-shell__brand">
+          <div className="orbit-shell__brand-mark">
+            <span className="material-symbols-outlined">orbit</span>
+          </div>
+          <div className="orbit-shell__brand-copy">
+            <h2>Orbit</h2>
+            <p>{scopeLabel}</p>
+          </div>
+        </div>
+
         <nav className="orbit-side-nav" aria-label="Scope navigation">
           {visibleScopeNav.map((item) => (
             <NavLink
@@ -110,7 +96,8 @@ export function AppShell() {
               to={item.to}
               className={({ isActive }) => `orbit-side-link${isActive ? " is-active" : ""}`}
             >
-              {item.label}
+              <span className="material-symbols-outlined orbit-side-link__icon">{item.icon}</span>
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
@@ -125,17 +112,106 @@ export function AppShell() {
                   to={view.to}
                   className={({ isActive }) => `orbit-side-link orbit-side-link--sub${isActive ? " is-active" : ""}`}
                 >
-                  {view.label}
+                  <span className="material-symbols-outlined orbit-side-link__icon">{view.icon}</span>
+                  <span>{view.label}</span>
                 </NavLink>
               ))}
             </div>
           </div>
         ) : null}
+
+        <section className="orbit-shell__coach">
+          <div className="orbit-shell__coach-head">
+            <span className="material-symbols-outlined">auto_awesome</span>
+            <span>AI Coach</span>
+          </div>
+          <p>
+            {activeWorkspaceName}의 일정 흐름을 분석하고, 지연 가능성이 높은 작업부터 우선순위를 제안합니다.
+          </p>
+        </section>
       </aside>
+
+      <header className="orbit-shell__top" role="banner">
+        <div className="orbit-shell__top-left">
+          <h1>{heroTitle}</h1>
+          <label className="orbit-shell__search">
+            <span className="material-symbols-outlined">search</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search tasks, threads, notes..."
+              aria-label="Search"
+            />
+          </label>
+        </div>
+
+        <div className="orbit-shell__top-actions">
+          <button
+            className="orbit-button orbit-button--ghost orbit-mobile-menu-button"
+            type="button"
+            onClick={() => setMobileNavOpen((value) => !value)}
+            aria-expanded={mobileNavOpen}
+            aria-controls="orbit-side-nav"
+          >
+            <span className="material-symbols-outlined">{mobileNavOpen ? "close" : "menu"}</span>
+            <span>{mobileNavOpen ? "Close" : "Menu"}</span>
+          </button>
+
+          <button className="orbit-button orbit-button--ghost orbit-workspace-pill" type="button" onClick={() => navigate("/app/workspace/select")} title="Select workspace">
+            <span className="material-symbols-outlined">workspaces</span>
+            <span>{activeWorkspaceName}</span>
+          </button>
+          <span className="orbit-shell__scope-label">{activeRole ?? "WORKSPACE_MEMBER"}</span>
+          <ThemeToggleButton variant="shell" />
+          <button className="orbit-button orbit-button--ghost" type="button" onClick={signOut}>
+            <span className="material-symbols-outlined">logout</span>
+            <span>Sign Out</span>
+          </button>
+          <button className="orbit-button orbit-desktop-only" type="button" onClick={() => navigate("/app/projects/board")}>
+            <span className="material-symbols-outlined">add</span>
+            <span>New Task</span>
+          </button>
+        </div>
+      </header>
 
       <main id="main-content" className="orbit-shell__content" role="main" tabIndex={-1}>
         <Outlet />
       </main>
+
+      <aside className="orbit-shell__rail" aria-label="Project health">
+        <header className="orbit-shell__rail-head">
+          <h3>
+            <span className="material-symbols-outlined">analytics</span>
+            <span>Project Health</span>
+          </h3>
+        </header>
+        <div className="orbit-shell__rail-body">
+          <article className="orbit-shell__rail-widget">
+            <div className="orbit-shell__rail-row">
+              <span>Overall Progress</span>
+              <strong>68%</strong>
+            </div>
+            <div className="orbit-shell__progress">
+              <span style={{ width: "68%" }} />
+            </div>
+          </article>
+
+          <article className="orbit-shell__rail-widget">
+            <p className="orbit-shell__rail-eyebrow">AI Coaching Summary</p>
+            <h4>Velocity Spike</h4>
+            <p>Assets 작업 속도가 평균 대비 20% 증가했습니다. Environment Pack B를 당겨서 진행하세요.</p>
+            <button className="orbit-link-button orbit-link-button--tab" type="button" onClick={() => navigate("/app/insights")}>
+              Apply Strategy
+            </button>
+          </article>
+
+          <article className="orbit-shell__rail-widget orbit-shell__rail-widget--warn">
+            <h4>Bottleneck Detected</h4>
+            <p>Review 단계 체류 시간이 증가했습니다. Inbox에서 즉시 블로커를 triage 하세요.</p>
+          </article>
+        </div>
+      </aside>
 
       <FloatingAgentWidget />
     </div>

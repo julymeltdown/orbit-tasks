@@ -20,7 +20,8 @@ export function ThemeToggleButton({ variant = "public" }: ThemeToggleButtonProps
 
   return (
     <button className={className} type="button" onClick={onToggle} aria-label={`${label} mode`}>
-      {label}
+      <span className="material-symbols-outlined">{theme === "dark" ? "light_mode" : "dark_mode"}</span>
+      <span>{label}</span>
     </button>
   );
 }

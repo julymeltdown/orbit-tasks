@@ -9,27 +9,41 @@ interface Action {
 interface Props {
   title: string;
   description: string;
+  statusHint?: string;
   icon?: ReactNode;
   actions?: Action[];
+  secondaryActions?: Action[];
+  learnMoreHref?: string;
+  learnMoreLabel?: string;
 }
 
-export function EmptyStateCard({ title, description, icon, actions = [] }: Props) {
+export function EmptyStateCard({
+  title,
+  description,
+  statusHint,
+  icon,
+  actions = [],
+  secondaryActions = [],
+  learnMoreHref,
+  learnMoreLabel = "Learn more"
+}: Props) {
   return (
-    <article className="orbit-card" style={{ padding: 18, display: "grid", gap: 12 }}>
-      <div style={{ display: "flex", gap: 10, alignItems: "start" }}>
+    <article className="orbit-empty-state">
+      <div className="orbit-empty-state__head">
         {icon ? (
-          <div className="orbit-panel" style={{ minWidth: 40, minHeight: 40, display: "grid", placeItems: "center" }}>
+          <div className="orbit-empty-state__icon">
             {icon}
           </div>
         ) : null}
         <div>
+          {statusHint ? <p className="orbit-empty-state__hint">{statusHint}</p> : null}
           <h3 style={{ margin: 0 }}>{title}</h3>
           <p style={{ marginBottom: 0, color: "var(--orbit-text-subtle)" }}>{description}</p>
         </div>
       </div>
 
       {actions.length > 0 ? (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="orbit-empty-state__actions">
           {actions.map((action) => (
             <button
               key={action.label}
@@ -42,7 +56,26 @@ export function EmptyStateCard({ title, description, icon, actions = [] }: Props
           ))}
         </div>
       ) : null}
+
+      {secondaryActions.length > 0 || learnMoreHref ? (
+        <div className="orbit-empty-state__secondary">
+          {secondaryActions.map((action) => (
+            <button
+              key={action.label}
+              className={`orbit-button${action.variant === "primary" ? "" : " orbit-button--ghost"}`}
+              type="button"
+              onClick={action.onClick}
+            >
+              {action.label}
+            </button>
+          ))}
+          {learnMoreHref ? (
+            <a className="orbit-link-button orbit-link-button--tab" href={learnMoreHref}>
+              {learnMoreLabel}
+            </a>
+          ) : null}
+        </div>
+      ) : null}
     </article>
   );
 }
-

@@ -2,6 +2,9 @@ import { useMemo } from "react";
 import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useProjectStore } from "@/stores/projectStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useAuthStore } from "@/stores/authStore";
+import { useActivationStore } from "@/stores/activationStore";
+import { hashActivationUserId } from "@/lib/telemetry/activationEvents";
 
 interface Props {
   title: string;
@@ -13,6 +16,12 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
   const context = useProjectViewStore((state) => state.getContext(projectId));
   const setFilter = useProjectViewStore((state) => state.setFilter);
+  const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
+  const hashedUserId = hashActivationUserId(userId);
+  const isAdvancedExpanded = useActivationStore((state) =>
+    state.isAdvancedExpanded(activeWorkspaceId ?? "workspace-missing", projectId, hashedUserId)
+  );
+  const setAdvancedExpanded = useActivationStore((state) => state.setAdvancedExpanded);
 
   const statusOptions = useMemo(
     () => [
@@ -37,12 +46,6 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
           value={context.filters.query}
           onChange={(event) => setFilter(projectId, "query", event.target.value)}
         />
-        <input
-          className="orbit-input"
-          placeholder="담당자"
-          value={context.filters.assignee}
-          onChange={(event) => setFilter(projectId, "assignee", event.target.value)}
-        />
         <select
           className="orbit-input"
           value={context.filters.status}
@@ -54,14 +57,20 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
             </option>
           ))}
         </select>
-        <label className="orbit-project-filterbar__checkbox">
-          <input
-            type="checkbox"
-            checked={context.filters.sprintOnly}
-            onChange={(event) => setFilter(projectId, "sprintOnly", event.target.checked)}
-          />
-          이번 스프린트만
-        </label>
+        <button
+          className="orbit-button orbit-button--ghost orbit-project-filterbar__advanced-toggle"
+          type="button"
+          onClick={() =>
+            setAdvancedExpanded(
+              activeWorkspaceId ?? "workspace-missing",
+              projectId,
+              hashedUserId,
+              !isAdvancedExpanded
+            )
+          }
+        >
+          {isAdvancedExpanded ? "Hide Advanced" : "More Filters"}
+        </button>
         <button
           className="orbit-text-button"
           type="button"
@@ -75,6 +84,25 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
           초기화
         </button>
       </div>
+
+      {isAdvancedExpanded ? (
+        <div className="orbit-project-filterbar__advanced">
+          <input
+            className="orbit-input"
+            placeholder="담당자"
+            value={context.filters.assignee}
+            onChange={(event) => setFilter(projectId, "assignee", event.target.value)}
+          />
+          <label className="orbit-project-filterbar__checkbox">
+            <input
+              type="checkbox"
+              checked={context.filters.sprintOnly}
+              onChange={(event) => setFilter(projectId, "sprintOnly", event.target.checked)}
+            />
+            이번 스프린트만
+          </label>
+        </div>
+      ) : null}
     </section>
   );
 }

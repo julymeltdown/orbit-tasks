@@ -8,6 +8,7 @@ import { useFocusContainment } from "@/components/common/useFocusContainment";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
 import { deriveInsightSignals } from "@/features/insights/insightSignals";
+import { resolveGuidanceStatus } from "@/features/insights/aiGuidanceStatus";
 
 const OPEN_KEY = "orbit.ai.widget.open";
 
@@ -68,6 +69,16 @@ export function FloatingAgentWidget() {
   const unreadHints = useMemo(() => {
     return evaluation?.questions.length ?? 0;
   }, [evaluation?.questions.length]);
+  const guidanceStatus = useMemo(
+    () =>
+      resolveGuidanceStatus(
+        evaluation,
+        signals.remainingStoryPoints === 0
+          ? "활성 작업이 없어 코칭 초안을 생성할 수 없습니다."
+          : `남은 ${signals.remainingStoryPoints}SP, 블로커 ${signals.blockedCount}개 기반으로 분석합니다.`
+      ),
+    [evaluation, signals.blockedCount, signals.remainingStoryPoints]
+  );
 
   const draftPlaceholder = useMemo(() => {
     if (signals.remainingStoryPoints === 0) {
@@ -175,11 +186,12 @@ export function FloatingAgentWidget() {
 
           {evaluation ? (
             <div className="orbit-panel" style={{ padding: 10 }}>
-            <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)", marginBottom: 6 }}>
-                Health {evaluation.health} · confidence {(evaluation.confidence * 100).toFixed(0)}% · {selectedWorkItemId ? "work item context" : "project context"}
-            </div>
+              <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)", marginBottom: 6 }}>
+                {guidanceStatus.stateLabel} · {guidanceStatus.reasonLabel} · {guidanceStatus.confidenceLabel} ·{" "}
+                {selectedWorkItemId ? "work item context" : "project context"}
+              </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button className="orbit-button orbit-button--ghost" type="button" onClick={acceptTopRisk}>
+                <button className="orbit-button orbit-button--ghost" type="button" onClick={acceptTopRisk} disabled={!guidanceStatus.canApplyAction}>
                   Accept Top Action
                 </button>
               </div>

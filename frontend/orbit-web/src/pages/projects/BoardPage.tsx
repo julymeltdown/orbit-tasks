@@ -11,11 +11,12 @@ import {
   useSensors
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { request } from "@/lib/http/client";
 import { useProjectStore } from "@/stores/projectStore";
 import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useAuthStore } from "@/stores/authStore";
 import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
 import { displayWorkItemTitle } from "@/features/workitems/display";
 import { type WorkItem, type WorkItemPriority, type WorkItemStatus, type WorkItemType, useWorkItems } from "@/features/workitems/hooks/useWorkItems";
@@ -23,6 +24,9 @@ import { ProjectViewTabs } from "@/components/projects/ProjectViewTabs";
 import { ProjectFilterBar } from "@/components/projects/ProjectFilterBar";
 import { DependencyInspectorPanel } from "@/components/projects/DependencyInspectorPanel";
 import { WorkItemDetailPanel } from "@/components/projects/WorkItemDetailPanel";
+import { EmptyStateCard } from "@/components/common/EmptyStateCard";
+import { getGuidedEmptyState } from "@/features/activation/emptyStateRegistry";
+import { trackActivationEvent } from "@/lib/telemetry/activationEvents";
 
 const FLOW_LANES: Array<{ status: WorkItemStatus; title: string }> = [
   { status: "TODO", title: "Backlog" },
@@ -188,13 +192,17 @@ function BoardCard({
 function CreateTaskPanel({
   open,
   composer,
+  showAdvancedFields,
   onComposerChange,
+  onToggleAdvancedFields,
   onSubmit,
   onClose
 }: {
   open: boolean;
   composer: ComposerState;
+  showAdvancedFields: boolean;
   onComposerChange: (field: keyof ComposerState, value: string) => void;
+  onToggleAdvancedFields: () => void;
   onSubmit: () => void;
   onClose: () => void;
 }) {
@@ -216,28 +224,33 @@ function CreateTaskPanel({
         value={composer.title}
         onChange={(event) => onComposerChange("title", event.target.value)}
       />
-      <div className="orbit-board-create-panel__grid">
-        <select className="orbit-input" value={composer.status} onChange={(event) => onComposerChange("status", event.target.value)}>
-          <option value="TODO">Backlog</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="REVIEW">Review</option>
-          <option value="DONE">Done</option>
-        </select>
-        <select className="orbit-input" value={composer.type} onChange={(event) => onComposerChange("type", event.target.value)}>
-          <option value="TASK">Task</option>
-          <option value="STORY">Story</option>
-          <option value="BUG">Bug</option>
-          <option value="EPIC">Epic</option>
-        </select>
-        <select className="orbit-input" value={composer.priority} onChange={(event) => onComposerChange("priority", event.target.value)}>
-          <option value="LOW">Low</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="HIGH">High</option>
-          <option value="CRITICAL">Critical</option>
-        </select>
-        <input className="orbit-input" placeholder="담당자" value={composer.assignee} onChange={(event) => onComposerChange("assignee", event.target.value)} />
-        <input className="orbit-input" type="date" value={composer.dueAt} onChange={(event) => onComposerChange("dueAt", event.target.value)} />
-      </div>
+      <button className="orbit-button orbit-button--ghost" type="button" onClick={onToggleAdvancedFields}>
+        {showAdvancedFields ? "Hide Details" : "Add Details"}
+      </button>
+      {showAdvancedFields ? (
+        <div className="orbit-board-create-panel__grid">
+          <select className="orbit-input" value={composer.status} onChange={(event) => onComposerChange("status", event.target.value)}>
+            <option value="TODO">Backlog</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="REVIEW">Review</option>
+            <option value="DONE">Done</option>
+          </select>
+          <select className="orbit-input" value={composer.type} onChange={(event) => onComposerChange("type", event.target.value)}>
+            <option value="TASK">Task</option>
+            <option value="STORY">Story</option>
+            <option value="BUG">Bug</option>
+            <option value="EPIC">Epic</option>
+          </select>
+          <select className="orbit-input" value={composer.priority} onChange={(event) => onComposerChange("priority", event.target.value)}>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="CRITICAL">Critical</option>
+          </select>
+          <input className="orbit-input" placeholder="담당자" value={composer.assignee} onChange={(event) => onComposerChange("assignee", event.target.value)} />
+          <input className="orbit-input" type="date" value={composer.dueAt} onChange={(event) => onComposerChange("dueAt", event.target.value)} />
+        </div>
+      ) : null}
       <div className="orbit-board-create-panel__actions">
         <button className="orbit-button orbit-button--ghost" type="button" onClick={onClose}>
           취소
@@ -251,8 +264,10 @@ function CreateTaskPanel({
 }
 
 export function BoardPage() {
+  const location = useLocation();
   const navigate = useNavigate();
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
   const projectView = useProjectViewStore((state) => state.getContext(projectId));
   const setProjectView = useProjectViewStore((state) => state.setView);
@@ -267,11 +282,15 @@ export function BoardPage() {
   const [showDependencyInspector, setShowDependencyInspector] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [showAdvancedFields, setShowAdvancedFields] = useState(false);
+  const [boardInteractionSent, setBoardInteractionSent] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [sprintBacklog, setSprintBacklog] = useState<BacklogItemView[]>([]);
   const [sprintLoading, setSprintLoading] = useState(false);
   const [sprintError, setSprintError] = useState<string | null>(null);
   const sprintOnly = projectView.filters.sprintOnly;
+  const boardEmptyState = getGuidedEmptyState("BOARD");
+  const sprintEmptyState = getGuidedEmptyState("SPRINT");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -334,6 +353,14 @@ export function BoardPage() {
   }, [projectId, setProjectView]);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("create") === "1") {
+      setComposerOpen(true);
+      setShowAdvancedFields(false);
+    }
+  }, [location.search]);
+
+  useEffect(() => {
     if (selectedItemId && !itemIndex[selectedItemId]) {
       setSelectedItemId(null);
       setDetailOpen(false);
@@ -376,6 +403,7 @@ export function BoardPage() {
 
   function openComposerFor(lane: WorkItemStatus) {
     setComposerOpen(true);
+    setShowAdvancedFields(false);
     setComposer((previous) => ({
       ...previous,
       title: "",
@@ -388,11 +416,26 @@ export function BoardPage() {
 
   function closeComposer() {
     setComposerOpen(false);
+    setShowAdvancedFields(false);
     setComposer(makeComposer());
   }
 
   function onComposerChange(field: keyof ComposerState, value: string) {
     setComposer((previous) => ({ ...previous, [field]: value }));
+  }
+
+  async function emitActivationEvent(eventType: "FIRST_TASK_CREATED" | "BOARD_FIRST_INTERACTION" | "EMPTY_STATE_ACTION_CLICKED", metadata?: Record<string, unknown>) {
+    if (!activeWorkspaceId) {
+      return;
+    }
+    await trackActivationEvent({
+      workspaceId: activeWorkspaceId,
+      projectId,
+      userId,
+      eventType,
+      route: "/app/projects/board",
+      metadata
+    });
   }
 
   async function submitComposer() {
@@ -418,6 +461,10 @@ export function BoardPage() {
 
       setSelectedItemId(created.workItemId);
       setDetailOpen(true);
+      await emitActivationEvent("FIRST_TASK_CREATED", {
+        workItemId: created.workItemId,
+        status: composer.status
+      });
       closeComposer();
     } catch (e) {
       setLocalError(e instanceof Error ? e.message : "Failed to create task");
@@ -490,6 +537,10 @@ export function BoardPage() {
       return;
     }
     await updateStatus(workItemId, nextStatus);
+    if (!boardInteractionSent) {
+      setBoardInteractionSent(true);
+      await emitActivationEvent("BOARD_FIRST_INTERACTION", { mode: "drag", workItemId });
+    }
   }
 
   function statusByDirection(current: WorkItemStatus, direction: "left" | "right"): WorkItemStatus {
@@ -514,12 +565,20 @@ export function BoardPage() {
       return;
     }
     await updateStatus(workItemId, next);
+    if (!boardInteractionSent) {
+      setBoardInteractionSent(true);
+      await emitActivationEvent("BOARD_FIRST_INTERACTION", { mode: "keyboard", workItemId });
+    }
   }
 
   function openDetails(workItemId: string) {
     setSelectedItemId(workItemId);
     setSelectedWorkItem(projectId, workItemId);
     setDetailOpen(true);
+    if (!boardInteractionSent) {
+      setBoardInteractionSent(true);
+      emitActivationEvent("BOARD_FIRST_INTERACTION", { mode: "open_detail", workItemId }).catch(() => undefined);
+    }
   }
 
   return (
@@ -566,15 +625,25 @@ export function BoardPage() {
       </section>
 
       {!activeSprint ? (
-        <article className="orbit-board-empty-sprint">
-          <h3 style={{ margin: 0 }}>활성 스프린트가 없습니다</h3>
-          <p style={{ margin: 0 }}>스프린트를 먼저 시작하면 칸반과 DSU 흐름이 자동으로 연결됩니다.</p>
-          <div>
-            <button className="orbit-button" type="button" onClick={() => navigate("/app/sprint")}>
-              스프린트 시작하기
-            </button>
-          </div>
-        </article>
+        <EmptyStateCard
+          title={sprintEmptyState.title}
+          description={sprintEmptyState.description}
+          statusHint={sprintEmptyState.statusHint}
+          actions={[
+            {
+              label: sprintEmptyState.primaryAction.label,
+              onClick: () => {
+                emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", { scope: "SPRINT", action: "create_sprint" }).catch(() => undefined);
+                navigate(sprintEmptyState.primaryAction.path);
+              }
+            }
+          ]}
+          secondaryActions={(sprintEmptyState.secondaryActions ?? []).map((action) => ({
+            label: action.label,
+            variant: "ghost",
+            onClick: () => navigate(action.path)
+          }))}
+        />
       ) : null}
 
       <div className="orbit-notion-main">
@@ -616,13 +685,44 @@ export function BoardPage() {
               ))}
             </section>
           </DndContext>
+          {!loading && filteredItems.length === 0 ? (
+            <EmptyStateCard
+              title={boardEmptyState.title}
+              description={boardEmptyState.description}
+              statusHint={boardEmptyState.statusHint}
+              actions={[
+                {
+                  label: boardEmptyState.primaryAction.label,
+                  onClick: () => {
+                    emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", { scope: "BOARD", action: "create_first_task" }).catch(() => undefined);
+                    openComposerFor("TODO");
+                  }
+                }
+              ]}
+              secondaryActions={(boardEmptyState.secondaryActions ?? []).map((action) => ({
+                label: action.label,
+                variant: "ghost",
+                onClick: () => {
+                  emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", {
+                    scope: "BOARD",
+                    action: action.label
+                  }).catch(() => undefined);
+                  navigate(action.path);
+                }
+              }))}
+              learnMoreHref="/app/insights"
+              learnMoreLabel="Learn how flow works"
+            />
+          ) : null}
         </section>
 
         <aside className="orbit-board-side">
           <CreateTaskPanel
             open={composerOpen}
             composer={composer}
+            showAdvancedFields={showAdvancedFields}
             onComposerChange={onComposerChange}
+            onToggleAdvancedFields={() => setShowAdvancedFields((value) => !value)}
             onSubmit={submitComposer}
             onClose={closeComposer}
           />

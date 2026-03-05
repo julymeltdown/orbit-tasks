@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DSUComposerPanel, type DSUComposePayload, type DSUSummary } from "@/components/agile/DSUComposerPanel";
 import { DSUSuggestionReviewPanel } from "@/components/agile/DSUSuggestionReviewPanel";
 import { SprintWizardStepBacklog } from "@/components/agile/SprintWizardStepBacklog";
 import { SprintWizardStepDayPlan } from "@/components/agile/SprintWizardStepDayPlan";
 import { SprintWizardStepInfo } from "@/components/agile/SprintWizardStepInfo";
 import { EmptyStateCard } from "@/components/common/EmptyStateCard";
+import { getGuidedEmptyState } from "@/features/activation/emptyStateRegistry";
 import { useDsuSuggestions } from "@/features/agile/hooks/useDsuSuggestions";
 import { type BacklogItemView, type DayPlanView, type SprintView, useSprintPlanning } from "@/features/agile/hooks/useSprintPlanning";
 import type { DSUSuggestion } from "@/features/workitems/types";
@@ -14,6 +15,7 @@ import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
+import { trackActivationEvent } from "@/lib/telemetry/activationEvents";
 
 type WizardStep = 1 | 2 | 3;
 
@@ -57,10 +59,28 @@ export function SprintWorkspacePage() {
   const [dsuHistory, setDsuHistory] = useState<SprintDsuEntry[]>([]);
   const [suggestions, setSuggestions] = useState<DSUSuggestion[]>([]);
   const [lastDsuId, setLastDsuId] = useState<string | null>(null);
+  const sprintEmptyState = getGuidedEmptyState("SPRINT");
 
   const canCreateSprint = useMemo(() => {
     return Boolean(activeWorkspaceId && projectId && sprintName.trim() && goal.trim() && startDate && endDate);
   }, [activeWorkspaceId, projectId, sprintName, goal, startDate, endDate]);
+
+  const emitActivationEvent = useCallback(
+    async (eventType: "SPRINT_ENTERED" | "EMPTY_STATE_ACTION_CLICKED", metadata?: Record<string, unknown>) => {
+      if (!activeWorkspaceId) {
+        return;
+      }
+      await trackActivationEvent({
+        workspaceId: activeWorkspaceId,
+        projectId,
+        userId,
+        eventType,
+        route: "/app/sprint",
+        metadata
+      });
+    },
+    [activeWorkspaceId, projectId, userId]
+  );
 
   async function loadSprintContext(sprintId: string) {
     const [nextBacklog, nextDayPlans, nextDsu] = await Promise.all([
@@ -104,7 +124,8 @@ export function SprintWorkspacePage() {
     loadSprintContext(activeSprint.sprintId).catch((e) => {
       setError(e instanceof Error ? e.message : "Failed to load sprint context");
     });
-  }, [activeWorkspaceId, projectId, activeSprint?.sprintId]);
+    emitActivationEvent("SPRINT_ENTERED", { source: "active_sprint_restore", sprintId: activeSprint.sprintId }).catch(() => undefined);
+  }, [activeWorkspaceId, projectId, activeSprint?.sprintId, emitActivationEvent, dailyCapacityMinutes, setProjectFilter, setActiveSprint]);
 
   async function createSprintAndContinue() {
     if (!activeWorkspaceId) {
@@ -141,6 +162,7 @@ export function SprintWorkspacePage() {
       await loadSprintContext(created.sprintId);
       setProjectFilter(projectId, "sprintOnly", true);
       setStep(2);
+      await emitActivationEvent("SPRINT_ENTERED", { source: "wizard_create", sprintId: created.sprintId });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create sprint");
     } finally {
@@ -267,10 +289,24 @@ export function SprintWorkspacePage() {
     <section className="orbit-sprint-shell">
       {!sprint ? (
         <EmptyStateCard
-          title="No active sprint selected"
-          description="Start sprint planning first, then generate and freeze day plans before running execution."
+          title={sprintEmptyState.title}
+          description={sprintEmptyState.description}
+          statusHint={sprintEmptyState.statusHint}
           actions={[
-            { label: "Open Board", onClick: () => setProjectFilter(projectId, "sprintOnly", false), variant: "ghost" }
+            {
+              label: sprintEmptyState.primaryAction.label,
+              onClick: () => {
+                emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", { scope: "SPRINT", action: "create_sprint" }).catch(() => undefined);
+                setStep(1);
+              }
+            }
+          ]}
+          secondaryActions={[
+            {
+              label: "Open Board",
+              variant: "ghost",
+              onClick: () => setProjectFilter(projectId, "sprintOnly", false)
+            }
           ]}
         />
       ) : null}

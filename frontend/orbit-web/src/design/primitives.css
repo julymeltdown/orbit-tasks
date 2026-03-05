@@ -102,6 +102,16 @@ select {
   cursor: not-allowed;
 }
 
+.orbit-button:focus-visible,
+.orbit-link-button:focus-visible,
+.orbit-icon-button:focus-visible,
+.orbit-text-button:focus-visible,
+.orbit-input:focus-visible,
+.orbit-side-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--orbit-accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
 .orbit-icon-button {
   display: inline-flex;
   align-items: center;

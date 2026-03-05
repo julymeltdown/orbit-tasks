@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useNavigate } from "react-router-dom";
 import { HttpError, request } from "@/lib/http/client";
 import { useEvaluationActions } from "@/features/insights/hooks/useEvaluationActions";
 import { deriveInsightSignals } from "@/features/insights/insightSignals";
@@ -8,6 +9,11 @@ import type { Evaluation } from "@/features/workitems/types";
 import { useProjectStore } from "@/stores/projectStore";
 import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useAuthStore } from "@/stores/authStore";
+import { EmptyStateCard } from "@/components/common/EmptyStateCard";
+import { getGuidedEmptyState } from "@/features/activation/emptyStateRegistry";
+import { resolveGuidanceStatus } from "@/features/insights/aiGuidanceStatus";
+import { trackActivationEvent } from "@/lib/telemetry/activationEvents";
 
 const HEALTH_SCORE_MAP: Record<string, number> = {
   ON_TRACK: 94,
@@ -19,21 +25,6 @@ const HEALTH_SCORE_MAP: Record<string, number> = {
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
-}
-
-function resolveReasonLabel(reason: string) {
-  switch (reason) {
-    case "llm_success":
-      return "LLM primary response";
-    case "deterministic_fallback":
-      return "Fallback engine";
-    case "no_data":
-      return "Insufficient signals";
-    case "not_run":
-      return "Not evaluated";
-    default:
-      return reason.replace(/_/g, " ");
-  }
 }
 
 function deriveHealthScore(evaluation: Evaluation | null, remainingSp: number, capacitySp: number, blocked: number, atRisk: number) {
@@ -50,8 +41,10 @@ function deriveHealthScore(evaluation: Evaluation | null, remainingSp: number, c
 }
 
 export function ScheduleInsightsPage() {
+  const navigate = useNavigate();
   const claims = useWorkspaceStore((state) => state.claims);
   const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
   const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
   const selectedWorkItemId = useProjectViewStore((state) => state.getContext(projectId).selectedWorkItemId);
   const { items } = useWorkItems(projectId);
@@ -68,9 +61,27 @@ export function ScheduleInsightsPage() {
   const [simulateAiFailure, setSimulateAiFailure] = useState(false);
   const [applyingAction, setApplyingAction] = useState(false);
   const { submitAction } = useEvaluationActions();
+  const insightsEmptyState = getGuidedEmptyState("INSIGHTS");
   const activeWorkspaceName = useMemo(() => {
     return claims.find((claim) => claim.workspaceId === workspaceId)?.workspaceName ?? "Workspace";
   }, [claims, workspaceId]);
+
+  async function emitActivationEvent(
+    eventType: "INSIGHT_EVALUATION_STARTED" | "INSIGHT_EVALUATION_COMPLETED" | "EMPTY_STATE_ACTION_CLICKED",
+    metadata?: Record<string, unknown>
+  ) {
+    if (!workspaceId) {
+      return;
+    }
+    await trackActivationEvent({
+      workspaceId,
+      projectId,
+      userId,
+      eventType,
+      route: "/app/insights",
+      metadata
+    });
+  }
 
   useEffect(() => {
     if (metricsDirty) {
@@ -113,6 +124,10 @@ export function ScheduleInsightsPage() {
     }
     setLoading(true);
     setError(null);
+    await emitActivationEvent("INSIGHT_EVALUATION_STARTED", {
+      selectedWorkItemId: selectedWorkItemId ?? null,
+      simulateAiFailure
+    });
     try {
       const next = await request<Evaluation>("/api/v2/insights/evaluations", {
         method: "POST",
@@ -129,6 +144,10 @@ export function ScheduleInsightsPage() {
         }
       });
       setEvaluation(next);
+      await emitActivationEvent("INSIGHT_EVALUATION_COMPLETED", {
+        fallback: next.fallback,
+        reason: next.reason
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Evaluation failed");
     } finally {
@@ -156,6 +175,16 @@ export function ScheduleInsightsPage() {
     () => deriveHealthScore(evaluation, remainingStoryPoints, availableCapacitySp, blockedCount, atRiskCount),
     [evaluation, remainingStoryPoints, availableCapacitySp, blockedCount, atRiskCount]
   );
+  const guidanceStatus = useMemo(
+    () =>
+      resolveGuidanceStatus(
+        evaluation,
+        remainingStoryPoints === 0
+          ? "작업을 추가하면 AI 평가가 활성화됩니다."
+          : `현재 입력 기준: 남은 ${remainingStoryPoints}SP, 가용 ${availableCapacitySp}SP, 블로커 ${blockedCount}개, 위험 ${atRiskCount}개`
+      ),
+    [evaluation, remainingStoryPoints, availableCapacitySp, blockedCount, atRiskCount]
+  );
 
   const confidenceScore = Math.round((evaluation?.confidence ?? 0.82) * 100);
   const trendDelta = clamp(Math.round((confidenceScore - 72) / 5), -8, 8);
@@ -179,14 +208,14 @@ export function ScheduleInsightsPage() {
   }, [atRiskCount, availableCapacitySp, blockedCount, evaluation, remainingStoryPoints]);
 
   const heroBadgeLabel = useMemo(() => {
-    if (!evaluation) {
+    if (guidanceStatus.state === "not_run") {
       return remainingStoryPoints > 0 ? "Live Metrics Ready" : "Awaiting Signals";
     }
-    if (evaluation.fallback) {
+    if (guidanceStatus.state === "fallback") {
       return "Fallback Diagnostics";
     }
-    return `${evaluation.health.replace(/_/g, " ")} · Live`;
-  }, [evaluation, remainingStoryPoints]);
+    return `${evaluation?.health.replace(/_/g, " ") ?? "evaluated"} · Live`;
+  }, [evaluation?.health, guidanceStatus.state, remainingStoryPoints]);
 
   function resetMetricsFromSignals() {
     setMetricsDirty(false);
@@ -292,6 +321,33 @@ export function ScheduleInsightsPage() {
 
       {error ? <p className="orbit-insights-error">{error}</p> : null}
 
+      {!evaluation && remainingStoryPoints === 0 ? (
+        <EmptyStateCard
+          title={insightsEmptyState.title}
+          description={insightsEmptyState.description}
+          statusHint={insightsEmptyState.statusHint}
+          actions={[
+            {
+              label: insightsEmptyState.primaryAction.label,
+              onClick: () => {
+                emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", { scope: "INSIGHTS", action: "run_evaluation" }).catch(() => undefined);
+                runEvaluation().catch(() => undefined);
+              }
+            }
+          ]}
+          secondaryActions={(insightsEmptyState.secondaryActions ?? []).map((action) => ({
+            label: action.label,
+            variant: "ghost",
+              onClick: () => {
+                emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", { scope: "INSIGHTS", action: action.label }).catch(() => undefined);
+                navigate(action.path);
+              }
+            }))}
+          learnMoreHref="/app/projects/board"
+          learnMoreLabel="Prepare board first"
+        />
+      ) : null}
+
       <section className="orbit-insights-main-grid">
         <article className="orbit-insights-health">
           <div className="orbit-insights-health__head">
@@ -334,13 +390,13 @@ export function ScheduleInsightsPage() {
               <p className="orbit-insights-eyebrow">AI Coaching</p>
               <h3>Draft Mitigations</h3>
             </div>
-            <span className={`orbit-insights-status${evaluation?.fallback ? " is-fallback" : ""}`}>
-              {resolveReasonLabel(evaluation?.reason ?? "not_run")}
+            <span className={`orbit-insights-status${guidanceStatus.isFallback ? " is-fallback" : ""}`}>
+              {guidanceStatus.reasonLabel}
             </span>
           </header>
           <p className="orbit-insights-side__summary">{coachSummary}</p>
           <div className="orbit-insights-side__meta">
-            <span>Confidence {confidenceScore}%</span>
+            <span>{guidanceStatus.confidenceLabel}</span>
             {evaluation ? (
               evaluation.fallback ? (
                 <span>Fallback result</span>
@@ -353,7 +409,7 @@ export function ScheduleInsightsPage() {
           </div>
 
           <div className="orbit-insights-side__actions">
-            <button className="orbit-button" type="button" onClick={acceptTopRisk} disabled={!evaluation || applyingAction}>
+            <button className="orbit-button" type="button" onClick={acceptTopRisk} disabled={!evaluation || applyingAction || !guidanceStatus.canApplyAction}>
               <span className="material-symbols-outlined">done</span>
               <span>{applyingAction ? "Applying..." : "Apply Top Strategy"}</span>
             </button>

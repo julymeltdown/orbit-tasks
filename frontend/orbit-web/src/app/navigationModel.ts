@@ -5,6 +5,7 @@ export interface ScopeNavItem {
   label: string;
   to: string;
   icon: string;
+  tier?: "core" | "advanced";
   minRole?: "WORKSPACE_MEMBER" | "WORKSPACE_MANAGER" | "WORKSPACE_ADMIN";
 }
 
@@ -24,14 +25,14 @@ const ROLE_WEIGHT: Record<string, number> = {
 };
 
 export const scopeNavigation: ScopeNavItem[] = [
-  { id: "my-work", label: "Dashboard", to: "/app", icon: "dashboard" },
-  { id: "sprint", label: "Sprint", to: "/app/sprint", icon: "event_note" },
-  { id: "inbox", label: "Inbox", to: "/app/inbox", icon: "inbox" },
-  { id: "workspaces", label: "Workspace", to: "/app/workspace/select", icon: "workspaces" },
-  { id: "portfolio", label: "Portfolio", to: "/app/portfolio", icon: "account_tree", minRole: "WORKSPACE_MANAGER" },
-  { id: "insights", label: "AI Insights", to: "/app/insights", icon: "psychology" },
-  { id: "integrations", label: "Integrations", to: "/app/integrations/import", icon: "hub", minRole: "WORKSPACE_MANAGER" },
-  { id: "admin", label: "Admin", to: "/app/admin/compliance", icon: "admin_panel_settings", minRole: "WORKSPACE_ADMIN" }
+  { id: "my-work", label: "Dashboard", to: "/app", icon: "dashboard", tier: "core" },
+  { id: "sprint", label: "Sprint", to: "/app/sprint", icon: "event_note", tier: "core" },
+  { id: "inbox", label: "Inbox", to: "/app/inbox", icon: "inbox", tier: "core" },
+  { id: "workspaces", label: "Workspace", to: "/app/workspace/select", icon: "workspaces", tier: "core" },
+  { id: "insights", label: "AI Insights", to: "/app/insights", icon: "psychology", tier: "core" },
+  { id: "portfolio", label: "Portfolio", to: "/app/portfolio", icon: "account_tree", tier: "advanced", minRole: "WORKSPACE_MANAGER" },
+  { id: "integrations", label: "Integrations", to: "/app/integrations/import", icon: "hub", tier: "advanced", minRole: "WORKSPACE_MANAGER" },
+  { id: "admin", label: "Admin", to: "/app/admin/compliance", icon: "admin_panel_settings", tier: "advanced", minRole: "WORKSPACE_ADMIN" }
 ];
 
 export const projectViewNavigation: ProjectViewItem[] = [
@@ -49,6 +50,12 @@ export function canAccessNavItem(role: string | null | undefined, item: ScopeNav
   const current = ROLE_WEIGHT[role ?? ""] ?? 0;
   const required = ROLE_WEIGHT[item.minRole] ?? 0;
   return current >= required;
+}
+
+export function splitScopeNavigationByTier(items: ScopeNavItem[]) {
+  const core = items.filter((item) => (item.tier ?? "core") === "core");
+  const advanced = items.filter((item) => (item.tier ?? "core") === "advanced");
+  return { core, advanced };
 }
 
 export function resolveScopeLabel(pathname: string): string {

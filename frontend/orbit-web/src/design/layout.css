@@ -197,6 +197,11 @@
   color: var(--orbit-text-subtle);
 }
 
+.orbit-shell__rail-meta {
+  font-size: 0.66rem !important;
+  letter-spacing: 0.03em;
+}
+
 .orbit-shell__rail-widget--warn {
   border-color: color-mix(in srgb, var(--orbit-warning) 45%, var(--orbit-border));
   background: color-mix(in srgb, var(--orbit-warning) 9%, var(--orbit-surface-1));
@@ -242,6 +247,13 @@
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 0.9rem;
   min-width: 0;
+}
+
+.orbit-shell__activation-loading {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--orbit-text-subtle);
+  padding: 0.2rem;
 }
 
 /* Global flatten mode: avoid double card/panel framing across pages. */
@@ -291,6 +303,10 @@
   padding: 0;
 }
 
+.orbit-side-nav--advanced {
+  margin-top: 0.1rem;
+}
+
 .orbit-desktop-only {
   display: inline-flex;
 }
@@ -310,6 +326,13 @@
   font-size: 0.83rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+.orbit-side-link--more {
+  justify-content: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .orbit-side-link.is-active {
@@ -705,6 +728,66 @@
   flex-wrap: wrap;
 }
 
+.orbit-ops-hub__actions--activation {
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 65%, transparent);
+  padding-top: 10px;
+}
+
+.orbit-activation-checklist {
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  height: 100%;
+}
+
+.orbit-activation-checklist__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.orbit-activation-checklist__head strong {
+  font-size: 1.15rem;
+  letter-spacing: -0.03em;
+}
+
+.orbit-activation-checklist__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.orbit-activation-checklist__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 75%, transparent);
+  border-radius: var(--orbit-radius-sm);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
+}
+
+.orbit-activation-checklist__item .material-symbols-outlined {
+  font-size: 1rem;
+  margin-top: 2px;
+}
+
+.orbit-activation-checklist__item p {
+  margin: 4px 0 0;
+  color: var(--orbit-text-subtle);
+  font-size: 0.75rem;
+}
+
+.orbit-activation-checklist__actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
 .orbit-notion-layout {
   display: grid;
   gap: 14px;
@@ -782,6 +865,10 @@
   min-width: 0;
 }
 
+.orbit-project-filterbar__advanced-toggle {
+  min-height: 2.65rem;
+}
+
 .orbit-project-filterbar__checkbox {
   display: inline-flex;
   align-items: center;
@@ -791,6 +878,52 @@
   background: var(--orbit-surface-1);
   padding: 0 10px;
   font-size: 12px;
+}
+
+.orbit-project-filterbar__advanced {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.orbit-empty-state {
+  border: 1px dashed color-mix(in srgb, var(--orbit-border) 86%, transparent);
+  border-radius: var(--orbit-radius-md);
+  padding: 14px;
+  background: color-mix(in srgb, var(--orbit-surface-1) 82%, transparent);
+  display: grid;
+  gap: 10px;
+}
+
+.orbit-empty-state__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.orbit-empty-state__icon {
+  min-width: 2.1rem;
+  min-height: 2.1rem;
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 75%, transparent);
+  border-radius: var(--orbit-radius-sm);
+  display: grid;
+  place-items: center;
+}
+
+.orbit-empty-state__hint {
+  margin: 0 0 6px;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--orbit-text-subtle);
+  font-weight: 700;
+}
+
+.orbit-empty-state__actions,
+.orbit-empty-state__secondary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .orbit-dsu-reminder {
@@ -2190,6 +2323,10 @@ button.orbit-dashboard-metric {
   .orbit-project-filterbar__controls {
     grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   }
+
+  .orbit-project-filterbar__advanced {
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  }
 }
 
 @media (max-width: 1320px) {
@@ -2479,6 +2616,10 @@ button.orbit-dashboard-metric {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .orbit-project-filterbar__advanced {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .orbit-calendar-surface .fc .fc-header-toolbar {
     flex-direction: column;
     align-items: stretch;
@@ -2534,6 +2675,13 @@ button.orbit-dashboard-metric {
 @media (max-width: 480px) {
   .orbit-shell__top {
     padding: 8px 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .orbit-shell__top-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .orbit-shell__top-left h1 {

@@ -26,6 +26,10 @@ import { OperationsHubPage } from "@/pages/overview/OperationsHubPage";
 import { fetchProfileCompletion } from "@/lib/auth/profileCompletion";
 import { useAuthStore } from "@/stores/authStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useProjectStore } from "@/stores/projectStore";
+import { useActivation } from "@/features/activation/hooks/useActivation";
+import { useActivationStore } from "@/stores/activationStore";
+import { hashActivationUserId } from "@/lib/telemetry/activationEvents";
 
 function SessionLoading() {
   return (
@@ -109,6 +113,31 @@ function LegacyRedirect({ to }: { to: string }) {
   return <Navigate replace to={to} />;
 }
 
+function ActivationBootstrap({ children }: { children: ReactNode }) {
+  const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
+  const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
+  const activation = useActivation();
+  const setActivationState = useActivationStore((state) => state.setState);
+
+  React.useEffect(() => {
+    if (!workspaceId || !projectId) {
+      return;
+    }
+    const activationUserId = hashActivationUserId(userId);
+    activation
+      .getState(workspaceId, projectId, activationUserId)
+      .then((state) => {
+        if (state) {
+          setActivationState(state);
+        }
+      })
+      .catch(() => undefined);
+  }, [activation, projectId, setActivationState, userId, workspaceId]);
+
+  return <>{children}</>;
+}
+
 function RequireAdmin({ children }: { children: ReactNode }) {
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const claims = useWorkspaceStore((state) => state.claims);
@@ -181,7 +210,9 @@ export const router = createBrowserRouter([
     element: (
       <RequireAuth>
         <RequireProfileCompletion>
-          <AppShell />
+          <ActivationBootstrap>
+            <AppShell />
+          </ActivationBootstrap>
         </RequireProfileCompletion>
       </RequireAuth>
     ),

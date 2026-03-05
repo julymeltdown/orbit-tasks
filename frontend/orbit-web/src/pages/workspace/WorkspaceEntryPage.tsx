@@ -2,6 +2,11 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { resolveReturnTo } from "@/lib/routing/restoreIntent";
+import { useProjectStore } from "@/stores/projectStore";
+import { useAuthStore } from "@/stores/authStore";
+import { EmptyStateCard } from "@/components/common/EmptyStateCard";
+import { getGuidedEmptyState } from "@/features/activation/emptyStateRegistry";
+import { trackActivationEvent } from "@/lib/telemetry/activationEvents";
 
 export function WorkspaceEntryPage() {
   const navigate = useNavigate();
@@ -14,6 +19,9 @@ export function WorkspaceEntryPage() {
   const fallbackNotice = useWorkspaceStore((state) => state.fallbackNotice);
   const loadClaims = useWorkspaceStore((state) => state.loadClaims);
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace);
+  const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
+  const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
+  const guided = getGuidedEmptyState("WORKSPACE_SELECT");
 
   useEffect(() => {
     loadClaims().catch(() => undefined);
@@ -22,6 +30,23 @@ export function WorkspaceEntryPage() {
   function useWorkspaceAndNavigate(workspaceId: string, path: string) {
     setActiveWorkspace(workspaceId);
     navigate(path);
+  }
+
+  async function emitActivationEvent(action: string) {
+    if (!activeWorkspaceId) {
+      return;
+    }
+    await trackActivationEvent({
+      workspaceId: activeWorkspaceId,
+      projectId,
+      userId,
+      eventType: "EMPTY_STATE_ACTION_CLICKED",
+      route: "/app/workspace/select",
+      metadata: {
+        scope: "WORKSPACE_SELECT",
+        action
+      }
+    });
   }
 
   function openWithCurrentWorkspace(path: string) {
@@ -74,7 +99,23 @@ export function WorkspaceEntryPage() {
         </div>
       </header>
 
-      {!loading && !error && (
+      {!loading && !error && claims.length === 0 ? (
+        <EmptyStateCard
+          title={guided.title}
+          description={guided.description}
+          actions={[
+            {
+              label: guided.primaryAction.label,
+              onClick: () => {
+                emitActivationEvent("use_default_workspace").catch(() => undefined);
+                openWithCurrentWorkspace(guided.primaryAction.path);
+              }
+            }
+          ]}
+        />
+      ) : null}
+
+      {!loading && !error && claims.length > 0 ? (
         <div className="orbit-workspace-entry__list">
           {claims.map((claim) => (
             <article key={claim.workspaceId} className="orbit-workspace-entry__claim orbit-animate-card">
@@ -118,7 +159,7 @@ export function WorkspaceEntryPage() {
             </article>
           ))}
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { request } from "@/lib/http/client";
 import { ThreadPanel } from "@/components/collaboration/ThreadPanel";
 import { InboxFilterBar, type InboxFilter } from "@/components/collaboration/InboxFilterBar";
 import { useAuthStore } from "@/stores/authStore";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useProjectStore } from "@/stores/projectStore";
+import { EmptyStateCard } from "@/components/common/EmptyStateCard";
+import { getGuidedEmptyState } from "@/features/activation/emptyStateRegistry";
+import { trackActivationEvent } from "@/lib/telemetry/activationEvents";
 
 interface InboxItem {
   inboxItemId: string;
@@ -27,13 +32,31 @@ function toApiFilter(filter: InboxFilter): string {
 }
 
 export function InboxPage() {
+  const navigate = useNavigate();
   const location = useLocation();
   const userId = useAuthStore((state) => state.userId) ?? "";
+  const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
   const [items, setItems] = useState<InboxItem[]>([]);
   const [focusThreadId, setFocusThreadId] = useState<string | null>(null);
   const [filter, setFilter] = useState<InboxFilter>("all");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const inboxEmptyState = getGuidedEmptyState("INBOX");
+
+  async function emitActivationEvent(action: string) {
+    if (!workspaceId || !userId) {
+      return;
+    }
+    await trackActivationEvent({
+      workspaceId,
+      projectId,
+      userId,
+      eventType: "EMPTY_STATE_ACTION_CLICKED",
+      route: "/app/inbox",
+      metadata: { scope: "INBOX", action }
+    });
+  }
 
   async function loadInbox(nextFilter: InboxFilter = filter) {
     if (!userId) {
@@ -121,7 +144,30 @@ export function InboxPage() {
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
 
         <div style={{ display: "grid", gap: 8 }}>
-          {items.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No inbox items.</p> : null}
+          {items.length === 0 ? (
+            <EmptyStateCard
+              title={inboxEmptyState.title}
+              description={inboxEmptyState.description}
+              statusHint={inboxEmptyState.statusHint}
+              actions={[
+                {
+                  label: inboxEmptyState.primaryAction.label,
+                  onClick: () => {
+                    emitActivationEvent("open_board").catch(() => undefined);
+                    navigate(inboxEmptyState.primaryAction.path);
+                  }
+                }
+              ]}
+              secondaryActions={(inboxEmptyState.secondaryActions ?? []).map((action) => ({
+                label: action.label,
+                variant: "ghost",
+                onClick: () => {
+                  emitActivationEvent(action.label).catch(() => undefined);
+                  navigate(action.path);
+                }
+              }))}
+            />
+          ) : null}
 
           {items.map((item) => (
             <div key={item.inboxItemId} className="orbit-panel orbit-animate-card" style={{ padding: 10, display: "grid", gap: 6 }}>

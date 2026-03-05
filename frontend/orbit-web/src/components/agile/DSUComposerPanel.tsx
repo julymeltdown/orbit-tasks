@@ -17,9 +17,11 @@ export interface DSUComposePayload {
 
 interface Props {
   onSubmit: (payload: DSUComposePayload) => Promise<DSUSummary>;
+  disabled?: boolean;
+  disabledReason?: string;
 }
 
-export function DSUComposerPanel({ onSubmit }: Props) {
+export function DSUComposerPanel({ onSubmit, disabled = false, disabledReason }: Props) {
   const [yesterday, setYesterday] = useState("");
   const [today, setToday] = useState("");
   const [blockers, setBlockers] = useState("");
@@ -36,6 +38,10 @@ export function DSUComposerPanel({ onSubmit }: Props) {
   }, [summary]);
 
   async function handleSubmit() {
+    if (disabled) {
+      setError(disabledReason ?? "DSU is currently locked");
+      return;
+    }
     if (!today.trim() && !blockers.trim() && !yesterday.trim()) {
       setError("Fill at least one DSU section");
       return;
@@ -69,11 +75,16 @@ export function DSUComposerPanel({ onSubmit }: Props) {
   }
 
   return (
-    <article className="orbit-dsu-panel">
-      <h3 style={{ margin: 0 }}>DSU Composer</h3>
+    <article className="orbit-dsu-panel" aria-disabled={disabled}>
+      <h3 style={{ margin: 0 }}>DSU Input</h3>
       <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 13 }}>
-        Enter yesterday/today/blockers in one note. The service normalizes blocker signal for schedule health.
+        Write yesterday / today / blockers once. AI creates draft changes, and only approved items are applied.
       </p>
+      {disabled ? (
+        <p style={{ margin: 0, color: "var(--orbit-warning)", fontSize: 12 }}>
+          {disabledReason ?? "DSU is unavailable right now."}
+        </p>
+      ) : null}
       <div style={{ display: "grid", gap: 8 }}>
         <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
           Yesterday
@@ -83,6 +94,7 @@ export function DSUComposerPanel({ onSubmit }: Props) {
             value={yesterday}
             onChange={(event) => setYesterday(event.target.value)}
             placeholder="어제 완료한 작업"
+            disabled={disabled || submitting}
           />
         </label>
         <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
@@ -93,6 +105,7 @@ export function DSUComposerPanel({ onSubmit }: Props) {
             value={today}
             onChange={(event) => setToday(event.target.value)}
             placeholder="오늘 진행할 작업"
+            disabled={disabled || submitting}
           />
         </label>
         <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
@@ -103,6 +116,7 @@ export function DSUComposerPanel({ onSubmit }: Props) {
             value={blockers}
             onChange={(event) => setBlockers(event.target.value)}
             placeholder="막힌 이슈, 의존성, 승인 대기"
+            disabled={disabled || submitting}
           />
         </label>
         <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
@@ -113,11 +127,12 @@ export function DSUComposerPanel({ onSubmit }: Props) {
             value={asks}
             onChange={(event) => setAsks(event.target.value)}
             placeholder="도움요청, 의사결정 요청"
+            disabled={disabled || submitting}
           />
         </label>
       </div>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <button className="orbit-button" type="button" onClick={handleSubmit} disabled={submitting}>
+        <button className="orbit-button" type="button" onClick={handleSubmit} disabled={disabled || submitting}>
           {submitting ? "Submitting..." : "Submit DSU"}
         </button>
         <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{progressLabel}</span>

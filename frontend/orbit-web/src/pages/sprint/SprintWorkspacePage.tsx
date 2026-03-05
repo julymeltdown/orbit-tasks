@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { DSUComposerPanel, type DSUComposePayload, type DSUSummary } from "@/components/agile/DSUComposerPanel";
 import { DSUSuggestionReviewPanel } from "@/components/agile/DSUSuggestionReviewPanel";
 import { SprintWizardStepBacklog } from "@/components/agile/SprintWizardStepBacklog";
@@ -18,6 +19,7 @@ import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
 import { trackActivationEvent } from "@/lib/telemetry/activationEvents";
 
 type WizardStep = 1 | 2 | 3;
+type SprintMode = "planning" | "dsu";
 
 interface SprintDsuEntry {
   dsuId: string;
@@ -31,7 +33,15 @@ function hasBlockerSignal(text: string): boolean {
   return lowered.includes("block") || lowered.includes("막힘") || lowered.includes("대기") || lowered.includes("승인");
 }
 
+function parseMode(value: string | null): SprintMode | null {
+  if (value === "planning" || value === "dsu") {
+    return value;
+  }
+  return null;
+}
+
 export function SprintWorkspacePage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
@@ -59,11 +69,31 @@ export function SprintWorkspacePage() {
   const [dsuHistory, setDsuHistory] = useState<SprintDsuEntry[]>([]);
   const [suggestions, setSuggestions] = useState<DSUSuggestion[]>([]);
   const [lastDsuId, setLastDsuId] = useState<string | null>(null);
+
   const sprintEmptyState = getGuidedEmptyState("SPRINT");
+  const queryMode = parseMode(searchParams.get("mode"));
+  const defaultMode: SprintMode = !activeSprint?.sprintId ? "planning" : sprint?.freezeState ? "dsu" : "planning";
+  const mode = queryMode ?? defaultMode;
+  const hasActiveSprint = Boolean(sprint);
+  const dsuLocked = !hasActiveSprint || !sprint?.freezeState;
+  const dsuLockedReason = !hasActiveSprint
+    ? "No active sprint selected. Start in Planning mode first."
+    : !sprint?.freezeState
+      ? "Freeze the day plan first, then submit DSU and approve AI drafts."
+      : undefined;
 
   const canCreateSprint = useMemo(() => {
     return Boolean(activeWorkspaceId && projectId && sprintName.trim() && goal.trim() && startDate && endDate);
   }, [activeWorkspaceId, projectId, sprintName, goal, startDate, endDate]);
+
+  const setMode = useCallback(
+    (nextMode: SprintMode) => {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("mode", nextMode);
+      setSearchParams(nextParams);
+    },
+    [searchParams, setSearchParams]
+  );
 
   const emitActivationEvent = useCallback(
     async (eventType: "SPRINT_ENTERED" | "EMPTY_STATE_ACTION_CLICKED", metadata?: Record<string, unknown>) => {
@@ -91,6 +121,8 @@ export function SprintWorkspacePage() {
     setBacklog(nextBacklog);
     setDayPlans(nextDayPlans);
     setDsuHistory(nextDsu);
+    const nextStep: WizardStep = nextDayPlans.length > 0 ? 3 : nextBacklog.length > 0 ? 2 : 1;
+    setStep(nextStep);
   }
 
   useEffect(() => {
@@ -125,7 +157,7 @@ export function SprintWorkspacePage() {
       setError(e instanceof Error ? e.message : "Failed to load sprint context");
     });
     emitActivationEvent("SPRINT_ENTERED", { source: "active_sprint_restore", sprintId: activeSprint.sprintId }).catch(() => undefined);
-  }, [activeWorkspaceId, projectId, activeSprint?.sprintId, emitActivationEvent, dailyCapacityMinutes, setProjectFilter, setActiveSprint]);
+  }, [activeWorkspaceId, projectId, activeSprint?.sprintId, emitActivationEvent, dailyCapacityMinutes, setActiveSprint]);
 
   async function createSprintAndContinue() {
     if (!activeWorkspaceId) {
@@ -162,6 +194,7 @@ export function SprintWorkspacePage() {
       await loadSprintContext(created.sprintId);
       setProjectFilter(projectId, "sprintOnly", true);
       setStep(2);
+      setMode("planning");
       await emitActivationEvent("SPRINT_ENTERED", { source: "wizard_create", sprintId: created.sprintId });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create sprint");
@@ -232,6 +265,7 @@ export function SprintWorkspacePage() {
       const updated = await sprintPlanning.freezeSprint(sprint.sprintId, true);
       setSprint(updated);
       setProjectFilter(projectId, "sprintOnly", true);
+      setMode("dsu");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to freeze sprint");
     } finally {
@@ -276,7 +310,9 @@ export function SprintWorkspacePage() {
         await loadSprintContext(sprint.sprintId);
       }
       await reloadWorkItems();
-      setSuggestions((prev) => prev.map((item) => ({ ...item, approved: items.find((target) => target.suggestionId === item.suggestionId)?.approved ?? item.approved })));
+      setSuggestions((prev) =>
+        prev.map((item) => ({ ...item, approved: items.find((target) => target.suggestionId === item.suggestionId)?.approved ?? item.approved }))
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to apply DSU suggestions");
       throw e;
@@ -287,115 +323,206 @@ export function SprintWorkspacePage() {
 
   return (
     <section className="orbit-sprint-shell">
-      {!sprint ? (
-        <EmptyStateCard
-          title={sprintEmptyState.title}
-          description={sprintEmptyState.description}
-          statusHint={sprintEmptyState.statusHint}
-          actions={[
-            {
-              label: sprintEmptyState.primaryAction.label,
-              onClick: () => {
-                emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", { scope: "SPRINT", action: "create_sprint" }).catch(() => undefined);
-                setStep(1);
-              }
-            }
-          ]}
-          secondaryActions={[
-            {
-              label: "Open Board",
-              variant: "ghost",
-              onClick: () => setProjectFilter(projectId, "sprintOnly", false)
-            }
-          ]}
-        />
-      ) : null}
+      <header className="orbit-sprint-hero">
+        <p className="orbit-sprint-hero__eyebrow">Plan → Do → Review → Adapt</p>
+        <h2 style={{ margin: 0 }}>Sprint + DSU Workspace</h2>
+        <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>
+          Planning creates and freezes the sprint plan. DSU collects daily updates and applies only approved AI draft changes.
+        </p>
+        <div className="orbit-sprint-hero__chips" aria-label="Sprint flow stage">
+          <span className={`orbit-sprint-chip${mode === "planning" ? " is-active" : ""}`}>1. Planning</span>
+          <span className={`orbit-sprint-chip${sprint?.freezeState ? " is-active" : ""}`}>2. Freeze</span>
+          <span className={`orbit-sprint-chip${mode === "dsu" ? " is-active" : ""}`}>3. DSU Execution</span>
+        </div>
+      </header>
 
       {error ? (
-        <article className="orbit-sprint-banner">
+        <article className="orbit-sprint-inline-note">
           <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{error}</p>
         </article>
       ) : null}
 
-      <article className="orbit-sprint-banner">
-        <h2 style={{ marginTop: 0 }}>Sprint Wizard</h2>
-        <p style={{ marginTop: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
-          Step {step} / 3 · Plan → Backlog → Day Plan Freeze
-        </p>
-      </article>
+      <nav className="orbit-sprint-mode-tabs" role="tablist" aria-label="Sprint modes">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "planning"}
+          className={`orbit-link-button orbit-link-button--tab${mode === "planning" ? " is-active" : ""}`}
+          onClick={() => setMode("planning")}
+        >
+          Planning
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "dsu"}
+          className={`orbit-link-button orbit-link-button--tab${mode === "dsu" ? " is-active" : ""}`}
+          onClick={() => setMode("dsu")}
+        >
+          DSU Review
+          {dsuLocked ? <span className="orbit-notice-badge">!</span> : null}
+        </button>
+      </nav>
 
-      {step === 1 ? (
-        <SprintWizardStepInfo
-          sprintName={sprintName}
-          goal={goal}
-          startDate={startDate}
-          endDate={endDate}
-          capacitySp={capacitySp}
-          dailyCapacityMinutes={dailyCapacityMinutes}
-          loading={loading}
-          onChange={(patch) => {
-            if (patch.sprintName !== undefined) setSprintName(patch.sprintName);
-            if (patch.goal !== undefined) setGoal(patch.goal);
-            if (patch.startDate !== undefined) setStartDate(patch.startDate);
-            if (patch.endDate !== undefined) setEndDate(patch.endDate);
-            if (patch.capacitySp !== undefined) setCapacitySp(patch.capacitySp);
-            if (patch.dailyCapacityMinutes !== undefined) setDailyCapacityMinutes(patch.dailyCapacityMinutes);
-          }}
-          onNext={createSprintAndContinue}
-        />
+      {mode === "planning" ? (
+        <section className="orbit-sprint-section" role="tabpanel" aria-label="Planning mode">
+          {!sprint ? (
+            <>
+              <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 13 }}>No active sprint selected</p>
+              <EmptyStateCard
+                title={sprintEmptyState.title}
+                description={sprintEmptyState.description}
+                statusHint={sprintEmptyState.statusHint}
+                actions={[
+                  {
+                    label: sprintEmptyState.primaryAction.label,
+                    onClick: () => {
+                      emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", { scope: "SPRINT", action: "create_sprint" }).catch(() => undefined);
+                      setStep(1);
+                    }
+                  }
+                ]}
+                secondaryActions={[
+                  {
+                    label: "Open Board",
+                    variant: "ghost",
+                    onClick: () => setProjectFilter(projectId, "sprintOnly", false)
+                  }
+                ]}
+              />
+            </>
+          ) : null}
+
+          <header className="orbit-sprint-section__head">
+            <h3 style={{ margin: 0 }}>Sprint Wizard</h3>
+            <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
+              Step {step} / 3 · Plan → Backlog → Day Plan Freeze
+            </p>
+          </header>
+
+          <div className="orbit-sprint-step-tabs" role="tablist" aria-label="Wizard step">
+            <button type="button" className={`orbit-link-button orbit-link-button--tab${step === 1 ? " is-active" : ""}`} onClick={() => setStep(1)}>
+              1. Info
+            </button>
+            <button
+              type="button"
+              className={`orbit-link-button orbit-link-button--tab${step === 2 ? " is-active" : ""}`}
+              onClick={() => setStep(2)}
+              disabled={!sprint}
+            >
+              2. Backlog
+            </button>
+            <button
+              type="button"
+              className={`orbit-link-button orbit-link-button--tab${step === 3 ? " is-active" : ""}`}
+              onClick={() => setStep(3)}
+              disabled={!sprint}
+            >
+              3. Day Plan
+            </button>
+          </div>
+
+          {step === 1 ? (
+            <SprintWizardStepInfo
+              sprintName={sprintName}
+              goal={goal}
+              startDate={startDate}
+              endDate={endDate}
+              capacitySp={capacitySp}
+              dailyCapacityMinutes={dailyCapacityMinutes}
+              loading={loading}
+              onChange={(patch) => {
+                if (patch.sprintName !== undefined) setSprintName(patch.sprintName);
+                if (patch.goal !== undefined) setGoal(patch.goal);
+                if (patch.startDate !== undefined) setStartDate(patch.startDate);
+                if (patch.endDate !== undefined) setEndDate(patch.endDate);
+                if (patch.capacitySp !== undefined) setCapacitySp(patch.capacitySp);
+                if (patch.dailyCapacityMinutes !== undefined) setDailyCapacityMinutes(patch.dailyCapacityMinutes);
+              }}
+              onNext={createSprintAndContinue}
+            />
+          ) : null}
+
+          {step === 2 ? (
+            <SprintWizardStepBacklog
+              workItems={workItems}
+              backlog={backlog}
+              loading={loading}
+              onAddBacklog={addBacklogItem}
+              onPrevious={() => setStep(1)}
+              onNext={() => {
+                setStep(3);
+                if (dayPlans.length === 0) {
+                  generateDayPlan().catch(() => undefined);
+                }
+              }}
+            />
+          ) : null}
+
+          {step === 3 ? (
+            <SprintWizardStepDayPlan
+              workItems={workItems}
+              dayPlans={dayPlans}
+              freezeState={Boolean(sprint?.freezeState)}
+              loading={loading}
+              onGenerate={generateDayPlan}
+              onPatch={patchDayPlan}
+              onFreeze={freezeSprintPlan}
+              onPrevious={() => setStep(2)}
+            />
+          ) : null}
+        </section>
       ) : null}
 
-      {step === 2 ? (
-        <SprintWizardStepBacklog
-          workItems={workItems}
-          backlog={backlog}
-          loading={loading}
-          onAddBacklog={addBacklogItem}
-          onPrevious={() => setStep(1)}
-          onNext={() => {
-            setStep(3);
-            if (dayPlans.length === 0) {
-              generateDayPlan().catch(() => undefined);
-            }
-          }}
-        />
-      ) : null}
+      {mode === "dsu" ? (
+        <section className="orbit-sprint-section" role="tabpanel" aria-label="DSU mode">
+          <header className="orbit-sprint-section__head">
+            <h3 style={{ margin: 0 }}>DSU + AI Suggestion Review</h3>
+            <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
+              Submit DSU, review AI draft updates, then apply approved items only.
+            </p>
+          </header>
 
-      {step === 3 ? (
-        <SprintWizardStepDayPlan
-          workItems={workItems}
-          dayPlans={dayPlans}
-          freezeState={Boolean(sprint?.freezeState)}
-          loading={loading}
-          onGenerate={generateDayPlan}
-          onPatch={patchDayPlan}
-          onFreeze={freezeSprintPlan}
-          onPrevious={() => setStep(2)}
-        />
-      ) : null}
-
-      <section className="orbit-sprint-dsu-grid">
-        <DSUComposerPanel onSubmit={submitDsu} />
-        <DSUSuggestionReviewPanel suggestions={suggestions} applying={applying} onApply={applySuggestions} />
-      </section>
-
-      <article className="orbit-sprint-history">
-        <h3 style={{ marginTop: 0 }}>DSU History</h3>
-        <div style={{ display: "grid", gap: 8 }}>
-          {dsuHistory.map((entry) => (
-            <div key={entry.dsuId} className="orbit-sprint-history__item orbit-animate-card">
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                <strong>{entry.authorId}</strong>
-                <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
-                  {new Date(entry.createdAt).toLocaleString()}
-                </span>
+          {dsuLocked ? (
+            <article className="orbit-sprint-inline-note orbit-sprint-inline-note--warning">
+              <strong>{hasActiveSprint ? "Sprint plan is not frozen yet" : "No active sprint selected"}</strong>
+              <p style={{ margin: 0 }}>{dsuLockedReason}</p>
+              <div>
+                <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setMode("planning")}>
+                  Open Planning
+                </button>
               </div>
-              <p style={{ margin: "6px 0 0", whiteSpace: "pre-wrap" }}>{entry.rawText}</p>
+            </article>
+          ) : null}
+
+          <section className="orbit-sprint-dsu-grid">
+            <DSUComposerPanel onSubmit={submitDsu} disabled={dsuLocked} disabledReason={dsuLockedReason} />
+            <DSUSuggestionReviewPanel
+              suggestions={suggestions}
+              applying={applying}
+              onApply={applySuggestions}
+              disabled={dsuLocked}
+              disabledReason={dsuLockedReason}
+            />
+          </section>
+
+          <section className="orbit-sprint-history">
+            <h3 style={{ marginTop: 0 }}>DSU History</h3>
+            <div className="orbit-sprint-history__list">
+              {dsuHistory.map((entry) => (
+                <div key={entry.dsuId} className="orbit-sprint-history__item orbit-animate-row">
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                    <strong>{entry.authorId}</strong>
+                    <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{new Date(entry.createdAt).toLocaleString()}</span>
+                  </div>
+                  <p style={{ margin: "6px 0 0", whiteSpace: "pre-wrap" }}>{entry.rawText}</p>
+                </div>
+              ))}
+              {dsuHistory.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No DSU submitted yet.</p> : null}
             </div>
-          ))}
-          {dsuHistory.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No DSU submitted yet.</p> : null}
-        </div>
-      </article>
+          </section>
+        </section>
+      ) : null}
     </section>
   );
 }

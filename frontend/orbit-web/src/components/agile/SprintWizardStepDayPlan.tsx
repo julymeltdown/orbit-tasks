@@ -26,7 +26,7 @@ export function SprintWizardStepDayPlan({
   const titleById = new Map(workItems.map((item) => [item.workItemId, displayWorkItemTitle(item.title)]));
 
   return (
-    <article className="orbit-card" style={{ padding: 16, display: "grid", gap: 10 }}>
+    <section className="orbit-sprint-step">
       <h3 style={{ margin: 0 }}>Step 3 · Day Plan Draft & Freeze</h3>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button className="orbit-button orbit-button--ghost" type="button" onClick={onGenerate} disabled={loading || freezeState}>
@@ -37,18 +37,18 @@ export function SprintWizardStepDayPlan({
         </button>
       </div>
 
-      <div style={{ display: "grid", gap: 10 }}>
+      <div className="orbit-sprint-dayplan-list">
         {dayPlans.map((plan) => (
-          <article key={plan.dayPlanId} className="orbit-panel" style={{ padding: 10, display: "grid", gap: 8 }}>
+          <article key={plan.dayPlanId} className="orbit-sprint-day-row">
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
               <strong>{new Date(plan.day).toLocaleDateString()}</strong>
               <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
                 {plan.locked ? "Locked" : "Editable"} · {plan.items.length} tasks
               </span>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
-              <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
-                Planned minutes
+            <div className="orbit-sprint-form-grid">
+              <label className="orbit-sprint-field">
+                <span>Planned minutes</span>
                 <input
                   className="orbit-input"
                   type="number"
@@ -58,8 +58,8 @@ export function SprintWizardStepDayPlan({
                   disabled={freezeState || loading}
                 />
               </label>
-              <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
-                Buffer minutes
+              <label className="orbit-sprint-field">
+                <span>Buffer minutes</span>
                 <input
                   className="orbit-input"
                   type="number"
@@ -70,7 +70,7 @@ export function SprintWizardStepDayPlan({
                 />
               </label>
             </div>
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
+            <ul className="orbit-sprint-list">
               {plan.items.map((item) => (
                 <li key={item.dayPlanItemId}>
                   {titleById.get(item.workItemId) ?? "Unknown item"} · {item.plannedMinutes}m
@@ -92,6 +92,6 @@ export function SprintWizardStepDayPlan({
           {freezeState ? "Sprint plan is frozen." : "Review and freeze when ready."}
         </span>
       </div>
-    </article>
+    </section>
   );
 }

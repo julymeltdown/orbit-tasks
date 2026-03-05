@@ -388,7 +388,7 @@ export function AppShell() {
             <span>Sign Out</span>
           </button>
           {navProfile === "ADVANCED" || dsuReminder?.pending ? (
-            <button className="orbit-button orbit-button--ghost orbit-desktop-only" type="button" onClick={() => navigate("/app/sprint#dsu")}>
+            <button className="orbit-button orbit-button--ghost orbit-desktop-only" type="button" onClick={() => navigate("/app/sprint?mode=dsu")}>
               <span className="material-symbols-outlined">event_note</span>
               <span>DSU</span>
               {dsuReminder?.pending ? <span className="orbit-notice-badge">!</span> : null}
@@ -414,7 +414,7 @@ export function AppShell() {
               <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/inbox")}>
                 Inbox
               </button>
-              <button className="orbit-button" type="button" onClick={() => navigate(dsuReminder.actionPath || "/app/sprint")}>
+              <button className="orbit-button" type="button" onClick={() => navigate(dsuReminder.actionPath || "/app/sprint?mode=planning")}>
                 DSU 입력하기
               </button>
             </div>

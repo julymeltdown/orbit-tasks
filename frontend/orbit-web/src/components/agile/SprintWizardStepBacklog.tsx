@@ -16,13 +16,13 @@ export function SprintWizardStepBacklog({ workItems, backlog, loading, onAddBack
   const titleById = new Map(workItems.map((item) => [item.workItemId, displayWorkItemTitle(item.title)]));
 
   return (
-    <article className="orbit-card" style={{ padding: 16, display: "grid", gap: 10 }}>
+    <section className="orbit-sprint-step">
       <h3 style={{ margin: 0 }}>Step 2 · Backlog Selection</h3>
       <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
         Choose work items for this sprint. Added items are used for day-plan draft generation.
       </p>
 
-      <div style={{ display: "grid", gap: 8, maxHeight: "42vh", overflowY: "auto", paddingRight: 4 }}>
+      <div className="orbit-sprint-scroll-list">
         {workItems
           .filter((item) => item.status !== "ARCHIVED")
           .map((item) => {
@@ -30,10 +30,9 @@ export function SprintWizardStepBacklog({ workItems, backlog, loading, onAddBack
             return (
               <div
                 key={item.workItemId}
-                className="orbit-panel orbit-animate-row"
-                style={{ padding: 10, display: "flex", alignItems: "center", gap: 8, justifyContent: "space-between" }}
+                className="orbit-sprint-row orbit-animate-row"
               >
-                <div style={{ display: "grid", gap: 4 }}>
+                <div className="orbit-sprint-row__meta">
                   <strong>{displayWorkItemTitle(item.title)}</strong>
                   <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
                     {item.status} · {item.assignee || "unassigned"}
@@ -52,12 +51,12 @@ export function SprintWizardStepBacklog({ workItems, backlog, loading, onAddBack
           })}
       </div>
 
-      <div className="orbit-panel" style={{ padding: 10, display: "grid", gap: 6 }}>
-        <strong style={{ fontSize: 12 }}>Current Sprint Backlog</strong>
+      <div className="orbit-sprint-summary">
+        <strong style={{ fontSize: 12 }}>Current Sprint Backlog ({backlog.length})</strong>
         {backlog.length === 0 ? (
           <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>No backlog items selected yet.</p>
         ) : (
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <ul className="orbit-sprint-list">
             {backlog.map((item) => (
               <li key={item.backlogItemId}>
                 {titleById.get(item.workItemId) ?? "Unknown item"} · rank {item.rank} · {item.status}
@@ -75,6 +74,6 @@ export function SprintWizardStepBacklog({ workItems, backlog, loading, onAddBack
           Continue
         </button>
       </div>
-    </article>
+    </section>
   );
 }

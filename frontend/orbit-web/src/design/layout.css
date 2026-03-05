@@ -2230,13 +2230,160 @@ button.orbit-dashboard-metric {
 .orbit-sprint-shell {
   display: grid;
   gap: 12px;
+  min-width: 0;
+  overflow-x: clip;
 }
 
-.orbit-sprint-banner {
+.orbit-sprint-hero {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.orbit-sprint-hero__eyebrow {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--orbit-text-subtle);
+}
+
+.orbit-sprint-hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.orbit-sprint-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 84%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 88%, transparent);
+  border-radius: var(--orbit-radius-sm);
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--orbit-text-subtle);
+}
+
+.orbit-sprint-chip.is-active {
+  border-color: color-mix(in srgb, var(--orbit-accent) 50%, var(--orbit-border));
+  color: var(--orbit-accent);
+}
+
+.orbit-sprint-mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.orbit-sprint-section {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.orbit-sprint-section__head {
+  display: grid;
+  gap: 4px;
+}
+
+.orbit-sprint-step-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.orbit-sprint-inline-note {
   border: 1px solid color-mix(in srgb, var(--orbit-border) 74%, transparent);
-  background: color-mix(in srgb, var(--orbit-surface-1) 84%, transparent);
-  border-radius: var(--orbit-radius-md);
-  padding: 12px;
+  background: color-mix(in srgb, var(--orbit-surface-1) 86%, transparent);
+  border-radius: var(--orbit-radius-sm);
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.orbit-sprint-inline-note--warning {
+  border-color: color-mix(in srgb, var(--orbit-warning) 55%, var(--orbit-border));
+  background: color-mix(in srgb, var(--orbit-warning) 12%, var(--orbit-surface-1));
+}
+
+.orbit-sprint-step {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.orbit-sprint-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 8px;
+}
+
+.orbit-sprint-field {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.orbit-sprint-field > span {
+  color: var(--orbit-text-subtle);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.orbit-sprint-scroll-list {
+  display: grid;
+  gap: 8px;
+  max-height: 42vh;
+  overflow: auto;
+  min-width: 0;
+}
+
+.orbit-sprint-row {
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 78%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
+  border-radius: var(--orbit-radius-sm);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.orbit-sprint-row__meta {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.orbit-sprint-summary {
+  display: grid;
+  gap: 6px;
+}
+
+.orbit-sprint-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.orbit-sprint-dayplan-list {
+  display: grid;
+  gap: 8px;
+}
+
+.orbit-sprint-day-row {
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 78%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
+  border-radius: var(--orbit-radius-sm);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
 }
 
 .orbit-sprint-dsu-grid {
@@ -2246,17 +2393,17 @@ button.orbit-dashboard-metric {
 }
 
 .orbit-dsu-panel {
-  border: 1px solid color-mix(in srgb, var(--orbit-border) 74%, transparent);
-  background: color-mix(in srgb, var(--orbit-surface-1) 84%, transparent);
-  border-radius: var(--orbit-radius-md);
-  padding: 12px;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
   display: grid;
   gap: 10px;
 }
 
-.orbit-dsu-suggestion {
+.orbit-dsu-suggestion-row {
   border: 1px solid color-mix(in srgb, var(--orbit-border) 78%, transparent);
-  background: color-mix(in srgb, var(--orbit-surface-1) 92%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
   border-radius: var(--orbit-radius-sm);
   padding: 10px;
   display: grid;
@@ -2264,15 +2411,18 @@ button.orbit-dashboard-metric {
 }
 
 .orbit-sprint-history {
-  border: 1px solid color-mix(in srgb, var(--orbit-border) 74%, transparent);
-  background: color-mix(in srgb, var(--orbit-surface-1) 84%, transparent);
-  border-radius: var(--orbit-radius-md);
-  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.orbit-sprint-history__list {
+  display: grid;
+  gap: 8px;
 }
 
 .orbit-sprint-history__item {
   border: 1px solid color-mix(in srgb, var(--orbit-border) 78%, transparent);
-  background: color-mix(in srgb, var(--orbit-surface-1) 92%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
   border-radius: var(--orbit-radius-sm);
   padding: 10px;
 }
@@ -2296,6 +2446,21 @@ button.orbit-dashboard-metric {
 
   .orbit-sprint-dsu-grid {
     grid-template-columns: 1fr;
+  }
+
+  .orbit-sprint-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .orbit-sprint-mode-tabs .orbit-link-button,
+  .orbit-sprint-step-tabs .orbit-link-button {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .orbit-sprint-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .orbit-notion-detail {

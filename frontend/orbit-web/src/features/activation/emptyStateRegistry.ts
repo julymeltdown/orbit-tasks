@@ -21,7 +21,7 @@ const EMPTY_STATE_REGISTRY: Record<GuidedEmptyStateScope, GuidedEmptyState> = {
     primaryAction: { label: "Create first task", path: "/app/projects/board?create=1" },
     secondaryActions: [
       { label: "Import tasks", path: "/app/integrations/import" },
-      { label: "Open sprint", path: "/app/sprint" }
+      { label: "Open sprint", path: "/app/sprint?mode=planning" }
     ]
   },
   SPRINT: {
@@ -29,7 +29,7 @@ const EMPTY_STATE_REGISTRY: Record<GuidedEmptyStateScope, GuidedEmptyState> = {
     title: "No active sprint",
     description: "Start a sprint to generate day plans, collect DSU, and run delivery coaching.",
     statusHint: "Plan → Freeze → Execute",
-    primaryAction: { label: "Create sprint", path: "/app/sprint" },
+    primaryAction: { label: "Create sprint", path: "/app/sprint?mode=planning" },
     secondaryActions: [
       { label: "Back to board", path: "/app/projects/board" }
     ]
@@ -48,7 +48,7 @@ const EMPTY_STATE_REGISTRY: Record<GuidedEmptyStateScope, GuidedEmptyState> = {
     description: "No pending notifications or AI questions. You can continue execution or open thread history.",
     statusHint: "Triage complete",
     primaryAction: { label: "Open board", path: "/app/projects/board" },
-    secondaryActions: [{ label: "Open sprint", path: "/app/sprint" }]
+    secondaryActions: [{ label: "Open sprint", path: "/app/sprint?mode=planning" }]
   },
   WORKSPACE_SELECT: {
     scope: "WORKSPACE_SELECT",
@@ -67,4 +67,3 @@ const EMPTY_STATE_REGISTRY: Record<GuidedEmptyStateScope, GuidedEmptyState> = {
 export function getGuidedEmptyState(scope: GuidedEmptyStateScope) {
   return EMPTY_STATE_REGISTRY[scope];
 }
-

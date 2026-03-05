@@ -239,6 +239,15 @@
   min-width: 0;
 }
 
+/* Global flatten mode: avoid double card/panel framing across pages. */
+:where(.orbit-card, .orbit-panel) > :where(.orbit-card, .orbit-panel):not(.orbit-notion-card):not(.orbit-ai-widget__bubble) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  border-radius: 0;
+}
+
 .orbit-board {
   display: flex;
   gap: 16px;
@@ -544,6 +553,63 @@
   padding: 20px;
   display: grid;
   gap: 14px;
+}
+
+.orbit-workspace-entry {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.orbit-workspace-entry__hero {
+  border-radius: var(--orbit-radius-md);
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 82%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 92%, transparent);
+  padding: 1rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.orbit-workspace-entry__hero p {
+  margin: 0;
+}
+
+.orbit-workspace-entry__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.orbit-workspace-entry__list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.orbit-workspace-entry__claim {
+  padding: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.orbit-workspace-entry__meta {
+  margin-top: 0.25rem;
+  font-size: 0.76rem;
+  color: var(--orbit-text-subtle);
+}
+
+.orbit-workspace-entry__right {
+  text-align: right;
+  margin-left: auto;
+}
+
+.orbit-workspace-entry__buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-top: 0.45rem;
 }
 
 .orbit-ops-hub__hero-head {

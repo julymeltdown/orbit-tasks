@@ -34,23 +34,23 @@ export function WorkspaceEntryPage() {
   }
 
   return (
-    <section style={{ display: "grid", gap: 14 }}>
-      <article className="orbit-card" style={{ padding: 20 }}>
-        <h2 style={{ marginTop: 0 }}>Select a workspace</h2>
+    <section className="orbit-workspace-entry">
+      <header className="orbit-workspace-entry__hero">
+        <h2 style={{ margin: 0 }}>Select a workspace</h2>
 
-        {loading && <p style={{ color: "var(--orbit-text-subtle)" }}>Loading workspace claims...</p>}
+        {loading && <p className="orbit-text-subtle">Loading workspace claims...</p>}
         {error && (
-          <p role="alert" style={{ color: "var(--orbit-danger)" }}>
+          <p role="alert" className="orbit-danger">
             {error}
           </p>
         )}
         {fallbackNotice && (
-          <p role="status" style={{ color: "var(--orbit-text-subtle)" }}>
+          <p role="status" className="orbit-text-subtle">
             {fallbackNotice}
           </p>
         )}
 
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+        <div className="orbit-workspace-entry__actions">
           <button className="orbit-button orbit-button--ghost" type="button" onClick={() => openWithCurrentWorkspace("/app/projects/board")}>
             Open Kanban
           </button>
@@ -72,55 +72,53 @@ export function WorkspaceEntryPage() {
             </button>
           ) : null}
         </div>
+      </header>
 
-        {!loading && !error && (
-          <div style={{ display: "grid", gap: 10 }}>
-            {claims.map((claim) => (
-              <div
-                key={claim.workspaceId}
-                className="orbit-panel orbit-animate-card"
-                style={{ padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}
-              >
-                <div>
-                  <strong>{claim.workspaceName}</strong>
-                  <div style={{ marginTop: 4, fontSize: 12, color: "var(--orbit-text-subtle)" }}>Workspace scope ready</div>
+      {!loading && !error && (
+        <div className="orbit-workspace-entry__list">
+          {claims.map((claim) => (
+            <article key={claim.workspaceId} className="orbit-card orbit-workspace-entry__claim orbit-animate-card">
+              <div>
+                <strong>{claim.workspaceName}</strong>
+                <div className="orbit-workspace-entry__meta">Workspace scope ready</div>
+              </div>
+              <div className="orbit-workspace-entry__right">
+                <div className="orbit-workspace-entry__meta" style={{ fontWeight: 700 }}>
+                  {claim.role}
                 </div>
-                <div style={{ textAlign: "right", marginLeft: "auto" }}>
-                  <div style={{ fontSize: 12, fontWeight: 700 }}>{claim.role}</div>
-                  {claim.defaultWorkspace && (
-                    <div style={{ fontSize: 11, color: "var(--orbit-accent)", textTransform: "uppercase" }}>
-                      Default
-                    </div>
-                  )}
-                  <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
-                    <button
-                      className={`orbit-button ${activeWorkspaceId === claim.workspaceId ? "orbit-button--ghost" : ""}`}
-                      type="button"
-                      onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/projects/board")}
-                    >
-                      {activeWorkspaceId === claim.workspaceId ? "Open Board" : "Use & Open"}
-                    </button>
-                    <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/projects/timeline")}>
-                      Timeline
-                    </button>
-                    <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/projects/table")}>
-                      Table
-                    </button>
-                    <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/sprint")}>
-                      Sprint
-                    </button>
-                    {activeWorkspaceId === claim.workspaceId ? (
-                      <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/inbox")}>
-                        Open Inbox
-                      </button>
-                    ) : null}
+                {claim.defaultWorkspace && (
+                  <div className="orbit-workspace-entry__meta orbit-accent" style={{ textTransform: "uppercase" }}>
+                    Default
                   </div>
+                )}
+                <div className="orbit-workspace-entry__buttons">
+                  <button
+                    className={`orbit-button ${activeWorkspaceId === claim.workspaceId ? "orbit-button--ghost" : ""}`}
+                    type="button"
+                    onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/projects/board")}
+                  >
+                    {activeWorkspaceId === claim.workspaceId ? "Open Board" : "Use & Open"}
+                  </button>
+                  <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/projects/timeline")}>
+                    Timeline
+                  </button>
+                  <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/projects/table")}>
+                    Table
+                  </button>
+                  <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/sprint")}>
+                    Sprint
+                  </button>
+                  {activeWorkspaceId === claim.workspaceId ? (
+                    <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/inbox")}>
+                      Open Inbox
+                    </button>
+                  ) : null}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </article>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

@@ -10,6 +10,7 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import type { Evaluation } from "@/features/workitems/types";
 import { useEvaluationActions } from "@/features/insights/hooks/useEvaluationActions";
+import { fetchDsuReminder, type DsuReminder } from "@/features/agile/hooks/useDsuReminder";
 import {
   canAccessNavItem,
   projectViewNavigation,
@@ -21,6 +22,7 @@ export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const clearSession = useAuthStore((state) => state.clearSession);
+  const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
   const claims = useWorkspaceStore((state) => state.claims);
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const loadClaims = useWorkspaceStore((state) => state.loadClaims);
@@ -33,6 +35,7 @@ export function AppShell() {
   const [evaluationLoading, setEvaluationLoading] = useState(false);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
+  const [dsuReminder, setDsuReminder] = useState<DsuReminder | null>(null);
 
   useEffect(() => {
     loadClaims().catch(() => undefined);
@@ -103,6 +106,24 @@ export function AppShell() {
       controller.abort();
     };
   }, [activeWorkspaceId, projectId]);
+
+  useEffect(() => {
+    if (!activeWorkspaceId || !projectId || !userId) {
+      setDsuReminder(null);
+      return;
+    }
+    const controller = new AbortController();
+    fetchDsuReminder(activeWorkspaceId, projectId, userId)
+      .then((response) => {
+        setDsuReminder(response);
+      })
+      .catch(() => {
+        setDsuReminder(null);
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [activeWorkspaceId, projectId, userId, location.pathname]);
 
   async function signOut() {
     try {
@@ -236,6 +257,11 @@ export function AppShell() {
             <span className="material-symbols-outlined">logout</span>
             <span>Sign Out</span>
           </button>
+          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/sprint#dsu")}>
+            <span className="material-symbols-outlined">event_note</span>
+            <span>DSU</span>
+            {dsuReminder?.pending ? <span className="orbit-notice-badge">!</span> : null}
+          </button>
           <button className="orbit-button orbit-desktop-only" type="button" onClick={() => navigate("/app/projects/board")}>
             <span className="material-symbols-outlined">add</span>
             <span>New Task</span>
@@ -244,6 +270,22 @@ export function AppShell() {
       </header>
 
       <main id="main-content" className="orbit-shell__content" role="main" tabIndex={-1}>
+        {dsuReminder?.pending ? (
+          <section className="orbit-dsu-reminder">
+            <div>
+              <strong>{dsuReminder.title}</strong>
+              <p>{dsuReminder.message}</p>
+            </div>
+            <div className="orbit-dsu-reminder__actions">
+              <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/inbox")}>
+                Inbox
+              </button>
+              <button className="orbit-button" type="button" onClick={() => navigate(dsuReminder.actionPath || "/app/sprint")}>
+                DSU 입력하기
+              </button>
+            </div>
+          </section>
+        ) : null}
         <Outlet />
       </main>
 

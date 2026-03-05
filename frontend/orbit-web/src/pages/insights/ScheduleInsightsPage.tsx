@@ -68,8 +68,8 @@ export function ScheduleInsightsPage() {
   }
 
   return (
-    <section className="orbit-shell__content-grid">
-      <article className="orbit-card" style={{ gridColumn: "span 12", padding: 20 }}>
+    <section className="orbit-insights-layout">
+      <section className="orbit-insights-controls">
         <h2 style={{ marginTop: 0 }}>Schedule Intelligence</h2>
         <p style={{ marginTop: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
           Context · {location.pathname} · workspace {workspaceId ?? "not-selected"} · selected {selectedWorkItemId ?? "none"}
@@ -113,9 +113,9 @@ export function ScheduleInsightsPage() {
           </label>
         </div>
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
-      </article>
+      </section>
 
-      <div style={{ gridColumn: "span 8" }}>
+      <div className="orbit-insights-health">
         {evaluation ? (
           <ScheduleHealthCards
             health={evaluation.health}
@@ -124,13 +124,13 @@ export function ScheduleInsightsPage() {
             fallback={evaluation.fallback}
           />
         ) : (
-          <div className="orbit-card" style={{ padding: 16 }}>
+          <div className="orbit-insights-empty">
             No evaluation yet.
           </div>
         )}
       </div>
 
-      <div style={{ gridColumn: "span 4", display: "grid", gap: 10 }}>
+      <div className="orbit-insights-side">
         <AICoachPanel
           questions={evaluation?.questions ?? []}
           actions={evaluation?.actions ?? []}

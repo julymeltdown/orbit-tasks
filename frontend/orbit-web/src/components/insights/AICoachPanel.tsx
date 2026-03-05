@@ -10,12 +10,12 @@ interface Props {
 
 export function AICoachPanel({ questions, actions, reason, onRun, loading }: Props) {
   return (
-    <article className="orbit-card" style={{ padding: 16, display: "grid", gap: 10 }}>
+    <section className="orbit-ai-coach-panel">
       <h3 style={{ margin: 0 }}>AI Coach</h3>
       <button className="orbit-button" type="button" onClick={onRun} disabled={loading}>
         {loading ? "Evaluating..." : "Run Evaluation"}
       </button>
-      <div className="orbit-panel" style={{ padding: 10 }}>
+      <div className="orbit-ai-coach-panel__block">
         <strong style={{ fontSize: 12 }}>Reason</strong>
         <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--orbit-text-subtle)" }}>{reason}</p>
       </div>
@@ -24,7 +24,7 @@ export function AICoachPanel({ questions, actions, reason, onRun, loading }: Pro
           <li key={question}>{question}</li>
         ))}
       </ul>
-      <div className="orbit-panel" style={{ padding: 10, display: "grid", gap: 6 }}>
+      <div className="orbit-ai-coach-panel__block" style={{ display: "grid", gap: 6 }}>
         <strong style={{ fontSize: 12 }}>Draft Actions</strong>
         {actions.length === 0 ? (
           <p style={{ margin: 0, fontSize: 12, color: "var(--orbit-text-subtle)" }}>No actions suggested yet.</p>
@@ -38,6 +38,6 @@ export function AICoachPanel({ questions, actions, reason, onRun, loading }: Pro
           </ul>
         )}
       </div>
-    </article>
+    </section>
   );
 }

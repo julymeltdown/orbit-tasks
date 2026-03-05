@@ -793,6 +793,42 @@
   font-size: 12px;
 }
 
+.orbit-dsu-reminder {
+  border: 1px solid color-mix(in srgb, var(--orbit-warning) 45%, var(--orbit-border));
+  background: color-mix(in srgb, var(--orbit-warning) 12%, var(--orbit-surface-1));
+  padding: 10px 12px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.orbit-dsu-reminder p {
+  margin: 4px 0 0;
+  color: var(--orbit-text-subtle);
+  font-size: 12px;
+}
+
+.orbit-dsu-reminder__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.orbit-notice-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1rem;
+  min-height: 1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--orbit-warning) 70%, transparent);
+  background: color-mix(in srgb, var(--orbit-warning) 18%, var(--orbit-surface-1));
+  color: var(--orbit-warning);
+  font-size: 10px;
+  font-weight: 800;
+}
+
 .orbit-notion-toolbar {
   border-top: 1px solid color-mix(in srgb, var(--orbit-border) 68%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--orbit-border) 68%, transparent);
@@ -903,14 +939,15 @@
   scroll-behavior: smooth;
 }
 
-.orbit-calendar-shell {
-  padding: 12px;
+.orbit-calendar-layout {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .orbit-calendar-surface {
-  padding: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  padding: 10px 0;
   overflow-x: auto;
 }
 
@@ -1006,7 +1043,7 @@
 }
 
 .orbit-calendar-selected {
-  padding: 10px;
+  padding: 8px 0;
   display: grid;
   gap: 8px;
 }
@@ -1027,7 +1064,7 @@
 }
 
 .orbit-calendar-unscheduled {
-  padding: 10px;
+  padding: 8px 0;
   display: grid;
   gap: 8px;
 }
@@ -1051,8 +1088,8 @@
 
 .orbit-calendar-unscheduled__item {
   width: 100%;
-  border: 1px solid var(--orbit-border);
-  background: var(--orbit-surface-1);
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 75%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 92%, transparent);
   color: var(--orbit-text);
   text-align: left;
   display: flex;
@@ -1061,6 +1098,117 @@
   gap: 8px;
   padding: 8px;
   cursor: pointer;
+}
+
+.orbit-dashboard-layout {
+  display: grid;
+  gap: 12px;
+}
+
+.orbit-dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.orbit-dashboard-metric {
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 78%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  color: inherit;
+}
+
+button.orbit-dashboard-metric {
+  cursor: pointer;
+}
+
+.orbit-dashboard-recent {
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  padding-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.orbit-table-layout {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.orbit-table-operations {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  padding-top: 10px;
+}
+
+.orbit-table-surface {
+  min-width: 0;
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  padding-top: 8px;
+}
+
+.orbit-insights-layout {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.orbit-insights-controls {
+  grid-column: span 12;
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  padding-top: 10px;
+}
+
+.orbit-insights-health {
+  grid-column: span 8;
+  min-width: 0;
+}
+
+.orbit-insights-side {
+  grid-column: span 4;
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.orbit-insights-empty {
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  padding: 10px 0;
+  color: var(--orbit-text-subtle);
+}
+
+.orbit-ai-coach-panel {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  padding-top: 10px;
+}
+
+.orbit-ai-coach-panel__block {
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 78%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
+  padding: 10px;
+}
+
+.orbit-health-cards {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  padding-top: 10px;
+}
+
+.orbit-health-cards__risk {
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 78%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
+  padding: 10px;
+  display: grid;
+  gap: 6px;
 }
 
 .orbit-notion-board {
@@ -1565,6 +1713,15 @@
   .orbit-notion-detail {
     min-width: 0;
   }
+
+  .orbit-dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .orbit-insights-health,
+  .orbit-insights-side {
+    grid-column: span 12;
+  }
 }
 
 @media (max-width: 1240px) {
@@ -1710,6 +1867,15 @@
   .orbit-shell__content-grid > * {
     grid-column: 1 / -1 !important;
     min-width: 0;
+  }
+
+  .orbit-dashboard-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .orbit-dsu-reminder {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .orbit-ops-hub__flow {

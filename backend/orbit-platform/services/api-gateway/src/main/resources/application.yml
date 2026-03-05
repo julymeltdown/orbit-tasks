@@ -112,3 +112,12 @@ gateway:
     buffer-limit: ${GATEWAY_TELEMETRY_BUFFER_LIMIT:10000}
   aggregation:
     cache-ttl: ${GATEWAY_AGGREGATION_CACHE_TTL:PT30S}
+
+orbit:
+  ai:
+    openai:
+      base-url: ${ORBIT_AI_OPENAI_BASE_URL:https://api.openai.com}
+      api-key: ${ORBIT_AI_OPENAI_API_KEY:}
+      store: ${ORBIT_AI_OPENAI_STORE:false}
+    model: ${ORBIT_AI_MODEL:gpt-5.2-pro}
+    timeout-ms: ${ORBIT_AI_TIMEOUT_MS:45000}

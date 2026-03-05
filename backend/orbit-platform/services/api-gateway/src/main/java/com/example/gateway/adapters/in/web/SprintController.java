@@ -1,11 +1,13 @@
 package com.example.gateway.adapters.in.web;
 
 import com.example.gateway.application.service.InMemoryWorkItemStore;
+import com.example.gateway.application.service.DsuSuggestionService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,6 +30,7 @@ public class SprintController {
     private static final double LOW_CONFIDENCE_THRESHOLD = 0.6d;
 
     private final InMemoryWorkItemStore workItemStore;
+    private final DsuSuggestionService dsuSuggestionService;
     private final Map<UUID, SprintView> sprints = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> activeSprintByProject = new ConcurrentHashMap<>();
     private final Map<UUID, List<BacklogItemView>> backlogBySprint = new ConcurrentHashMap<>();
@@ -36,8 +40,9 @@ public class SprintController {
     private final Map<UUID, List<DsuSuggestionView>> suggestionsByDsu = new ConcurrentHashMap<>();
     private final Map<UUID, List<DsuApplyLogView>> applyLogsByDsu = new ConcurrentHashMap<>();
 
-    public SprintController(InMemoryWorkItemStore workItemStore) {
+    public SprintController(InMemoryWorkItemStore workItemStore, DsuSuggestionService dsuSuggestionService) {
         this.workItemStore = workItemStore;
+        this.dsuSuggestionService = dsuSuggestionService;
     }
 
     // Legacy compatibility endpoint
@@ -252,61 +257,34 @@ public class SprintController {
     @PostMapping("/api/v2/dsu/{dsuId}:suggest")
     public List<DsuSuggestionView> suggest(@PathVariable UUID dsuId, @Valid @RequestBody DsuSuggestRequest request) {
         DsuEntryView entry = requireDsu(dsuId);
-        String text = entry.rawText().toLowerCase();
-        List<BacklogItemView> backlog = backlogBySprint.getOrDefault(entry.sprintId(), List.of());
-        List<DsuSuggestionView> suggestions = new ArrayList<>();
+        List<String> backlogWorkItemIds = backlogBySprint.getOrDefault(entry.sprintId(), List.of()).stream()
+                .map(backlogItem -> backlogItem.workItemId().toString())
+                .toList();
+        List<DsuSuggestionView> suggestions = dsuSuggestionService.suggest(
+                        new DsuSuggestionService.SuggestionContext(
+                                entry.workspaceId().toString(),
+                                entry.projectId().toString(),
+                                entry.sprintId().toString(),
+                                entry.authorId(),
+                                entry.rawText()
+                        ),
+                        backlogWorkItemIds
+                )
+                .stream()
+                .map(draft -> new DsuSuggestionView(
+                        UUID.randomUUID(),
+                        dsuId,
+                        draft.targetType(),
+                        draft.targetId(),
+                        draft.proposedChange(),
+                        draft.confidence(),
+                        draft.reason(),
+                        false
+                ))
+                .toList();
 
-        if ((text.contains("done") || text.contains("완료")) && !backlog.isEmpty()) {
-            BacklogItemView target = backlog.get(0);
-            suggestions.add(new DsuSuggestionView(
-                    UUID.randomUUID(),
-                    dsuId,
-                    "WORK_ITEM_PATCH",
-                    target.workItemId().toString(),
-                    Map.of("status", "DONE"),
-                    0.84,
-                    "Detected completion signal from DSU text",
-                    false));
-        }
-        if ((text.contains("review") || text.contains("검토")) && backlog.size() > 1) {
-            BacklogItemView target = backlog.get(1);
-            suggestions.add(new DsuSuggestionView(
-                    UUID.randomUUID(),
-                    dsuId,
-                    "WORK_ITEM_PATCH",
-                    target.workItemId().toString(),
-                    Map.of("status", "REVIEW"),
-                    0.78,
-                    "Detected review signal from DSU text",
-                    false));
-        }
-        if (text.contains("blocked") || text.contains("막힘") || text.contains("승인")) {
-            String targetId = backlog.isEmpty() ? "" : backlog.get(0).workItemId().toString();
-            suggestions.add(new DsuSuggestionView(
-                    UUID.randomUUID(),
-                    dsuId,
-                    "WORK_ITEM_PATCH",
-                    targetId,
-                    Map.of("blockedReason", "Blocker detected from DSU"),
-                    0.55,
-                    "Possible blocker phrase found, confirmation required",
-                    false));
-        }
-
-        if (suggestions.isEmpty()) {
-            suggestions.add(new DsuSuggestionView(
-                    UUID.randomUUID(),
-                    dsuId,
-                    "QUESTION",
-                    "",
-                    Map.of("question", "No actionable change recognized. Please select target work item."),
-                    0.42,
-                    "Insufficient confidence",
-                    false));
-        }
-
-        suggestionsByDsu.put(dsuId, suggestions);
-        return List.copyOf(suggestions);
+        suggestionsByDsu.put(dsuId, new ArrayList<>(suggestions));
+        return suggestions;
     }
 
     @PostMapping("/api/v2/dsu/{dsuId}:apply")
@@ -402,6 +380,68 @@ public class SprintController {
     public List<DsuEntryView> listDsuV2(@PathVariable UUID sprintId) {
         requireSprint(sprintId);
         return dsuEntries.values().stream().filter(entry -> entry.sprintId().equals(sprintId)).toList();
+    }
+
+    @GetMapping("/api/v2/dsu/reminders")
+    public DsuReminderView reminder(@RequestParam String workspaceId,
+                                    @RequestParam String projectId,
+                                    @RequestParam String authorId) {
+        UUID projectUuid = UUID.fromString(projectId);
+        UUID sprintId = activeSprintByProject.get(projectUuid);
+        if (sprintId == null) {
+            return new DsuReminderView(
+                    workspaceId,
+                    projectId,
+                    null,
+                    authorId,
+                    false,
+                    "INFO",
+                    "No active sprint",
+                    "Start or select a sprint to activate DSU reminders.",
+                    "/app/sprint",
+                    null,
+                    null);
+        }
+
+        SprintView sprint = requireSprint(sprintId);
+        LocalDate todayUtc = LocalDate.now(ZoneOffset.UTC);
+        DsuEntryView latestByAuthor = dsuEntries.values().stream()
+                .filter(entry -> entry.projectId().equals(projectUuid))
+                .filter(entry -> entry.sprintId().equals(sprintId))
+                .filter(entry -> entry.authorId().equals(authorId))
+                .max((left, right) -> left.createdAt().compareTo(right.createdAt()))
+                .orElse(null);
+
+        boolean submittedToday = latestByAuthor != null
+                && Instant.parse(latestByAuthor.createdAt()).atZone(ZoneOffset.UTC).toLocalDate().equals(todayUtc);
+
+        if (submittedToday) {
+            return new DsuReminderView(
+                    workspaceId,
+                    projectId,
+                    sprintId.toString(),
+                    authorId,
+                    false,
+                    "INFO",
+                    "DSU completed",
+                    "Today's DSU is already submitted.",
+                    "/app/sprint",
+                    todayUtc.toString(),
+                    latestByAuthor.createdAt());
+        }
+
+        return new DsuReminderView(
+                workspaceId,
+                projectId,
+                sprintId.toString(),
+                authorId,
+                true,
+                "WARNING",
+                "DSU pending",
+                "오늘 DSU를 작성하고 AI 제안을 검토해 진행도를 반영하세요.",
+                "/app/sprint",
+                sprint.endDate().toString(),
+                latestByAuthor == null ? null : latestByAuthor.createdAt());
     }
 
     // Legacy compatibility endpoint
@@ -669,6 +709,21 @@ public class SprintController {
             int appliedCount,
             int skippedCount,
             String createdAt
+    ) {
+    }
+
+    public record DsuReminderView(
+            String workspaceId,
+            String projectId,
+            String sprintId,
+            String authorId,
+            boolean pending,
+            String severity,
+            String title,
+            String message,
+            String actionPath,
+            String dueDate,
+            String latestSubmittedAt
     ) {
     }
 

@@ -63,10 +63,10 @@ export function TablePage() {
   }
 
   return (
-    <section style={{ display: "grid", gap: 14 }}>
+    <section className="orbit-table-layout">
       <ProjectViewTabs />
       <ProjectFilterBar title="Table View" subtitle="Bulk editing and audit-friendly operations over shared project data." />
-      <article className="orbit-card" style={{ padding: 20 }}>
+      <section className="orbit-table-operations">
         <h2 style={{ marginTop: 0 }}>Table Operations</h2>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
@@ -103,9 +103,9 @@ export function TablePage() {
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
         {mutation.error ? <p style={{ color: "var(--orbit-danger)" }}>{mutation.error}</p> : null}
         {localError ? <p style={{ color: "var(--orbit-danger)" }}>{localError}</p> : null}
-      </article>
+      </section>
 
-      <article className="orbit-card" style={{ padding: 16 }}>
+      <section className="orbit-table-surface">
         <div style={{ overflowX: "auto", width: "100%" }}>
           <table style={{ width: "100%", minWidth: "max(100%, 54rem)", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
@@ -197,7 +197,7 @@ export function TablePage() {
             </tbody>
           </table>
         </div>
-      </article>
+      </section>
     </section>
   );
 }

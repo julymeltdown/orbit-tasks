@@ -76,89 +76,87 @@ export function CalendarPage() {
   }, [context.selectedWorkItemId, filtered]);
 
   return (
-    <section style={{ display: "grid", gap: 12 }}>
+    <section className="orbit-calendar-layout">
       <ProjectViewTabs />
       <ProjectFilterBar title="Calendar View" subtitle="Deadlines and unscheduled items from the same work-item dataset." />
-      <article className="orbit-card orbit-calendar-shell">
-        {loading ? <p>Loading calendar...</p> : null}
-        {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
+      {loading ? <p>Loading calendar...</p> : null}
+      {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
 
-        <section className="orbit-panel orbit-calendar-surface">
-          <FullCalendar
-            plugins={[dayGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
-            fixedWeekCount={false}
-            height="auto"
-            dayMaxEventRows={3}
-            editable
-            events={events}
-            eventClick={(arg) => {
-              setSelectedWorkItem(projectId, arg.event.id);
-            }}
-            eventDrop={(arg) => {
-              const nextDate = arg.event.start ? arg.event.start.toISOString().slice(0, 10) : null;
-              updateItem(arg.event.id, { dueAt: nextDate }).catch(() => {
-                arg.revert();
-              });
-            }}
-            headerToolbar={{
-              left: "prev,next today",
-              center: "title",
-              right: ""
-            }}
-          />
-        </section>
+      <section className="orbit-calendar-surface">
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          fixedWeekCount={false}
+          height="auto"
+          dayMaxEventRows={3}
+          editable
+          events={events}
+          eventClick={(arg) => {
+            setSelectedWorkItem(projectId, arg.event.id);
+          }}
+          eventDrop={(arg) => {
+            const nextDate = arg.event.start ? arg.event.start.toISOString().slice(0, 10) : null;
+            updateItem(arg.event.id, { dueAt: nextDate }).catch(() => {
+              arg.revert();
+            });
+          }}
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: ""
+          }}
+        />
+      </section>
 
-        {selectedItem ? (
-          <section className="orbit-panel orbit-calendar-selected">
-            <div className="orbit-calendar-selected__head">
-              <span className="orbit-notion-pill">{selectedItem.status}</span>
-              <strong>{displayWorkItemTitle(selectedItem.title)}</strong>
-            </div>
-            <div className="orbit-calendar-selected__meta">
-              <span>{selectedItem.assignee || "unassigned"}</span>
-              <span>{selectedItem.dueAt ? new Date(selectedItem.dueAt).toLocaleDateString() : "No due date"}</span>
-              <span>{selectedItem.type}</span>
-            </div>
-          </section>
-        ) : null}
-
-        <section className="orbit-panel orbit-calendar-unscheduled">
-          <div className="orbit-calendar-unscheduled__head">
-            <strong>Unscheduled</strong>
-            <span>{unscheduledItems.length}</span>
+      {selectedItem ? (
+        <section className="orbit-calendar-selected">
+          <div className="orbit-calendar-selected__head">
+            <span className="orbit-notion-pill">{selectedItem.status}</span>
+            <strong>{displayWorkItemTitle(selectedItem.title)}</strong>
           </div>
-          <div className="orbit-calendar-unscheduled__list">
-            {unscheduledItems.map((item) => (
-              <button
-                key={item.workItemId}
-                type="button"
-                className="orbit-calendar-unscheduled__item orbit-animate-row"
-                onClick={() => setSelectedWorkItem(projectId, item.workItemId)}
-              >
-                <div style={{ display: "grid", gap: 4 }}>
-                  <strong>{displayWorkItemTitle(item.title)}</strong>
-                  <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{item.assignee || "unassigned"}</span>
-                  <input
-                    className="orbit-input"
-                    type="date"
-                    value={item.dueAt ? new Date(item.dueAt).toISOString().slice(0, 10) : ""}
-                    onChange={(event) => updateItem(item.workItemId, { dueAt: event.target.value || null }).catch(() => undefined)}
-                  />
-                </div>
-                <span className="orbit-notion-pill">{item.status}</span>
-              </button>
-            ))}
-            {unscheduledItems.length === 0 ? (
-              <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>Every visible item is scheduled on the calendar.</p>
-            ) : null}
+          <div className="orbit-calendar-selected__meta">
+            <span>{selectedItem.assignee || "unassigned"}</span>
+            <span>{selectedItem.dueAt ? new Date(selectedItem.dueAt).toLocaleDateString() : "No due date"}</span>
+            <span>{selectedItem.type}</span>
           </div>
         </section>
+      ) : null}
 
-        {!loading && !error && filtered.length === 0 ? (
-          <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No items for the current filter.</p>
-        ) : null}
-      </article>
+      <section className="orbit-calendar-unscheduled">
+        <div className="orbit-calendar-unscheduled__head">
+          <strong>Unscheduled</strong>
+          <span>{unscheduledItems.length}</span>
+        </div>
+        <div className="orbit-calendar-unscheduled__list">
+          {unscheduledItems.map((item) => (
+            <button
+              key={item.workItemId}
+              type="button"
+              className="orbit-calendar-unscheduled__item orbit-animate-row"
+              onClick={() => setSelectedWorkItem(projectId, item.workItemId)}
+            >
+              <div style={{ display: "grid", gap: 4 }}>
+                <strong>{displayWorkItemTitle(item.title)}</strong>
+                <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{item.assignee || "unassigned"}</span>
+                <input
+                  className="orbit-input"
+                  type="date"
+                  value={item.dueAt ? new Date(item.dueAt).toISOString().slice(0, 10) : ""}
+                  onChange={(event) => updateItem(item.workItemId, { dueAt: event.target.value || null }).catch(() => undefined)}
+                />
+              </div>
+              <span className="orbit-notion-pill">{item.status}</span>
+            </button>
+          ))}
+          {unscheduledItems.length === 0 ? (
+            <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>Every visible item is scheduled on the calendar.</p>
+          ) : null}
+        </div>
+      </section>
+
+      {!loading && !error && filtered.length === 0 ? (
+        <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No items for the current filter.</p>
+      ) : null}
     </section>
   );
 }

@@ -15,7 +15,7 @@ interface Props {
 
 export function ScheduleHealthCards({ health, confidence, topRisks, fallback }: Props) {
   return (
-    <article className="orbit-card" style={{ padding: 16, display: "grid", gap: 10 }}>
+    <section className="orbit-health-cards">
       <h3 style={{ margin: 0 }}>Schedule Health</h3>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
         <strong style={{ fontSize: 26 }}>{health.toUpperCase()}</strong>
@@ -26,7 +26,7 @@ export function ScheduleHealthCards({ health, confidence, topRisks, fallback }: 
       </div>
       <div style={{ display: "grid", gap: 8 }}>
         {topRisks.map((risk) => (
-          <div key={`${risk.type}-${risk.summary}`} className="orbit-panel" style={{ padding: 10 }}>
+          <div key={`${risk.type}-${risk.summary}`} className="orbit-health-cards__risk">
             <strong>{risk.summary}</strong>
             <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{risk.impact}</div>
             <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12 }}>
@@ -50,6 +50,6 @@ export function ScheduleHealthCards({ health, confidence, topRisks, fallback }: 
           </div>
         ))}
       </div>
-    </article>
+    </section>
   );
 }

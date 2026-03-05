@@ -1,4 +1,4 @@
-export type ScopeNavSection = "my-work" | "workspaces" | "portfolio" | "insights" | "integrations" | "admin";
+export type ScopeNavSection = "my-work" | "sprint" | "inbox" | "workspaces" | "portfolio" | "insights" | "integrations" | "admin";
 
 export interface ScopeNavItem {
   id: ScopeNavSection;
@@ -25,6 +25,8 @@ const ROLE_WEIGHT: Record<string, number> = {
 
 export const scopeNavigation: ScopeNavItem[] = [
   { id: "my-work", label: "Dashboard", to: "/app", icon: "dashboard" },
+  { id: "sprint", label: "Sprint", to: "/app/sprint", icon: "event_note" },
+  { id: "inbox", label: "Inbox", to: "/app/inbox", icon: "inbox" },
   { id: "workspaces", label: "Workspace", to: "/app/workspace/select", icon: "workspaces" },
   { id: "portfolio", label: "Portfolio", to: "/app/portfolio", icon: "account_tree", minRole: "WORKSPACE_MANAGER" },
   { id: "insights", label: "AI Insights", to: "/app/insights", icon: "psychology" },

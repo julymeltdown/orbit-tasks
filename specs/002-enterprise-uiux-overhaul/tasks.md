@@ -84,8 +84,8 @@
 - [ ] T033 [US1] Simplify top action set and remove duplicate entry actions in `frontend/orbit-web/src/app/AppShell.tsx`
 - [ ] T034 [US1] Normalize scope navigation model in `frontend/orbit-web/src/app/navigationModel.ts`
 - [ ] T035 [US1] Enforce scope-first routes and redirects in `frontend/orbit-web/src/app/router.tsx`
-- [ ] T036 [US1] Remove workspace UUID rendering and show human labels in `frontend/orbit-web/src/pages/workspace/WorkspaceEntryPage.tsx`
-- [ ] T037 [US1] Remove project token/UUID exposure in operations hub in `frontend/orbit-web/src/pages/overview/OperationsHubPage.tsx`
+- [X] T036 [US1] Remove workspace UUID rendering and show human labels in `frontend/orbit-web/src/pages/workspace/WorkspaceEntryPage.tsx`
+- [X] T037 [US1] Remove project token/UUID exposure in operations hub in `frontend/orbit-web/src/pages/overview/OperationsHubPage.tsx`
 - [ ] T038 [US1] Add compact navigation density rules for desktop/mobile in `frontend/orbit-web/src/design/layout.css`
 
 ---

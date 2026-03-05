@@ -18,8 +18,8 @@ const FILTERS: Array<{ id: InboxFilter; label: string }> = [
 
 export function InboxFilterBar({ value, onChange, unreadCount, onMarkAllRead, onRefresh }: Props) {
   return (
-    <article className="orbit-card orbit-inbox-filterbar">
-      <div className="orbit-inbox-filterbar__tabs" role="tablist" aria-label="Inbox categories">
+    <article className="orbit-inbox-filterbar" aria-label="Inbox filters">
+      <nav className="orbit-inbox-filterbar__tabs" role="tablist" aria-label="Inbox categories">
         {FILTERS.map((filter) => (
           <button
             key={filter.id}
@@ -32,8 +32,8 @@ export function InboxFilterBar({ value, onChange, unreadCount, onMarkAllRead, on
             {filter.label}
           </button>
         ))}
-      </div>
-      <div className="orbit-inbox-filterbar__actions">
+      </nav>
+      <section className="orbit-inbox-filterbar__actions" aria-label="Inbox actions">
         <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>Unread {unreadCount}</span>
         <button className="orbit-button orbit-button--ghost" type="button" onClick={onMarkAllRead}>
           Mark all read
@@ -41,10 +41,9 @@ export function InboxFilterBar({ value, onChange, unreadCount, onMarkAllRead, on
         <button className="orbit-button orbit-button--ghost" type="button" onClick={onRefresh}>
           Refresh
         </button>
-      </div>
+      </section>
     </article>
   );
 }
 
 export type { InboxFilter };
-

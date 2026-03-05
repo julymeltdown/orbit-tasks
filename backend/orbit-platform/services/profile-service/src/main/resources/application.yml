@@ -25,6 +25,7 @@ spring:
   grpc:
     server:
       port: ${GRPC_SERVER_PORT:29091}
+      max-inbound-message-size: ${PROFILE_GRPC_MAX_INBOUND_MESSAGE_SIZE:6MB}
       reflection:
         enabled: true
       health:
@@ -70,6 +71,10 @@ management:
 logging:
   pattern:
     level: "%5p [${spring.application.name},%X{correlationId:-}]"
+
+profile:
+  avatar:
+    max-bytes: ${PROFILE_AVATAR_MAX_BYTES:5242880}
 
 ---
 spring:

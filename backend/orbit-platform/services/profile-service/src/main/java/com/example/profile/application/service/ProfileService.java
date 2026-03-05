@@ -12,15 +12,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ProfileService {
     private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{3,20}$");
-    private static final int MAX_AVATAR_BYTES = 1_048_576;
+    private static final int DEFAULT_MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
     private final ProfileRepositoryPort profileRepository;
     private final AvatarRepositoryPort avatarRepository;
+    @Value("${profile.avatar.max-bytes:" + DEFAULT_MAX_AVATAR_BYTES + "}")
+    private int maxAvatarBytes = DEFAULT_MAX_AVATAR_BYTES;
 
     public ProfileService(ProfileRepositoryPort profileRepository, AvatarRepositoryPort avatarRepository) {
         this.profileRepository = profileRepository;
@@ -135,8 +138,8 @@ public class ProfileService {
         if (content == null || content.length == 0) {
             throw new IllegalArgumentException("Avatar image is required");
         }
-        if (content.length > MAX_AVATAR_BYTES) {
-            throw new IllegalArgumentException("Avatar image must be <= 1MB");
+        if (content.length > maxAvatarBytes) {
+            throw new IllegalArgumentException("Avatar image must be <= " + humanReadableSize(maxAvatarBytes));
         }
 
         String resolvedContentType = (contentType == null || contentType.isBlank())
@@ -165,5 +168,15 @@ public class ProfileService {
 
     private static Profile defaultProfile(String userId) {
         return new Profile(userId, "", "", "", "", 0L, 0L, 0L);
+    }
+
+    private static String humanReadableSize(int bytes) {
+        if (bytes % (1024 * 1024) == 0) {
+            return (bytes / (1024 * 1024)) + "MB";
+        }
+        if (bytes % 1024 == 0) {
+            return (bytes / 1024) + "KB";
+        }
+        return bytes + "B";
     }
 }

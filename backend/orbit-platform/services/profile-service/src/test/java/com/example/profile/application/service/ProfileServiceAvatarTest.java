@@ -35,11 +35,11 @@ class ProfileServiceAvatarTest {
         IllegalArgumentException missingContent = assertThrows(IllegalArgumentException.class,
                 () -> service.uploadAvatar("user-1", new byte[0], "image/png"));
         IllegalArgumentException oversize = assertThrows(IllegalArgumentException.class,
-                () -> service.uploadAvatar("user-1", new byte[1_048_577], "image/png"));
+                () -> service.uploadAvatar("user-1", new byte[5 * 1024 * 1024 + 1], "image/png"));
 
         assertEquals("User ID is required", missingUser.getMessage());
         assertEquals("Avatar image is required", missingContent.getMessage());
-        assertEquals("Avatar image must be <= 1MB", oversize.getMessage());
+        assertEquals("Avatar image must be <= 5MB", oversize.getMessage());
     }
 
     @Test

@@ -18,6 +18,12 @@ spec:
           ports:
             - containerPort: 28080
           env:
+            - name: GATEWAY_MULTIPART_MAX_FILE_SIZE
+              value: 5MB
+            - name: GATEWAY_MULTIPART_MAX_REQUEST_SIZE
+              value: 5MB
+            - name: GATEWAY_PROFILE_GRPC_MAX_INBOUND_SIZE
+              value: 6MB
             - name: GATEWAY_AUTH_BASE_URL
               value: http://auth-service:24131
             - name: GATEWAY_JWKS_URL

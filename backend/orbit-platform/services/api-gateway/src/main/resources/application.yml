@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: api-gateway
+  servlet:
+    multipart:
+      max-file-size: ${GATEWAY_MULTIPART_MAX_FILE_SIZE:5MB}
+      max-request-size: ${GATEWAY_MULTIPART_MAX_REQUEST_SIZE:5MB}
   datasource:
     url: ${DB_URL:jdbc:h2:file:/tmp/api_gateway_db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE}
     username: ${DB_USERNAME:sa}
@@ -28,6 +32,7 @@ spring:
         profile:
           address: ${GATEWAY_PROFILE_GRPC_TARGET:localhost:29091}
           negotiation-type: plaintext
+          max-inbound-message-size: ${GATEWAY_PROFILE_GRPC_MAX_INBOUND_SIZE:6MB}
         post:
           address: ${GATEWAY_POST_GRPC_TARGET:localhost:29094}
           negotiation-type: plaintext

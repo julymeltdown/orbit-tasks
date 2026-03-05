@@ -31,8 +31,8 @@ export function ProjectViewTabs() {
   }
 
   return (
-    <article className="orbit-card orbit-project-tabs">
-      <div className="orbit-project-tabs__links" role="tablist" aria-label="Project views">
+    <article className="orbit-project-tabs" aria-label="Project views">
+      <nav className="orbit-project-tabs__links" role="tablist" aria-label="Project views">
         {projectViewNavigation.map((item) => (
           <NavLink
             key={item.id}
@@ -48,9 +48,9 @@ export function ProjectViewTabs() {
             {item.label}
           </NavLink>
         ))}
-      </div>
+      </nav>
 
-      <div className="orbit-project-tabs__actions">
+      <section className="orbit-project-tabs__actions" aria-label="View actions">
         <button
           className="orbit-button orbit-button--ghost"
           type="button"
@@ -62,8 +62,7 @@ export function ProjectViewTabs() {
           {saving ? "Saving..." : "Save View"}
         </button>
         {error ? <span className="orbit-project-tabs__error">{error}</span> : null}
-      </div>
+      </section>
     </article>
   );
 }
-

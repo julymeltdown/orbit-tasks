@@ -17,11 +17,9 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
   const statusOptions = useMemo(() => ["ALL", "TODO", "IN_PROGRESS", "REVIEW", "DONE", "ARCHIVED"], []);
 
   return (
-    <article className="orbit-card orbit-project-filterbar">
-      <div>
-        <h2 style={{ marginTop: 0, marginBottom: 4 }}>{title}</h2>
-        {subtitle ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>{subtitle}</p> : null}
-      </div>
+    <article className="orbit-project-filterbar" aria-label="Task filters">
+      <h2 className="orbit-project-filterbar__title">{title}</h2>
+      {subtitle ? <p className="orbit-project-filterbar__subtitle">{subtitle}</p> : null}
       <div className="orbit-project-filterbar__controls">
         <input
           className="orbit-input"
@@ -70,4 +68,3 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
     </article>
   );
 }
-

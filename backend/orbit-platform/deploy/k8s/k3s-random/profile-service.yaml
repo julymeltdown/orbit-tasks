@@ -28,6 +28,10 @@ spec:
               value: "24132"
             - name: GRPC_SERVER_PORT
               value: "29132"
+            - name: PROFILE_GRPC_MAX_INBOUND_MESSAGE_SIZE
+              value: 6MB
+            - name: PROFILE_AVATAR_MAX_BYTES
+              value: "5242880"
             - name: AUTH_JWKS_URL
               value: http://auth-service:24131/.well-known/jwks.json
           ports:

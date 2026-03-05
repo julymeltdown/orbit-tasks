@@ -1,5 +1,7 @@
 .orbit-shell {
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
   display: grid;
   grid-template-columns: var(--orbit-sidebar-w) minmax(0, 1fr) minmax(18rem, 20rem);
   grid-template-rows: auto 1fr;
@@ -41,6 +43,8 @@
   position: sticky;
   top: 0;
   z-index: 35;
+  width: 100%;
+  max-width: 100%;
 }
 
 .orbit-shell__top-left {
@@ -135,7 +139,8 @@
   grid-row: 2 / 3;
   padding: 1.15rem;
   min-width: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: clip;
 }
 
 .orbit-shell__rail {
@@ -706,17 +711,33 @@
 }
 
 .orbit-project-tabs {
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 72%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
+  box-shadow: var(--orbit-shadow-1);
   padding: 10px;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 10px;
+  min-width: 0;
+  width: 100%;
 }
 
 .orbit-project-tabs__links {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
+}
+
+.orbit-project-tabs__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .orbit-link-button--tab {
@@ -731,15 +752,34 @@
 }
 
 .orbit-project-filterbar {
-  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 72%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
+  box-shadow: var(--orbit-shadow-1);
+  padding: 10px;
   display: grid;
   gap: 10px;
+  min-width: 0;
+}
+
+.orbit-project-filterbar__title {
+  margin: 0;
+  font-size: 1.12rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.orbit-project-filterbar__subtitle {
+  margin: 0;
+  color: var(--orbit-text-subtle);
+  font-size: 0.84rem;
+  line-height: 1.4;
 }
 
 .orbit-project-filterbar__controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: 8px;
+  min-width: 0;
 }
 
 .orbit-project-filterbar__checkbox {
@@ -804,12 +844,17 @@
 }
 
 .orbit-inbox-filterbar {
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 72%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
+  box-shadow: var(--orbit-shadow-1);
   padding: 10px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
+  width: 100%;
 }
 
 .orbit-inbox-filterbar__tabs {
@@ -1470,6 +1515,7 @@
   .orbit-shell__content {
     grid-column: 1;
     padding: 12px 10px;
+    overflow-x: clip;
   }
 
   .orbit-shell__content-grid > * {
@@ -1566,6 +1612,20 @@
     padding: 8px;
   }
 
+  .orbit-project-tabs__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .orbit-project-filterbar {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .orbit-project-filterbar__controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .orbit-calendar-surface .fc .fc-header-toolbar {
     flex-direction: column;
     align-items: stretch;
@@ -1630,5 +1690,9 @@
     min-height: 2rem;
     padding: 5px 8px;
     font-size: 10px;
+  }
+
+  .orbit-project-filterbar {
+    padding: 7px;
   }
 }

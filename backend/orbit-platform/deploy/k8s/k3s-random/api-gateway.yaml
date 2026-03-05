@@ -20,6 +20,12 @@ spec:
           env:
             - name: GATEWAY_PORT
               value: "28080"
+            - name: GATEWAY_MULTIPART_MAX_FILE_SIZE
+              value: 5MB
+            - name: GATEWAY_MULTIPART_MAX_REQUEST_SIZE
+              value: 5MB
+            - name: GATEWAY_PROFILE_GRPC_MAX_INBOUND_SIZE
+              value: 6MB
             - name: GATEWAY_AUTH_GRPC_TARGET
               value: auth-service:29131
             - name: GATEWAY_IDENTITY_GRPC_TARGET

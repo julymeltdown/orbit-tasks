@@ -398,7 +398,7 @@ public class SprintController {
                     "INFO",
                     "No active sprint",
                     "Start or select a sprint to activate DSU reminders.",
-                    "/app/sprint",
+                    "/app/sprint?mode=planning",
                     null,
                     null);
         }
@@ -425,7 +425,7 @@ public class SprintController {
                     "INFO",
                     "DSU completed",
                     "Today's DSU is already submitted.",
-                    "/app/sprint",
+                    "/app/sprint?mode=dsu",
                     todayUtc.toString(),
                     latestByAuthor.createdAt());
         }
@@ -439,7 +439,7 @@ public class SprintController {
                 "WARNING",
                 "DSU pending",
                 "오늘 DSU를 작성하고 AI 제안을 검토해 진행도를 반영하세요.",
-                "/app/sprint",
+                "/app/sprint?mode=dsu",
                 sprint.endDate().toString(),
                 latestByAuthor == null ? null : latestByAuthor.createdAt());
     }

@@ -1165,6 +1165,66 @@ button.orbit-dashboard-metric {
   padding-top: 10px;
 }
 
+.orbit-insights-controls__summary {
+  margin: 0;
+  color: var(--orbit-text-subtle);
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 72ch;
+}
+
+.orbit-insights-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.orbit-insights-metric {
+  border: 1px solid color-mix(in srgb, var(--orbit-border) 78%, transparent);
+  background: color-mix(in srgb, var(--orbit-surface-1) 90%, transparent);
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.orbit-insights-metric span {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.orbit-insights-metric small {
+  color: var(--orbit-text-subtle);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.orbit-insights-toggle {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.orbit-insights-toggle small {
+  grid-column: 2;
+  color: var(--orbit-text-subtle);
+  font-size: 11px;
+}
+
+.orbit-insights-controls__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.orbit-insights-controls__meta {
+  margin: 0;
+  color: var(--orbit-text-subtle);
+  font-size: 12px;
+}
+
 .orbit-insights-health {
   grid-column: span 8;
   min-width: 0;
@@ -1718,6 +1778,10 @@ button.orbit-dashboard-metric {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .orbit-insights-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .orbit-insights-health,
   .orbit-insights-side {
     grid-column: span 12;
@@ -1870,6 +1934,10 @@ button.orbit-dashboard-metric {
   }
 
   .orbit-dashboard-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .orbit-insights-metrics {
     grid-template-columns: 1fr;
   }
 

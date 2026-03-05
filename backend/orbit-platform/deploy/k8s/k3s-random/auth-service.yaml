@@ -27,7 +27,7 @@ spec:
             - name: AUTH_SEED_RESET
               value: "true"
             - name: REDIS_URL
-              value: redis://redis:23111
+              value: redis://redis:24111
             - name: SMTP_HOST
               valueFrom:
                 secretKeyRef:
@@ -64,14 +64,14 @@ spec:
                   name: auth-jwt
                   key: JWT_PUBLIC_KEY_PEM
             - name: SERVER_PORT
-              value: "21937"
+              value: "24131"
             - name: GRPC_SERVER_PORT
-              value: "28741"
+              value: "29131"
           ports:
             - name: http
-              containerPort: 21937
+              containerPort: 24131
             - name: grpc
-              containerPort: 28741
+              containerPort: 29131
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -95,8 +95,8 @@ spec:
     app: auth-service
   ports:
     - name: http
-      port: 21937
+      port: 24131
       targetPort: http
     - name: grpc
-      port: 28741
+      port: 29131
       targetPort: grpc

@@ -25,16 +25,16 @@ spec:
             - name: PROFILE_SEED_RESET
               value: "true"
             - name: SERVER_PORT
-              value: "23369"
+              value: "24132"
             - name: GRPC_SERVER_PORT
-              value: "27183"
+              value: "29132"
             - name: AUTH_JWKS_URL
-              value: http://auth-service:21937/.well-known/jwks.json
+              value: http://auth-service:24131/.well-known/jwks.json
           ports:
             - name: http
-              containerPort: 23369
+              containerPort: 24132
             - name: grpc
-              containerPort: 27183
+              containerPort: 29132
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -58,8 +58,8 @@ spec:
     app: profile-service
   ports:
     - name: http
-      port: 23369
+      port: 24132
       targetPort: http
     - name: grpc
-      port: 27183
+      port: 29132
       targetPort: grpc

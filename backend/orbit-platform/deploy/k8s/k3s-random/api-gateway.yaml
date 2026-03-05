@@ -19,29 +19,29 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: GATEWAY_PORT
-              value: "24271"
+              value: "28080"
             - name: GATEWAY_AUTH_GRPC_TARGET
-              value: auth-service:28741
+              value: auth-service:29131
             - name: GATEWAY_IDENTITY_GRPC_TARGET
-              value: auth-service:28741
+              value: auth-service:29131
             - name: GATEWAY_JWT_PUBLIC_KEY_PEM
               valueFrom:
                 secretKeyRef:
                   name: auth-jwt
                   key: JWT_PUBLIC_KEY_PEM
             - name: GATEWAY_PROFILE_GRPC_TARGET
-              value: profile-service:27183
+              value: profile-service:29132
             - name: GATEWAY_FRIEND_GRPC_TARGET
-              value: friend-service:29921
+              value: friend-service:29133
             - name: GATEWAY_NOTIFICATION_GRPC_TARGET
-              value: notification-service:21463
+              value: notification-service:29134
             - name: GATEWAY_POST_GRPC_TARGET
-              value: post-service:29567
+              value: post-service:29135
             - name: GATEWAY_CORS_ALLOWED_ORIGINS
               value: https://*.infinitefallcult.trade,https://infinitefallcult.trade,https://tasksapi.infinitefallcult.trade,http://121.130.253.119:32436,http://localhost:*,https://localhost:*
           ports:
             - name: http
-              containerPort: 24271
+              containerPort: 28080
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -66,6 +66,6 @@ spec:
     app: api-gateway
   ports:
     - name: http
-      port: 24271
+      port: 28080
       targetPort: http
       nodePort: 32157

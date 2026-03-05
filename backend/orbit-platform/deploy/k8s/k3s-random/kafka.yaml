@@ -29,9 +29,9 @@ spec:
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
               value: "0@$(POD_IP):27643"
             - name: KAFKA_LISTENERS
-              value: "PLAINTEXT://:22391,CONTROLLER://:27643"
+              value: "PLAINTEXT://:24191,CONTROLLER://:27643"
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: "PLAINTEXT://kafka:22391"
+              value: "PLAINTEXT://kafka:24191"
             - name: KAFKA_CONTROLLER_LISTENER_NAMES
               value: "CONTROLLER"
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
@@ -50,7 +50,7 @@ spec:
               value: "5L6g3nShT-eMCtK--X86sw"
           ports:
             - name: kafka
-              containerPort: 22391
+              containerPort: 24191
             - name: controller
               containerPort: 27643
           resources:
@@ -71,5 +71,5 @@ spec:
     app: kafka
   ports:
     - name: kafka
-      port: 22391
+      port: 24191
       targetPort: kafka

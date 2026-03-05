@@ -15,7 +15,7 @@ spring:
           time_zone: UTC
   grpc:
     server:
-      port: ${GRPC_SERVER_PORT:9096}
+      port: ${GRPC_SERVER_PORT:29096}
       reflection:
         enabled: true
       health:

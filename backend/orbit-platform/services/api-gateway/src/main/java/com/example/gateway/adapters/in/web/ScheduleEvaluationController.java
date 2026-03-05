@@ -1,24 +1,36 @@
 package com.example.gateway.adapters.in.web;
 
+import com.example.gateway.application.service.ScheduleEvaluationHistoryService;
+import com.example.gateway.domain.schedule.ScheduleAction;
+import com.example.gateway.domain.schedule.ScheduleEvaluationSnapshot;
+import com.example.gateway.domain.schedule.ScheduleRisk;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping
 public class ScheduleEvaluationController {
-    private final Map<UUID, ScheduleEvaluationResponse> evaluations = new ConcurrentHashMap<>();
+    private final ScheduleEvaluationHistoryService historyService;
+
+    public ScheduleEvaluationController(ScheduleEvaluationHistoryService historyService) {
+        this.historyService = historyService;
+    }
 
     // legacy compatibility
     @PostMapping("/api/insights/schedule-evaluations")
@@ -66,8 +78,15 @@ public class ScheduleEvaluationController {
                 request.simulateAiFailure(),
                 request.simulateAiFailure() ? "fallback_rules_only" : "ok"
         );
-        evaluations.put(UUID.fromString(request.projectId()), response);
+        historyService.save(toSnapshot(request, response));
         return response;
+    }
+
+    @GetMapping("/api/v2/insights/evaluations/latest")
+    public ScheduleEvaluationResponse latestV2(@RequestParam String workspaceId, @RequestParam String projectId) {
+        return historyService.findLatest(workspaceId, projectId)
+                .map(this::toResponse)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No evaluation found"));
     }
 
     // legacy compatibility
@@ -79,11 +98,79 @@ public class ScheduleEvaluationController {
     @PostMapping("/api/v2/insights/evaluations/{evaluationId}/actions")
     public EvaluationActionResponse actionV2(@PathVariable String evaluationId,
                                              @Valid @RequestBody EvaluationActionRequest request) {
+        if (request.evaluationId() != null && !request.evaluationId().isBlank() && !evaluationId.equals(request.evaluationId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "evaluationId mismatch");
+        }
+        boolean recorded = historyService.recordAction(evaluationId, request.action(), request.note()).isPresent();
+        if (!recorded) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Evaluation not found");
+        }
         return new EvaluationActionResponse(
                 evaluationId,
                 request.action(),
                 request.note() == null ? "" : request.note(),
                 "recorded"
+        );
+    }
+
+    private ScheduleEvaluationSnapshot toSnapshot(ScheduleEvaluationRequest request, ScheduleEvaluationResponse response) {
+        List<ScheduleRisk> risks = response.topRisks().stream()
+                .map(risk -> new ScheduleRisk(
+                        risk.type(),
+                        risk.summary(),
+                        risk.impact(),
+                        risk.recommendedActions(),
+                        risk.evidence()))
+                .toList();
+        List<ScheduleAction> actions = response.actions().stream()
+                .map(action -> new ScheduleAction(
+                        action.actionId(),
+                        action.label(),
+                        action.status(),
+                        action.note()))
+                .toList();
+
+        return new ScheduleEvaluationSnapshot(
+                response.evaluationId(),
+                request.workspaceId(),
+                request.projectId(),
+                request.sprintId(),
+                request.selectedWorkItemId(),
+                request.prompt(),
+                response.health(),
+                risks,
+                response.questions(),
+                actions,
+                response.confidence(),
+                response.fallback(),
+                response.reason(),
+                Instant.now()
+        );
+    }
+
+    private ScheduleEvaluationResponse toResponse(ScheduleEvaluationSnapshot snapshot) {
+        return new ScheduleEvaluationResponse(
+                snapshot.evaluationId(),
+                snapshot.health(),
+                snapshot.topRisks().stream()
+                        .map(risk -> new RiskItem(
+                                risk.type(),
+                                risk.summary(),
+                                risk.impact(),
+                                risk.recommendedActions(),
+                                risk.evidence()))
+                        .toList(),
+                snapshot.questions(),
+                snapshot.actions().stream()
+                        .map(action -> new ActionItem(
+                                action.actionId(),
+                                action.label(),
+                                action.status(),
+                                action.note()))
+                        .toList(),
+                snapshot.confidence(),
+                snapshot.fallback(),
+                snapshot.reason()
         );
     }
 

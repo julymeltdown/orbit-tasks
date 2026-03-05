@@ -31,9 +31,9 @@ spec:
             - name: POST_PERSISTENCE_MODE
               value: "jpa"
             - name: REDIS_URL
-              value: redis://redis:23111
+              value: redis://redis:24111
             - name: DB_URL
-              value: jdbc:postgresql://post-postgres:25477/post_db
+              value: jdbc:postgresql://post-postgres:24177/post_db
             - name: DB_USERNAME
               value: post_user
             - name: DB_PASSWORD
@@ -41,7 +41,7 @@ spec:
             - name: POST_KAFKA_ENABLED
               value: "true"
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: kafka:22391
+              value: kafka:24191
             - name: JPA_DDL_AUTO
               value: "update"
             - name: POST_EVENTS_REPUBLISH_ENABLED
@@ -57,24 +57,24 @@ spec:
             - name: POST_REDIS_POST_TTL
               value: "PT12H"
             - name: SERVER_PORT
-              value: "26809"
+              value: "24135"
             - name: GRPC_SERVER_PORT
-              value: "29567"
+              value: "29135"
             - name: AUTH_JWKS_URL
-              value: http://auth-service:21937/.well-known/jwks.json
+              value: http://auth-service:24131/.well-known/jwks.json
             - name: POST_INTERNAL_SERVICE_TOKEN
               value: internal-service-token
             - name: PROFILE_GRPC_TARGET
-              value: static://profile-service:27183
+              value: static://profile-service:29132
             - name: FRIEND_GRPC_TARGET
-              value: static://friend-service:29921
+              value: static://friend-service:29133
             - name: NOTIFICATION_GRPC_TARGET
-              value: static://notification-service:21463
+              value: static://notification-service:29134
           ports:
             - name: http
-              containerPort: 26809
+              containerPort: 24135
             - name: grpc
-              containerPort: 29567
+              containerPort: 29135
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -98,8 +98,8 @@ spec:
     app: post-service
   ports:
     - name: http
-      port: 26809
+      port: 24135
       targetPort: http
     - name: grpc
-      port: 29567
+      port: 29135
       targetPort: grpc

@@ -1,9 +1,17 @@
 server:
-  port: ${GATEWAY_PORT:8080}
+  port: ${GATEWAY_PORT:28080}
 
 spring:
   application:
     name: api-gateway
+  datasource:
+    url: ${DB_URL:jdbc:h2:file:/tmp/api_gateway_db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    open-in-view: false
   grpc:
     server:
       enabled: false
@@ -12,22 +20,22 @@ spring:
         negotiation-type: plaintext
       channels:
         auth:
-          address: ${GATEWAY_AUTH_GRPC_TARGET:localhost:9090}
+          address: ${GATEWAY_AUTH_GRPC_TARGET:localhost:29090}
           negotiation-type: plaintext
         identity:
-          address: ${GATEWAY_IDENTITY_GRPC_TARGET:localhost:9095}
+          address: ${GATEWAY_IDENTITY_GRPC_TARGET:localhost:29095}
           negotiation-type: plaintext
         profile:
-          address: ${GATEWAY_PROFILE_GRPC_TARGET:localhost:9091}
+          address: ${GATEWAY_PROFILE_GRPC_TARGET:localhost:29091}
           negotiation-type: plaintext
         post:
-          address: ${GATEWAY_POST_GRPC_TARGET:localhost:9092}
+          address: ${GATEWAY_POST_GRPC_TARGET:localhost:29094}
           negotiation-type: plaintext
         friend:
-          address: ${GATEWAY_FRIEND_GRPC_TARGET:localhost:9093}
+          address: ${GATEWAY_FRIEND_GRPC_TARGET:localhost:29092}
           negotiation-type: plaintext
         notification:
-          address: ${GATEWAY_NOTIFICATION_GRPC_TARGET:localhost:9094}
+          address: ${GATEWAY_NOTIFICATION_GRPC_TARGET:localhost:29093}
           negotiation-type: plaintext
 
 management:

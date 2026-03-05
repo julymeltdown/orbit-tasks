@@ -3,9 +3,13 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import { FloatingAgentWidget } from "@/components/insights/FloatingAgentWidget";
 import { useFocusContainment } from "@/components/common/useFocusContainment";
-import { request } from "@/lib/http/client";
+import { HttpError, request } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/authStore";
+import { useProjectStore } from "@/stores/projectStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
+import type { Evaluation } from "@/features/workitems/types";
+import { useEvaluationActions } from "@/features/insights/hooks/useEvaluationActions";
 import {
   canAccessNavItem,
   projectViewNavigation,
@@ -20,8 +24,15 @@ export function AppShell() {
   const claims = useWorkspaceStore((state) => state.claims);
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const loadClaims = useWorkspaceStore((state) => state.loadClaims);
+  const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
+  const { byStatus, items } = useWorkItems(projectId);
+  const { submitAction } = useEvaluationActions();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const menuRef = useFocusContainment(mobileNavOpen);
+  const [latestEvaluation, setLatestEvaluation] = useState<Evaluation | null>(null);
+  const [evaluationLoading, setEvaluationLoading] = useState(false);
+  const [evaluationError, setEvaluationError] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     loadClaims().catch(() => undefined);
@@ -44,6 +55,11 @@ export function AppShell() {
   );
   const showProjectViews = location.pathname.startsWith("/app/projects");
   const [query, setQuery] = useState("");
+  const totalWorkItems = useMemo(() => items.filter((item) => item.status !== "ARCHIVED").length, [items]);
+  const doneWorkItems = byStatus.DONE.length;
+  const progressPercent = totalWorkItems > 0 ? Math.round((doneWorkItems / totalWorkItems) * 100) : 0;
+  const topRisk = latestEvaluation?.topRisks[0] ?? null;
+  const secondaryRisk = latestEvaluation?.topRisks[1] ?? null;
 
   const heroTitle = useMemo(() => {
     if (location.pathname.startsWith("/app/projects/board")) return "Cinematic Board";
@@ -56,6 +72,38 @@ export function AppShell() {
     return "Studio Pipeline";
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (!activeWorkspaceId || !projectId) {
+      setLatestEvaluation(null);
+      setEvaluationError(null);
+      return;
+    }
+    const controller = new AbortController();
+    setEvaluationLoading(true);
+    setEvaluationError(null);
+    request<Evaluation>(
+      `/api/v2/insights/evaluations/latest?workspaceId=${encodeURIComponent(activeWorkspaceId)}&projectId=${encodeURIComponent(projectId)}`,
+      { signal: controller.signal }
+    )
+      .then((response) => {
+        setLatestEvaluation(response);
+      })
+      .catch((error) => {
+        if (error instanceof HttpError && error.status === 404) {
+          setLatestEvaluation(null);
+          return;
+        }
+        setEvaluationError(error instanceof Error ? error.message : "Failed to load latest evaluation");
+      })
+      .finally(() => {
+        setEvaluationLoading(false);
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [activeWorkspaceId, projectId]);
+
   async function signOut() {
     try {
       await request<void>("/auth/logout", { method: "POST" });
@@ -65,6 +113,26 @@ export function AppShell() {
     clearSession();
     navigate("/login", { replace: true });
     setMobileNavOpen(false);
+  }
+
+  async function applyTopStrategy() {
+    if (!latestEvaluation) {
+      navigate("/app/insights");
+      return;
+    }
+    setApplying(true);
+    try {
+      await submitAction({
+        evaluationId: latestEvaluation.evaluationId,
+        action: "accept",
+        note: "Accepted from shell panel"
+      });
+      navigate("/app/insights");
+    } catch {
+      navigate("/app/insights");
+    } finally {
+      setApplying(false);
+    }
   }
 
   return (
@@ -190,25 +258,40 @@ export function AppShell() {
           <article className="orbit-shell__rail-widget">
             <div className="orbit-shell__rail-row">
               <span>Overall Progress</span>
-              <strong>68%</strong>
+              <strong>{progressPercent}%</strong>
             </div>
             <div className="orbit-shell__progress">
-              <span style={{ width: "68%" }} />
+              <span style={{ width: `${progressPercent}%` }} />
             </div>
           </article>
 
           <article className="orbit-shell__rail-widget">
             <p className="orbit-shell__rail-eyebrow">AI Coaching Summary</p>
-            <h4>Velocity Spike</h4>
-            <p>Assets 작업 속도가 평균 대비 20% 증가했습니다. Environment Pack B를 당겨서 진행하세요.</p>
-            <button className="orbit-link-button orbit-link-button--tab" type="button" onClick={() => navigate("/app/insights")}>
-              Apply Strategy
-            </button>
+            {evaluationLoading ? <p>Loading latest evaluation...</p> : null}
+            {!evaluationLoading && evaluationError ? <p>{evaluationError}</p> : null}
+            {!evaluationLoading && !evaluationError && topRisk ? (
+              <>
+                <h4>{topRisk.summary}</h4>
+                <p>{topRisk.recommendedActions?.[0] ?? topRisk.impact}</p>
+                <button className="orbit-link-button orbit-link-button--tab" type="button" onClick={applyTopStrategy} disabled={applying}>
+                  {applying ? "Applying..." : "Apply Strategy"}
+                </button>
+              </>
+            ) : null}
+            {!evaluationLoading && !evaluationError && !topRisk ? (
+              <>
+                <h4>No Evaluation Yet</h4>
+                <p>Run the AI evaluation first, then latest guidance will appear here.</p>
+                <button className="orbit-link-button orbit-link-button--tab" type="button" onClick={() => navigate("/app/insights")}>
+                  Open Insights
+                </button>
+              </>
+            ) : null}
           </article>
 
           <article className="orbit-shell__rail-widget orbit-shell__rail-widget--warn">
-            <h4>Bottleneck Detected</h4>
-            <p>Review 단계 체류 시간이 증가했습니다. Inbox에서 즉시 블로커를 triage 하세요.</p>
+            <h4>{secondaryRisk?.summary ?? "No Secondary Risk"}</h4>
+            <p>{secondaryRisk?.impact ?? "Additional risk signals will appear after new evaluations run."}</p>
           </article>
         </div>
       </aside>

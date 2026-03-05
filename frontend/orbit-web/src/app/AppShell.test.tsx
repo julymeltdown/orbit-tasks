@@ -19,4 +19,12 @@ describe("AppShell", () => {
     expect(source).toContain("canAccessNavItem");
     expect(source).toContain("Project Views");
   });
+
+  it("loads coaching summary from latest evaluation endpoint instead of hardcoded strings", () => {
+    const source = readFileSync(path.resolve(testDir, "./AppShell.tsx"), "utf8");
+    expect(source).toContain("/api/v2/insights/evaluations/latest");
+    expect(source).not.toContain("Velocity Spike");
+    expect(source).not.toContain("Assets 작업 속도가 평균 대비 20% 증가했습니다.");
+    expect(source).not.toContain("Bottleneck Detected");
+  });
 });

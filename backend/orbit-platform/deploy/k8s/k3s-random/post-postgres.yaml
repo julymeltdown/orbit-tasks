@@ -37,21 +37,21 @@ spec:
             - name: POSTGRES_PASSWORD
               value: post_pass
             - name: PGPORT
-              value: "25477"
+              value: "24177"
           ports:
             - name: postgres
-              containerPort: 25477
+              containerPort: 24177
           volumeMounts:
             - name: post-postgres-data
               mountPath: /var/lib/postgresql/data
           readinessProbe:
             exec:
-              command: ["sh", "-c", "pg_isready -U post_user -d post_db -p 25477"]
+              command: ["sh", "-c", "pg_isready -U post_user -d post_db -p 24177"]
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ["sh", "-c", "pg_isready -U post_user -d post_db -p 25477"]
+              command: ["sh", "-c", "pg_isready -U post_user -d post_db -p 24177"]
             initialDelaySeconds: 30
             periodSeconds: 20
       volumes:
@@ -69,5 +69,5 @@ spec:
     app: post-postgres
   ports:
     - name: postgres
-      port: 25477
+      port: 24177
       targetPort: postgres

@@ -104,7 +104,6 @@ export function SprintWorkspacePage() {
     loadSprintContext(activeSprint.sprintId).catch((e) => {
       setError(e instanceof Error ? e.message : "Failed to load sprint context");
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeWorkspaceId, projectId, activeSprint?.sprintId]);
 
   async function createSprintAndContinue() {

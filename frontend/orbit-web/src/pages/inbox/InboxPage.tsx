@@ -56,7 +56,6 @@ export function InboxPage() {
 
   useEffect(() => {
     loadInbox(filter).catch(() => undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, filter]);
 
   useEffect(() => {

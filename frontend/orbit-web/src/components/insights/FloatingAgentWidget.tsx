@@ -9,25 +9,9 @@ import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
 import { deriveInsightSignals } from "@/features/insights/insightSignals";
 import { resolveGuidanceStatus } from "@/features/insights/aiGuidanceStatus";
+import type { Evaluation } from "@/features/workitems/types";
 
 const OPEN_KEY = "orbit.ai.widget.open";
-
-interface Evaluation {
-  evaluationId: string;
-  health: string;
-  topRisks: Array<{
-    type: string;
-    summary: string;
-    impact: string;
-    recommendedActions: string[];
-    evidence: string[];
-  }>;
-  questions: string[];
-  actions: Array<{ label?: string; status?: string; note?: string }>;
-  confidence: number;
-  fallback: boolean;
-  reason: string;
-}
 
 interface ChatMessage {
   id: string;

@@ -76,15 +76,26 @@ export function DSUComposerPanel({ onSubmit, disabled = false, disabledReason }:
 
   return (
     <article className="orbit-dsu-panel" aria-disabled={disabled}>
-      <h3 style={{ margin: 0 }}>DSU Input</h3>
+      <div className="orbit-dsu-panel__head">
+        <div>
+          <p className="orbit-ops-hub__eyebrow" style={{ marginBottom: 6 }}>Daily Review</p>
+          <h3 style={{ margin: 0 }}>DSU 입력</h3>
+        </div>
+        <span className={`orbit-notion-pill${summary?.statusSignal === "at_risk" ? " orbit-notion-pill--warn" : ""}`}>{progressLabel}</span>
+      </div>
       <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 13 }}>
-        Write yesterday / today / blockers once. AI creates draft changes, and only approved items are applied.
+        DSU는 기록용 메모가 아니라 오늘 계획을 조정하기 위한 입력입니다. AI는 변경 후보만 제안하고, 승인 전에는 어떤 작업도 바꾸지 않습니다.
       </p>
       {disabled ? (
         <p style={{ margin: 0, color: "var(--orbit-warning)", fontSize: 12 }}>
           {disabledReason ?? "DSU is unavailable right now."}
         </p>
       ) : null}
+      <div className="orbit-dsu-panel__guide">
+        <span>어제: 실제로 끝낸 것</span>
+        <span>오늘: 지금부터 진행할 것</span>
+        <span>블로커: 멈춘 이유와 필요한 도움</span>
+      </div>
       <div style={{ display: "grid", gap: 8 }}>
         <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
           Yesterday
@@ -133,9 +144,9 @@ export function DSUComposerPanel({ onSubmit, disabled = false, disabledReason }:
       </div>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button className="orbit-button" type="button" onClick={handleSubmit} disabled={disabled || submitting}>
-          {submitting ? "Submitting..." : "Submit DSU"}
+          {submitting ? "제출 중..." : "DSU 제출"}
         </button>
-        <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{progressLabel}</span>
+        <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>제출 후 AI suggestion draft가 생성됩니다.</span>
       </div>
       {summary && summary.asks.length > 0 ? (
         <ul style={{ margin: 0, paddingLeft: 18, color: "var(--orbit-text-subtle)", fontSize: 13 }}>

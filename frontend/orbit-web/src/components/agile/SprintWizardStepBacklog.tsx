@@ -17,10 +17,13 @@ export function SprintWizardStepBacklog({ workItems, backlog, loading, onAddBack
 
   return (
     <section className="orbit-sprint-step">
-      <h3 style={{ margin: 0 }}>Step 2 · Backlog Selection</h3>
-      <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
-        Choose work items for this sprint. Added items are used for day-plan draft generation.
-      </p>
+      <div>
+        <p className="orbit-ops-hub__eyebrow" style={{ marginBottom: 6 }}>Step 2</p>
+        <h3 style={{ margin: 0 }}>이번 스프린트에 넣을 작업을 고르세요</h3>
+        <p style={{ margin: "6px 0 0", color: "var(--orbit-text-subtle)", fontSize: 12 }}>
+          여기서 추가한 backlog만 day plan draft의 입력으로 사용됩니다. 너무 많이 넣으면 다음 단계에서 과밀 경고가 보입니다.
+        </p>
+      </div>
 
       <div className="orbit-sprint-scroll-list">
         {workItems
@@ -52,9 +55,9 @@ export function SprintWizardStepBacklog({ workItems, backlog, loading, onAddBack
       </div>
 
       <div className="orbit-sprint-summary">
-        <strong style={{ fontSize: 12 }}>Current Sprint Backlog ({backlog.length})</strong>
+        <strong style={{ fontSize: 12 }}>현재 Sprint Backlog ({backlog.length})</strong>
         {backlog.length === 0 ? (
-          <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>No backlog items selected yet.</p>
+          <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>아직 선택된 backlog가 없습니다. 핵심 작업부터 넣으세요.</p>
         ) : (
           <ul className="orbit-sprint-list">
             {backlog.map((item) => (
@@ -68,10 +71,10 @@ export function SprintWizardStepBacklog({ workItems, backlog, loading, onAddBack
 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
         <button className="orbit-button orbit-button--ghost" type="button" onClick={onPrevious}>
-          Back
+          이전
         </button>
         <button className="orbit-button" type="button" onClick={onNext} disabled={loading}>
-          Continue
+          day plan 만들기
         </button>
       </div>
     </section>

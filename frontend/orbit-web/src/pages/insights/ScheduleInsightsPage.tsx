@@ -20,23 +20,41 @@ const HEALTH_SCORE_MAP: Record<string, number> = {
   STABLE: 88,
   AT_RISK: 62,
   OFF_TRACK: 38,
-  CRITICAL: 24
+  CRITICAL: 24,
+  HEALTHY: 91,
+  WARNING: 68
 };
+
+interface MetricsSnapshot {
+  remainingStoryPoints: number;
+  availableCapacitySp: number;
+  blockedCount: number;
+  atRiskCount: number;
+}
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-function deriveHealthScore(evaluation: Evaluation | null, remainingSp: number, capacitySp: number, blocked: number, atRisk: number) {
+function toSnapshot(remainingStoryPoints: number, availableCapacitySp: number, blockedCount: number, atRiskCount: number): MetricsSnapshot {
+  return {
+    remainingStoryPoints,
+    availableCapacitySp,
+    blockedCount,
+    atRiskCount
+  };
+}
+
+function deriveHealthScore(evaluation: Evaluation | null, metrics: MetricsSnapshot) {
   if (evaluation) {
     const mapped = HEALTH_SCORE_MAP[evaluation.health.toUpperCase()];
     if (typeof mapped === "number") {
       return mapped;
     }
   }
-  const ratioPenalty = capacitySp <= 0 ? 40 : Math.max(0, (remainingSp - capacitySp) * 4);
-  const blockedPenalty = blocked * 7;
-  const riskPenalty = atRisk * 5;
+  const ratioPenalty = metrics.availableCapacitySp <= 0 ? 40 : Math.max(0, (metrics.remainingStoryPoints - metrics.availableCapacitySp) * 4);
+  const blockedPenalty = metrics.blockedCount * 7;
+  const riskPenalty = metrics.atRiskCount * 5;
   return clamp(Math.round(92 - ratioPenalty - blockedPenalty - riskPenalty), 8, 98);
 }
 
@@ -53,11 +71,10 @@ export function ScheduleInsightsPage() {
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [remainingStoryPoints, setRemainingStoryPoints] = useState(0);
-  const [availableCapacitySp, setAvailableCapacitySp] = useState(0);
-  const [blockedCount, setBlockedCount] = useState(0);
-  const [atRiskCount, setAtRiskCount] = useState(0);
-  const [metricsDirty, setMetricsDirty] = useState(false);
+  const [mode, setMode] = useState<"live" | "scenario">("live");
+  const [scenarioMetrics, setScenarioMetrics] = useState<MetricsSnapshot>(() =>
+    toSnapshot(signals.remainingStoryPoints, signals.availableCapacitySp, signals.blockedCount, signals.atRiskCount)
+  );
   const [simulateAiFailure, setSimulateAiFailure] = useState(false);
   const [applyingAction, setApplyingAction] = useState(false);
   const { submitAction } = useEvaluationActions();
@@ -65,6 +82,25 @@ export function ScheduleInsightsPage() {
   const activeWorkspaceName = useMemo(() => {
     return claims.find((claim) => claim.workspaceId === workspaceId)?.workspaceName ?? "Workspace";
   }, [claims, workspaceId]);
+
+  const liveMetrics = useMemo(
+    () =>
+      toSnapshot(
+        signals.remainingStoryPoints,
+        signals.availableCapacitySp,
+        signals.blockedCount,
+        signals.atRiskCount
+      ),
+    [signals.atRiskCount, signals.availableCapacitySp, signals.blockedCount, signals.remainingStoryPoints]
+  );
+
+  useEffect(() => {
+    if (mode === "live") {
+      setScenarioMetrics(liveMetrics);
+    }
+  }, [liveMetrics, mode]);
+
+  const activeMetrics = mode === "live" ? liveMetrics : scenarioMetrics;
 
   async function emitActivationEvent(
     eventType: "INSIGHT_EVALUATION_STARTED" | "INSIGHT_EVALUATION_COMPLETED" | "EMPTY_STATE_ACTION_CLICKED",
@@ -82,16 +118,6 @@ export function ScheduleInsightsPage() {
       metadata
     });
   }
-
-  useEffect(() => {
-    if (metricsDirty) {
-      return;
-    }
-    setRemainingStoryPoints(signals.remainingStoryPoints);
-    setAvailableCapacitySp(signals.availableCapacitySp);
-    setBlockedCount(signals.blockedCount);
-    setAtRiskCount(signals.atRiskCount);
-  }, [metricsDirty, signals]);
 
   useEffect(() => {
     if (!workspaceId || !projectId) {
@@ -126,7 +152,8 @@ export function ScheduleInsightsPage() {
     setError(null);
     await emitActivationEvent("INSIGHT_EVALUATION_STARTED", {
       selectedWorkItemId: selectedWorkItemId ?? null,
-      simulateAiFailure
+      simulateAiFailure,
+      mode
     });
     try {
       const next = await request<Evaluation>("/api/v2/insights/evaluations", {
@@ -136,17 +163,19 @@ export function ScheduleInsightsPage() {
           projectId,
           sprintId: "",
           selectedWorkItemId,
-          remainingStoryPoints,
-          availableCapacitySp,
-          blockedCount,
-          atRiskCount,
+          prompt: mode === "scenario" ? "scenario simulation" : "live telemetry",
+          remainingStoryPoints: activeMetrics.remainingStoryPoints,
+          availableCapacitySp: activeMetrics.availableCapacitySp,
+          blockedCount: activeMetrics.blockedCount,
+          atRiskCount: activeMetrics.atRiskCount,
           simulateAiFailure
         }
       });
       setEvaluation(next);
       await emitActivationEvent("INSIGHT_EVALUATION_COMPLETED", {
         fallback: next.fallback,
-        reason: next.reason
+        reason: next.reason,
+        mode
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Evaluation failed");
@@ -171,59 +200,60 @@ export function ScheduleInsightsPage() {
     }
   }
 
-  const healthScore = useMemo(
-    () => deriveHealthScore(evaluation, remainingStoryPoints, availableCapacitySp, blockedCount, atRiskCount),
-    [evaluation, remainingStoryPoints, availableCapacitySp, blockedCount, atRiskCount]
-  );
+  const healthScore = useMemo(() => deriveHealthScore(evaluation, activeMetrics), [evaluation, activeMetrics]);
   const guidanceStatus = useMemo(
     () =>
       resolveGuidanceStatus(
         evaluation,
-        remainingStoryPoints === 0
+        activeMetrics.remainingStoryPoints === 0
           ? "작업을 추가하면 AI 평가가 활성화됩니다."
-          : `현재 입력 기준: 남은 ${remainingStoryPoints}SP, 가용 ${availableCapacitySp}SP, 블로커 ${blockedCount}개, 위험 ${atRiskCount}개`
+          : `${mode === "live" ? "실시간 지표" : "시나리오 입력"} 기준: 남은 ${activeMetrics.remainingStoryPoints}SP, 가용 ${activeMetrics.availableCapacitySp}SP, 블로커 ${activeMetrics.blockedCount}개, 위험 ${activeMetrics.atRiskCount}개`
       ),
-    [evaluation, remainingStoryPoints, availableCapacitySp, blockedCount, atRiskCount]
+    [activeMetrics, evaluation, mode]
   );
 
   const confidenceScore = Math.round((evaluation?.confidence ?? 0.82) * 100);
   const trendDelta = clamp(Math.round((confidenceScore - 72) / 5), -8, 8);
   const chartColumns = useMemo(
-    () =>
-      [0.72, 0.84, 0.76, 1, 0.9, 0.63, 0.81].map((base) => clamp(Math.round(base * healthScore), 14, 100)),
+    () => [0.72, 0.84, 0.76, 1, 0.9, 0.63, 0.81].map((base) => clamp(Math.round(base * healthScore), 14, 100)),
     [healthScore]
   );
 
   const coachSummary = useMemo(() => {
     if (!evaluation) {
-      if (remainingStoryPoints === 0) {
+      if (activeMetrics.remainingStoryPoints === 0) {
         return "활성 작업이 아직 없습니다. 작업을 추가한 뒤 평가를 실행하면 코칭이 생성됩니다.";
       }
-      return `현재 입력 기준: 남은 ${remainingStoryPoints}SP, 가용 ${availableCapacitySp}SP, 블로커 ${blockedCount}개, 위험 ${atRiskCount}개`;
+      return `${mode === "live" ? "실시간 지표" : "시나리오 입력"} 기준: 남은 ${activeMetrics.remainingStoryPoints}SP, 가용 ${activeMetrics.availableCapacitySp}SP, 블로커 ${activeMetrics.blockedCount}개, 위험 ${activeMetrics.atRiskCount}개`;
     }
     if (evaluation.topRisks.length === 0) {
-      return "Current workload trend is stable. Keep blocker count low and monitor capacity drift.";
+      return "명확한 위험 신호는 크지 않습니다. 블로커와 용량 변화만 계속 추적하면 됩니다.";
     }
     return evaluation.topRisks[0].impact;
-  }, [atRiskCount, availableCapacitySp, blockedCount, evaluation, remainingStoryPoints]);
+  }, [activeMetrics, evaluation, mode]);
 
   const heroBadgeLabel = useMemo(() => {
     if (guidanceStatus.state === "not_run") {
-      return remainingStoryPoints > 0 ? "Live Metrics Ready" : "Awaiting Signals";
+      return mode === "live" ? "Live telemetry ready" : "Scenario draft ready";
     }
     if (guidanceStatus.state === "fallback") {
-      return "Fallback Diagnostics";
+      return "Fallback diagnostics";
     }
-    return `${evaluation?.health.replace(/_/g, " ") ?? "evaluated"} · Live`;
-  }, [evaluation?.health, guidanceStatus.state, remainingStoryPoints]);
+    return `${mode === "live" ? "Live" : "Scenario"} · ${evaluation?.health.replace(/_/g, " ") ?? "evaluated"}`;
+  }, [evaluation?.health, guidanceStatus.state, mode]);
 
-  function resetMetricsFromSignals() {
-    setMetricsDirty(false);
-    setRemainingStoryPoints(signals.remainingStoryPoints);
-    setAvailableCapacitySp(signals.availableCapacitySp);
-    setBlockedCount(signals.blockedCount);
-    setAtRiskCount(signals.atRiskCount);
+  function updateScenario<K extends keyof MetricsSnapshot>(key: K, value: number) {
+    setScenarioMetrics((current) => ({
+      ...current,
+      [key]: Math.max(0, value)
+    }));
   }
+
+  function resetScenarioFromLive() {
+    setScenarioMetrics(liveMetrics);
+  }
+
+  const hasSignals = activeMetrics.remainingStoryPoints > 0 || activeMetrics.blockedCount > 0 || activeMetrics.atRiskCount > 0;
 
   return (
     <section className="orbit-insights-layout">
@@ -235,93 +265,112 @@ export function ScheduleInsightsPage() {
           </div>
           <h2>Schedule Intelligence</h2>
           <p>
-            {activeWorkspaceName} 워크스페이스의 용량·블로커·리스크를 기반으로 일정 상태를 예측하고 대응 전략 Draft를 생성합니다.
+            {activeWorkspaceName} 워크스페이스의 일정 흐름을 해석합니다. 실시간 상태를 볼지, 가정값을 넣고 시뮬레이션할지 먼저 고르세요.
           </p>
         </div>
         <div className="orbit-insights-hero__actions">
           <div className="orbit-insights-hero__scope">
             <span className="material-symbols-outlined">target</span>
-            <span>{selectedWorkItemId ? "Selected card scope" : "Workspace scope"}</span>
+            <span>{selectedWorkItemId ? "Selected card context" : "Workspace scope"}</span>
           </div>
           <button className="orbit-button" type="button" onClick={runEvaluation} disabled={loading}>
             <span className="material-symbols-outlined">auto_awesome</span>
-            <span>{loading ? "Evaluating..." : "Run Evaluation"}</span>
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={resetMetricsFromSignals}>
-            Use live metrics
+            <span>{loading ? "Evaluating..." : mode === "live" ? "Run Live Evaluation" : "Run Scenario"}</span>
           </button>
         </div>
       </header>
 
+      <section className="orbit-insights-mode-switch" role="tablist" aria-label="Insights mode">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "live"}
+          className={`orbit-link-button orbit-link-button--tab${mode === "live" ? " is-active" : ""}`}
+          onClick={() => setMode("live")}
+        >
+          Live telemetry
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "scenario"}
+          className={`orbit-link-button orbit-link-button--tab${mode === "scenario" ? " is-active" : ""}`}
+          onClick={() => {
+            setMode("scenario");
+            resetScenarioFromLive();
+          }}
+        >
+          Scenario simulation
+        </button>
+      </section>
+
+      <section className="orbit-insights-mode-card">
+        <div>
+          <p className="orbit-insights-eyebrow">{mode === "live" ? "Live Mode" : "Scenario Mode"}</p>
+          <strong>{mode === "live" ? "실제 데이터만 읽습니다" : "가정값을 넣고 결과를 실험합니다"}</strong>
+          <p>
+            {mode === "live"
+              ? "남은 작업, 가용 용량, 블로커, 위험 항목은 현재 work item과 sprint 데이터에서 자동 계산됩니다."
+              : "아래 값은 실제 데이터가 아니라 실험용 입력입니다. 팀에 적용되기 전에 대응 전략을 검토할 때 사용합니다."}
+          </p>
+        </div>
+        {mode === "scenario" ? (
+          <label className="orbit-insights-toggle">
+            <input type="checkbox" checked={simulateAiFailure} onChange={(event) => setSimulateAiFailure(event.target.checked)} />
+            <div>
+              <strong>Simulate AI fallback</strong>
+              <small>LLM unavailable scenario를 강제로 실행해 규칙 기반 응답을 검증합니다.</small>
+            </div>
+          </label>
+        ) : (
+          <button className="orbit-button orbit-button--ghost" type="button" onClick={resetScenarioFromLive}>
+            live snapshot 동기화
+          </button>
+        )}
+      </section>
+
       <section className="orbit-insights-metrics">
-        <label className="orbit-insights-metric">
+        <article className="orbit-insights-metric">
           <span>Remaining Work</span>
-          <strong>Story Points</strong>
-          <input
-            className="orbit-input"
-            type="number"
-            min={0}
-            value={remainingStoryPoints}
-            onChange={(event) => {
-              setMetricsDirty(true);
-              setRemainingStoryPoints(Number(event.target.value));
-            }}
-          />
-        </label>
-        <label className="orbit-insights-metric">
+          <strong>{activeMetrics.remainingStoryPoints} SP</strong>
+          {mode === "scenario" ? (
+            <input className="orbit-input" type="number" min={0} value={activeMetrics.remainingStoryPoints} onChange={(event) => updateScenario("remainingStoryPoints", Number(event.target.value))} />
+          ) : (
+            <small>실시간 계산값</small>
+          )}
+        </article>
+        <article className="orbit-insights-metric">
           <span>Available Capacity</span>
-          <strong>Story Points</strong>
-          <input
-            className="orbit-input"
-            type="number"
-            min={0}
-            value={availableCapacitySp}
-            onChange={(event) => {
-              setMetricsDirty(true);
-              setAvailableCapacitySp(Number(event.target.value));
-            }}
-          />
-        </label>
-        <label className="orbit-insights-metric">
+          <strong>{activeMetrics.availableCapacitySp} SP</strong>
+          {mode === "scenario" ? (
+            <input className="orbit-input" type="number" min={0} value={activeMetrics.availableCapacitySp} onChange={(event) => updateScenario("availableCapacitySp", Number(event.target.value))} />
+          ) : (
+            <small>활성 sprint 기준</small>
+          )}
+        </article>
+        <article className="orbit-insights-metric">
           <span>Blocked Items</span>
-          <strong>Count</strong>
-          <input
-            className="orbit-input"
-            type="number"
-            min={0}
-            value={blockedCount}
-            onChange={(event) => {
-              setMetricsDirty(true);
-              setBlockedCount(Number(event.target.value));
-            }}
-          />
-        </label>
-        <label className="orbit-insights-metric">
+          <strong>{activeMetrics.blockedCount}</strong>
+          {mode === "scenario" ? (
+            <input className="orbit-input" type="number" min={0} value={activeMetrics.blockedCount} onChange={(event) => updateScenario("blockedCount", Number(event.target.value))} />
+          ) : (
+            <small>블로커가 있는 작업 수</small>
+          )}
+        </article>
+        <article className="orbit-insights-metric">
           <span>At-Risk Items</span>
-          <strong>Count</strong>
-          <input
-            className="orbit-input"
-            type="number"
-            min={0}
-            value={atRiskCount}
-            onChange={(event) => {
-              setMetricsDirty(true);
-              setAtRiskCount(Number(event.target.value));
-            }}
-          />
-        </label>
-        <label className="orbit-insights-toggle">
-          <input type="checkbox" checked={simulateAiFailure} onChange={(event) => setSimulateAiFailure(event.target.checked)} />
-          <div>
-            <strong>Simulate AI fallback</strong>
-            <small>LLM unavailable scenario를 강제로 실행해 규칙 기반 응답을 검증합니다.</small>
-          </div>
-        </label>
+          <strong>{activeMetrics.atRiskCount}</strong>
+          {mode === "scenario" ? (
+            <input className="orbit-input" type="number" min={0} value={activeMetrics.atRiskCount} onChange={(event) => updateScenario("atRiskCount", Number(event.target.value))} />
+          ) : (
+            <small>기한/용량/블로커 기준</small>
+          )}
+        </article>
       </section>
 
       {error ? <p className="orbit-insights-error">{error}</p> : null}
 
-      {!evaluation && remainingStoryPoints === 0 ? (
+      {!evaluation && !hasSignals ? (
         <EmptyStateCard
           title={insightsEmptyState.title}
           description={insightsEmptyState.description}
@@ -330,21 +379,20 @@ export function ScheduleInsightsPage() {
             {
               label: insightsEmptyState.primaryAction.label,
               onClick: () => {
-                emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", { scope: "INSIGHTS", action: "run_evaluation" }).catch(() => undefined);
-                runEvaluation().catch(() => undefined);
+                emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", { scope: "INSIGHTS", action: "open_board" }).catch(() => undefined);
+                navigate(insightsEmptyState.primaryAction.path);
               }
             }
           ]}
-          secondaryActions={(insightsEmptyState.secondaryActions ?? []).map((action) => ({
-            label: action.label,
-            variant: "ghost",
-              onClick: () => {
-                emitActivationEvent("EMPTY_STATE_ACTION_CLICKED", { scope: "INSIGHTS", action: action.label }).catch(() => undefined);
-                navigate(action.path);
-              }
-            }))}
+          secondaryActions={[
+            {
+              label: "보드 준비하기",
+              variant: "ghost",
+              onClick: () => navigate("/app/projects/board")
+            }
+          ]}
           learnMoreHref="/app/projects/board"
-          learnMoreLabel="Prepare board first"
+          learnMoreLabel="작업 먼저 만들기"
         />
       ) : null}
 
@@ -353,7 +401,7 @@ export function ScheduleInsightsPage() {
           <div className="orbit-insights-health__head">
             <div>
               <p className="orbit-insights-eyebrow">Schedule Health</p>
-              <h3>Aggregate sprint reliability</h3>
+              <h3>{mode === "live" ? "현재 일정 건강도" : "시나리오 기반 일정 건강도"}</h3>
             </div>
             <div className="orbit-insights-health__score">
               <strong>
@@ -397,15 +445,8 @@ export function ScheduleInsightsPage() {
           <p className="orbit-insights-side__summary">{coachSummary}</p>
           <div className="orbit-insights-side__meta">
             <span>{guidanceStatus.confidenceLabel}</span>
-            {evaluation ? (
-              evaluation.fallback ? (
-                <span>Fallback result</span>
-              ) : (
-                <span>Primary model</span>
-              )
-            ) : (
-              <span>Awaiting run</span>
-            )}
+            <span>{mode === "live" ? "Live input" : "Scenario input"}</span>
+            {evaluation ? <span>{evaluation.fallback ? "Fallback result" : "Primary model"}</span> : <span>Awaiting run</span>}
           </div>
 
           <div className="orbit-insights-side__actions">
@@ -428,7 +469,7 @@ export function ScheduleInsightsPage() {
               ))}
             </ul>
           ) : (
-            <p className="orbit-insights-empty">No draft actions yet.</p>
+            <p className="orbit-insights-empty">평가 후 초안 액션이 여기에 표시됩니다.</p>
           )}
 
           {evaluation?.questions.length ? (
@@ -444,11 +485,12 @@ export function ScheduleInsightsPage() {
       <section className="orbit-insights-risks">
         <header className="orbit-insights-risks__head">
           <h3>Risk Breakdown</h3>
+          <span className="orbit-insights-risks__mode">{mode === "live" ? "실시간 기준" : "시나리오 기준"}</span>
         </header>
         <div className="orbit-insights-risks__grid">
           {(evaluation?.topRisks ?? []).length === 0 ? (
             <p className="orbit-insights-empty">
-              {remainingStoryPoints > 0
+              {hasSignals
                 ? "아직 평가 결과가 없습니다. Run Evaluation으로 리스크 상세와 evidence 링크를 생성하세요."
                 : "작업 데이터가 누적되면 리스크 카드가 자동으로 생성됩니다."}
             </p>
@@ -468,11 +510,7 @@ export function ScheduleInsightsPage() {
                 {risk.evidence.length ? (
                   <div className="orbit-insights-risk__evidence">
                     {risk.evidence.map((entry) => (
-                      <a
-                        key={entry}
-                        className="orbit-link-button orbit-link-button--tab"
-                        href={`/app/projects/table?evidence=${encodeURIComponent(entry)}`}
-                      >
+                      <a key={entry} className="orbit-link-button orbit-link-button--tab" href={`/app/projects/table?evidence=${encodeURIComponent(entry)}`}>
                         {entry}
                       </a>
                     ))}
@@ -486,20 +524,24 @@ export function ScheduleInsightsPage() {
 
       <footer className="orbit-insights-footer">
         <div>
+          <span>Mode</span>
+          <strong>{mode === "live" ? "Live" : "Scenario"}</strong>
+        </div>
+        <div>
           <span>Remaining SP</span>
-          <strong>{remainingStoryPoints}</strong>
+          <strong>{activeMetrics.remainingStoryPoints}</strong>
         </div>
         <div>
           <span>Capacity SP</span>
-          <strong>{availableCapacitySp}</strong>
+          <strong>{activeMetrics.availableCapacitySp}</strong>
         </div>
         <div>
           <span>Blocked</span>
-          <strong>{blockedCount}</strong>
+          <strong>{activeMetrics.blockedCount}</strong>
         </div>
         <div>
           <span>At Risk</span>
-          <strong>{atRiskCount}</strong>
+          <strong>{activeMetrics.atRiskCount}</strong>
         </div>
       </footer>
     </section>

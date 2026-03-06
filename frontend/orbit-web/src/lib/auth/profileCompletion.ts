@@ -18,8 +18,8 @@ function isFilled(value: string | null | undefined): boolean {
   return Boolean(value && value.trim().length > 0);
 }
 
-export function isProfileComplete(profile: Pick<BasicProfile, "username" | "nickname" | "avatarUrl" | "bio">): boolean {
-  return isFilled(profile.username) && isFilled(profile.nickname) && isFilled(profile.avatarUrl) && isFilled(profile.bio);
+export function isProfileComplete(profile: Pick<BasicProfile, "username" | "nickname">): boolean {
+  return isFilled(profile.username) && isFilled(profile.nickname);
 }
 
 export async function fetchProfileCompletion(): Promise<ProfileCompletionResult> {
@@ -37,4 +37,3 @@ export async function fetchProfileCompletion(): Promise<ProfileCompletionResult>
     profile
   };
 }
-

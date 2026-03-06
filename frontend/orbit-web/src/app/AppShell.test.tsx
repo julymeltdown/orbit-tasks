@@ -17,7 +17,8 @@ describe("AppShell", () => {
     const source = readFileSync(path.resolve(testDir, "./AppShell.tsx"), "utf8");
     expect(source).toContain("scopeNavigation.filter");
     expect(source).toContain("canAccessNavItem");
-    expect(source).toContain("Project Views");
+    expect(source).toContain("resolveRoutePurpose");
+    expect(source).toContain("useGlobalSearch");
   });
 
   it("loads coaching summary from latest evaluation endpoint instead of hardcoded strings", () => {

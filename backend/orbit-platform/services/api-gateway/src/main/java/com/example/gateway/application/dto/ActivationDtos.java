@@ -22,14 +22,22 @@ public final class ActivationDtos {
     ) {
     }
 
+    public record ResumeTarget(String title, String path, String reason) {
+    }
+
     public record ActivationStateResponse(
             String workspaceId,
             String projectId,
             String userId,
             String activationStage,
+            String sessionType,
             String navigationProfile,
             boolean completed,
             String completionReason,
+            ActionLink primaryAction,
+            List<ActionLink> secondaryActions,
+            String blockingReason,
+            ResumeTarget resumeTarget,
             List<ActivationStep> checklist,
             String updatedAt
     ) {

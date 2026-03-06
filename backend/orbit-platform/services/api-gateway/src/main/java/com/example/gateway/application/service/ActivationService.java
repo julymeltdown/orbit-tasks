@@ -79,17 +79,70 @@ public class ActivationService {
     }
 
     private ActivationDtos.ActivationStateResponse toResponse(ActivationStateModel state) {
+        String sessionType = state.firstTaskCreatedAt() == null
+                ? "first_session"
+                : state.completed() ? "returning_user" : "recovery_state";
+        ActivationDtos.ActionLink primaryAction = resolvePrimaryAction(state);
+        List<ActivationDtos.ActionLink> secondaryActions = resolveSecondaryActions(state);
+        ActivationDtos.ResumeTarget resumeTarget = resolveResumeTarget(state);
         return new ActivationDtos.ActivationStateResponse(
                 state.workspaceId(),
                 state.projectId(),
                 state.userId(),
                 state.activationStage(),
+                sessionType,
                 state.navigationProfile(),
                 state.completed(),
                 state.completionReason(),
+                primaryAction,
+                secondaryActions,
+                state.firstTaskCreatedAt() == null ? "첫 작업을 만들어야 추천 경로가 활성화됩니다." : null,
+                resumeTarget,
                 buildChecklist(state),
                 state.updatedAt().toString()
         );
+    }
+
+    private ActivationDtos.ActionLink resolvePrimaryAction(ActivationStateModel state) {
+        if (state.firstTaskCreatedAt() == null) {
+            return new ActivationDtos.ActionLink("첫 작업 만들기", "/app/projects/board?create=1");
+        }
+        if (state.sprintEnteredAt() == null) {
+            return new ActivationDtos.ActionLink("스프린트 계획 열기", "/app/sprint?mode=planning");
+        }
+        if (state.insightEvaluationStartedAt() == null) {
+            return new ActivationDtos.ActionLink("인사이트 평가 실행", "/app/insights");
+        }
+        return new ActivationDtos.ActionLink("작업 계속하기", "/app/projects/board");
+    }
+
+    private List<ActivationDtos.ActionLink> resolveSecondaryActions(ActivationStateModel state) {
+        if (state.firstTaskCreatedAt() == null) {
+            return List.of(
+                    new ActivationDtos.ActionLink("작업 가져오기", "/app/integrations/import"),
+                    new ActivationDtos.ActionLink("워크스페이스 선택", "/app/workspace/select")
+            );
+        }
+        return List.of(
+                new ActivationDtos.ActionLink("인박스 열기", "/app/inbox"),
+                new ActivationDtos.ActionLink("인사이트 보기", "/app/insights")
+        );
+    }
+
+    private ActivationDtos.ResumeTarget resolveResumeTarget(ActivationStateModel state) {
+        if (state.completed()) {
+            return new ActivationDtos.ResumeTarget("작업 계속하기", "/app/projects/board", "최근 온보딩 흐름이 완료되었습니다.");
+        }
+        if (state.insightEvaluationCompletedAt() != null) {
+            return new ActivationDtos.ResumeTarget("평가 결과 다시 보기", "/app/insights", "최근 평가 결과와 추천 액션이 남아 있습니다.");
+        }
+        if (state.sprintEnteredAt() != null) {
+            return new ActivationDtos.ResumeTarget("스프린트 이어서 계획", "/app/sprint?mode=planning", "스프린트 계획이 시작되었지만 아직 완료되지 않았습니다.");
+        }
+        if (state.firstTaskCreatedAt() != null) {
+            return new ActivationDtos.ResumeTarget("보드에서 작업 이어서 보기", "/app/projects/board", "첫 작업 생성 이후 실행 흐름을 계속할 수 있습니다.");
+        }
+        return null;
     }
 
     private List<ActivationDtos.ActivationStep> buildChecklist(ActivationStateModel state) {

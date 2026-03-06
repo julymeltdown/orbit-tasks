@@ -7,6 +7,7 @@ import { useProjectStore } from "@/stores/projectStore";
 import { useProjectViewStore } from "@/stores/projectViewStore";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import { displayWorkItemTitle } from "@/features/workitems/display";
+import { type DrilldownMetric, isAtRiskItem, isBlockedItem, isOverdueItem, resetFiltersForDrilldown } from "@/features/insights/drilldownContracts";
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export function DashboardPage() {
   const projectId = useProjectStore((state) => state.getProjectId(activeWorkspaceId));
   const setView = useProjectViewStore((state) => state.setView);
   const setFilter = useProjectViewStore((state) => state.setFilter);
+  const setLastDrilldownMetric = useProjectViewStore((state) => state.setLastDrilldownMetric);
   const context = useProjectViewStore((state) => state.getContext(projectId));
   const { items, loading, error } = useWorkItems(projectId);
 
@@ -36,24 +38,26 @@ export function DashboardPage() {
   const summary = useMemo(() => {
     const total = filtered.length;
     const done = filtered.filter((item) => item.status === "DONE").length;
-    const blocked = filtered.filter((item) => item.status === "REVIEW").length;
-    const overdue = filtered.filter((item) => {
-      if (!item.dueAt) return false;
-      return new Date(item.dueAt).getTime() < Date.now() && item.status !== "DONE";
-    }).length;
+    const review = filtered.filter((item) => item.status === "REVIEW").length;
+    const blocked = filtered.filter((item) => isBlockedItem(item)).length;
+    const overdue = filtered.filter((item) => isOverdueItem(item)).length;
+    const atRisk = filtered.filter((item) => isAtRiskItem(item)).length;
     const completion = total === 0 ? 0 : Math.round((done / total) * 100);
-    return { total, done, blocked, overdue, completion };
+    return { total, done, blocked, overdue, review, atRisk, completion };
   }, [filtered]);
 
-  function drillTo(filter: "ALL" | "DONE" | "REVIEW") {
-    setFilter(projectId, "status", filter);
+  function drillTo(metric: DrilldownMetric) {
+    const reset = resetFiltersForDrilldown();
+    setFilter(projectId, "status", reset.status ?? "ALL");
+    setFilter(projectId, "query", reset.query ?? "");
+    setLastDrilldownMetric(projectId, metric);
     navigate("/app/projects/table");
   }
 
   return (
     <section className="orbit-dashboard-layout">
       <ProjectViewTabs />
-      <ProjectFilterBar title="Dashboard View" subtitle="Progress, risk, and execution indicators from shared query state." />
+      <ProjectFilterBar title="프로젝트 대시보드" subtitle="숫자의 의미가 명확해야 다음 행동이 정해집니다. 각 카드에서 바로 drilldown 할 수 있습니다." />
 
       {loading ? <p>Loading dashboard...</p> : null}
       {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
@@ -62,25 +66,25 @@ export function DashboardPage() {
           <p className="orbit-ops-hub__eyebrow">Completion</p>
           <strong style={{ fontSize: 30 }}>{summary.completion}%</strong>
         </div>
-        <button className="orbit-dashboard-metric orbit-animate-card" type="button" onClick={() => drillTo("ALL")}>
+        <button className="orbit-dashboard-metric orbit-animate-card" type="button" onClick={() => drillTo("all")}>
           <p className="orbit-ops-hub__eyebrow">Total</p>
           <strong style={{ fontSize: 30 }}>{summary.total}</strong>
         </button>
-        <button
-          className="orbit-dashboard-metric orbit-animate-card"
-          type="button"
-          onClick={() => {
-            setFilter(projectId, "status", "ALL");
-            setFilter(projectId, "query", "");
-            navigate("/app/projects/table");
-          }}
-        >
+        <button className="orbit-dashboard-metric orbit-animate-card" type="button" onClick={() => drillTo("overdue")}>
           <p className="orbit-ops-hub__eyebrow">Overdue</p>
           <strong style={{ fontSize: 30 }}>{summary.overdue}</strong>
         </button>
-        <button className="orbit-dashboard-metric orbit-animate-card" type="button" onClick={() => drillTo("REVIEW")}>
-          <p className="orbit-ops-hub__eyebrow">Review Queue</p>
+        <button className="orbit-dashboard-metric orbit-animate-card" type="button" onClick={() => drillTo("blocked")}>
+          <p className="orbit-ops-hub__eyebrow">Blocked</p>
           <strong style={{ fontSize: 30 }}>{summary.blocked}</strong>
+        </button>
+        <button className="orbit-dashboard-metric orbit-animate-card" type="button" onClick={() => drillTo("review")}>
+          <p className="orbit-ops-hub__eyebrow">Review Queue</p>
+          <strong style={{ fontSize: 30 }}>{summary.review}</strong>
+        </button>
+        <button className="orbit-dashboard-metric orbit-animate-card" type="button" onClick={() => drillTo("atRisk")}>
+          <p className="orbit-ops-hub__eyebrow">At Risk</p>
+          <strong style={{ fontSize: 30 }}>{summary.atRisk}</strong>
         </button>
       </div>
 

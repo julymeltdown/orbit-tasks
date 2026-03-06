@@ -88,12 +88,6 @@ public class ProfileService {
         if (nickname == null || nickname.isBlank()) {
             throw new IllegalArgumentException("Display name is required");
         }
-        if (avatarUrl == null || avatarUrl.isBlank()) {
-            throw new IllegalArgumentException("Avatar URL is required");
-        }
-        if (bio == null || bio.isBlank()) {
-            throw new IllegalArgumentException("Profile message is required");
-        }
 
         String normalizedUsername = normalizeUsername(username);
 
@@ -111,8 +105,8 @@ public class ProfileService {
                 userId,
                 normalizedUsername,
                 nickname.trim(),
-                avatarUrl.trim(),
-                bio.trim(),
+                normalizeOptional(avatarUrl),
+                normalizeOptional(bio),
                 followerCount,
                 followingCount,
                 postCount);
@@ -164,6 +158,10 @@ public class ProfileService {
 
     private static String normalizeUsername(String username) {
         return username.trim().toLowerCase();
+    }
+
+    private static String normalizeOptional(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private static Profile defaultProfile(String userId) {

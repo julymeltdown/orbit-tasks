@@ -25,22 +25,22 @@ const ROLE_WEIGHT: Record<string, number> = {
 };
 
 export const scopeNavigation: ScopeNavItem[] = [
-  { id: "my-work", label: "Dashboard", to: "/app", icon: "dashboard", tier: "core" },
-  { id: "sprint", label: "Sprint", to: "/app/sprint", icon: "event_note", tier: "core" },
-  { id: "inbox", label: "Inbox", to: "/app/inbox", icon: "inbox", tier: "core" },
-  { id: "workspaces", label: "Workspace", to: "/app/workspace/select", icon: "workspaces", tier: "core" },
-  { id: "insights", label: "AI Insights", to: "/app/insights", icon: "psychology", tier: "core" },
-  { id: "portfolio", label: "Portfolio", to: "/app/portfolio", icon: "account_tree", tier: "advanced", minRole: "WORKSPACE_MANAGER" },
-  { id: "integrations", label: "Integrations", to: "/app/integrations/import", icon: "hub", tier: "advanced", minRole: "WORKSPACE_MANAGER" },
-  { id: "admin", label: "Admin", to: "/app/admin/compliance", icon: "admin_panel_settings", tier: "advanced", minRole: "WORKSPACE_ADMIN" }
+  { id: "my-work", label: "홈", to: "/app", icon: "dashboard", tier: "core" },
+  { id: "sprint", label: "스프린트", to: "/app/sprint", icon: "event_note", tier: "core" },
+  { id: "inbox", label: "인박스", to: "/app/inbox", icon: "inbox", tier: "core" },
+  { id: "workspaces", label: "워크스페이스", to: "/app/workspace/select", icon: "workspaces", tier: "core" },
+  { id: "insights", label: "인사이트", to: "/app/insights", icon: "psychology", tier: "core" },
+  { id: "portfolio", label: "포트폴리오", to: "/app/portfolio", icon: "account_tree", tier: "advanced", minRole: "WORKSPACE_MANAGER" },
+  { id: "integrations", label: "연동", to: "/app/integrations/import", icon: "hub", tier: "advanced", minRole: "WORKSPACE_MANAGER" },
+  { id: "admin", label: "관리", to: "/app/admin/compliance", icon: "admin_panel_settings", tier: "advanced", minRole: "WORKSPACE_ADMIN" }
 ];
 
 export const projectViewNavigation: ProjectViewItem[] = [
-  { id: "board", label: "Project Board", to: "/app/projects/board", icon: "view_kanban" },
-  { id: "table", label: "Table", to: "/app/projects/table", icon: "table_view" },
-  { id: "timeline", label: "Timeline", to: "/app/projects/timeline", icon: "timeline" },
-  { id: "calendar", label: "Calendar", to: "/app/projects/calendar", icon: "calendar_month" },
-  { id: "dashboard", label: "Dashboard", to: "/app/projects/dashboard", icon: "space_dashboard" }
+  { id: "board", label: "보드", to: "/app/projects/board", icon: "view_kanban" },
+  { id: "table", label: "테이블", to: "/app/projects/table", icon: "table_view" },
+  { id: "timeline", label: "타임라인", to: "/app/projects/timeline", icon: "timeline" },
+  { id: "calendar", label: "캘린더", to: "/app/projects/calendar", icon: "calendar_month" },
+  { id: "dashboard", label: "대시보드", to: "/app/projects/dashboard", icon: "space_dashboard" }
 ];
 
 export function canAccessNavItem(role: string | null | undefined, item: ScopeNavItem): boolean {
@@ -60,28 +60,28 @@ export function splitScopeNavigationByTier(items: ScopeNavItem[]) {
 
 export function resolveScopeLabel(pathname: string): string {
   if (pathname.startsWith("/app/projects")) {
-    return "Project";
+    return "프로젝트";
   }
   if (pathname.startsWith("/app/sprint")) {
-    return "Sprint";
+    return "스프린트";
   }
   if (pathname.startsWith("/app/inbox")) {
-    return "Inbox";
+    return "인박스";
   }
   if (pathname.startsWith("/app/portfolio")) {
-    return "Portfolio";
+    return "포트폴리오";
   }
   if (pathname.startsWith("/app/admin")) {
-    return "Admin";
+    return "관리";
   }
   if (pathname.startsWith("/app/insights")) {
-    return "Insights";
+    return "인사이트";
   }
   if (pathname.startsWith("/app/integrations")) {
-    return "Integrations";
+    return "연동";
   }
   if (pathname.startsWith("/app/workspace")) {
-    return "Workspace";
+    return "워크스페이스";
   }
-  return "My Work";
+  return "홈";
 }

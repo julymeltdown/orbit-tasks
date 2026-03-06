@@ -6,6 +6,7 @@ import { WorkItemStatus, WorkItemType, useWorkItems } from "@/features/workitems
 import { ProjectViewTabs } from "@/components/projects/ProjectViewTabs";
 import { ProjectFilterBar } from "@/components/projects/ProjectFilterBar";
 import { displayWorkItemTitle } from "@/features/workitems/display";
+import { type DrilldownMetric, getDrilldownLabel, matchesDrilldownMetric, resetFiltersForDrilldown } from "@/features/insights/drilldownContracts";
 
 const STATUS_OPTIONS: WorkItemStatus[] = ["TODO", "IN_PROGRESS", "REVIEW", "DONE", "ARCHIVED"];
 
@@ -15,12 +16,14 @@ export function TablePage() {
   const viewContext = useProjectViewStore((state) => state.getContext(projectId));
   const setView = useProjectViewStore((state) => state.setView);
   const setFilter = useProjectViewStore((state) => state.setFilter);
+  const setLastDrilldownMetric = useProjectViewStore((state) => state.setLastDrilldownMetric);
   const { items, loading, error, mutation, createItem, updateStatus, updateItem, archiveItem } = useWorkItems(projectId);
 
   const [title, setTitle] = useState("");
   const [assignee, setAssignee] = useState("");
   const [type, setType] = useState<WorkItemType>("TASK");
   const [localError, setLocalError] = useState<string | null>(null);
+  const drilldownMetric = viewContext.lastDrilldownMetric as DrilldownMetric | null;
 
   useEffect(() => {
     setView(projectId, "table");
@@ -39,9 +42,9 @@ export function TablePage() {
       if (assigneeFilter && !(item.assignee ?? "").toLowerCase().includes(assigneeFilter)) {
         return false;
       }
-      return true;
+      return matchesDrilldownMetric(drilldownMetric, item);
     });
-  }, [items, viewContext.filters.assignee, viewContext.filters.query, viewContext.filters.status]);
+  }, [drilldownMetric, items, viewContext.filters.assignee, viewContext.filters.query, viewContext.filters.status]);
 
   async function onCreate() {
     if (!title.trim()) {
@@ -65,7 +68,27 @@ export function TablePage() {
   return (
     <section className="orbit-table-layout">
       <ProjectViewTabs />
-      <ProjectFilterBar title="Table View" subtitle="Bulk editing and audit-friendly operations over shared project data." />
+      <ProjectFilterBar title="작업 테이블" subtitle="여러 작업을 비교·정리·수정하는 검토용 화면입니다." />
+      {drilldownMetric ? (
+        <section className="orbit-sprint-inline-note">
+          <strong>현재 drilldown</strong>
+          <p style={{ margin: 0 }}>{getDrilldownLabel(drilldownMetric)}</p>
+          <div>
+            <button
+              className="orbit-button orbit-button--ghost"
+              type="button"
+              onClick={() => {
+                const reset = resetFiltersForDrilldown();
+                setFilter(projectId, "status", reset.status ?? "ALL");
+                setFilter(projectId, "query", reset.query ?? "");
+                setLastDrilldownMetric(projectId, null);
+              }}
+            >
+              drilldown 해제
+            </button>
+          </div>
+        </section>
+      ) : null}
       <section className="orbit-table-operations">
         <h2 style={{ marginTop: 0 }}>Table Operations</h2>
 

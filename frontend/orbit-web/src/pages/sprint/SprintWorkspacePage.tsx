@@ -17,10 +17,9 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import { useActiveSprint } from "@/features/agile/hooks/useActiveSprint";
 import { trackActivationEvent } from "@/lib/telemetry/activationEvents";
+import { getDsuLockReason, getSprintModeSummary, getSprintReadinessLabel, type SprintMode } from "@/features/agile/sprintMode";
 
 type WizardStep = 1 | 2 | 3;
-type SprintMode = "planning" | "dsu";
-
 interface SprintDsuEntry {
   dsuId: string;
   authorId: string;
@@ -76,11 +75,16 @@ export function SprintWorkspacePage() {
   const mode = queryMode ?? defaultMode;
   const hasActiveSprint = Boolean(sprint);
   const dsuLocked = !hasActiveSprint || !sprint?.freezeState;
-  const dsuLockedReason = !hasActiveSprint
-    ? "No active sprint selected. Start in Planning mode first."
-    : !sprint?.freezeState
-      ? "Freeze the day plan first, then submit DSU and approve AI drafts."
-      : undefined;
+  const dsuLockedReason = getDsuLockReason(sprint) ?? undefined;
+  const modeSummary = getSprintModeSummary(mode, sprint, backlog.length, dayPlans.length);
+  const readinessLabel = getSprintReadinessLabel(sprint, backlog.length, dayPlans.length);
+  const workItemTitleById = useMemo(
+    () =>
+      Object.fromEntries(
+        workItems.map((item) => [item.workItemId, item.title])
+      ),
+    [workItems]
+  );
 
   const canCreateSprint = useMemo(() => {
     return Boolean(activeWorkspaceId && projectId && sprintName.trim() && goal.trim() && startDate && endDate);
@@ -324,15 +328,18 @@ export function SprintWorkspacePage() {
   return (
     <section className="orbit-sprint-shell">
       <header className="orbit-sprint-hero">
-        <p className="orbit-sprint-hero__eyebrow">Plan → Do → Review → Adapt</p>
-        <h2 style={{ margin: 0 }}>Sprint + DSU Workspace</h2>
-        <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>
-          Planning creates and freezes the sprint plan. DSU collects daily updates and applies only approved AI draft changes.
-        </p>
+        <p className="orbit-sprint-hero__eyebrow">{modeSummary.eyebrow}</p>
+        <h2 style={{ margin: 0 }}>{modeSummary.title}</h2>
+        <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>{modeSummary.description}</p>
         <div className="orbit-sprint-hero__chips" aria-label="Sprint flow stage">
           <span className={`orbit-sprint-chip${mode === "planning" ? " is-active" : ""}`}>1. Planning</span>
           <span className={`orbit-sprint-chip${sprint?.freezeState ? " is-active" : ""}`}>2. Freeze</span>
           <span className={`orbit-sprint-chip${mode === "dsu" ? " is-active" : ""}`}>3. DSU Execution</span>
+        </div>
+        <div className="orbit-sprint-hero__status">
+          <strong>{sprint?.name ?? "No active sprint"}</strong>
+          <span>{readinessLabel}</span>
+          <span>{modeSummary.nextStep}</span>
         </div>
       </header>
 
@@ -368,7 +375,7 @@ export function SprintWorkspacePage() {
         <section className="orbit-sprint-section" role="tabpanel" aria-label="Planning mode">
           {!sprint ? (
             <>
-              <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 13 }}>No active sprint selected</p>
+              <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 13 }}>활성 스프린트가 아직 없습니다.</p>
               <EmptyStateCard
                 title={sprintEmptyState.title}
                 description={sprintEmptyState.description}
@@ -384,7 +391,7 @@ export function SprintWorkspacePage() {
                 ]}
                 secondaryActions={[
                   {
-                    label: "Open Board",
+                    label: "보드 보기",
                     variant: "ghost",
                     onClick: () => setProjectFilter(projectId, "sprintOnly", false)
                   }
@@ -396,7 +403,7 @@ export function SprintWorkspacePage() {
           <header className="orbit-sprint-section__head">
             <h3 style={{ margin: 0 }}>Sprint Wizard</h3>
             <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
-              Step {step} / 3 · Plan → Backlog → Day Plan Freeze
+              Step {step} / 3 · Info → Backlog → Day Plan Freeze
             </p>
           </header>
 
@@ -479,21 +486,28 @@ export function SprintWorkspacePage() {
           <header className="orbit-sprint-section__head">
             <h3 style={{ margin: 0 }}>DSU + AI Suggestion Review</h3>
             <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 12 }}>
-              Submit DSU, review AI draft updates, then apply approved items only.
+              DSU를 입력하고, AI draft를 읽고, 승인한 항목만 반영합니다.
             </p>
           </header>
 
           {dsuLocked ? (
             <article className="orbit-sprint-inline-note orbit-sprint-inline-note--warning">
-              <strong>{hasActiveSprint ? "Sprint plan is not frozen yet" : "No active sprint selected"}</strong>
+              <strong>{hasActiveSprint ? "Sprint plan이 아직 freeze되지 않았습니다" : "활성 스프린트가 없습니다"}</strong>
               <p style={{ margin: 0 }}>{dsuLockedReason}</p>
               <div>
                 <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setMode("planning")}>
-                  Open Planning
+                  Planning 열기
                 </button>
               </div>
             </article>
           ) : null}
+
+          <article className="orbit-sprint-inline-note">
+            <strong>현재 루프 설명</strong>
+            <p style={{ margin: 0 }}>
+              DSU는 오늘 계획 대비 실제 진척을 검토하기 위한 입력입니다. AI는 초안만 제안하고, 승인 전에는 아무 것도 적용되지 않습니다.
+            </p>
+          </article>
 
           <section className="orbit-sprint-dsu-grid">
             <DSUComposerPanel onSubmit={submitDsu} disabled={dsuLocked} disabledReason={dsuLockedReason} />
@@ -503,6 +517,7 @@ export function SprintWorkspacePage() {
               onApply={applySuggestions}
               disabled={dsuLocked}
               disabledReason={dsuLockedReason}
+              workItemTitleById={workItemTitleById}
             />
           </section>
 
@@ -518,7 +533,7 @@ export function SprintWorkspacePage() {
                   <p style={{ margin: "6px 0 0", whiteSpace: "pre-wrap" }}>{entry.rawText}</p>
                 </div>
               ))}
-              {dsuHistory.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No DSU submitted yet.</p> : null}
+              {dsuHistory.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>아직 제출된 DSU가 없습니다.</p> : null}
             </div>
           </section>
         </section>

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { resolveReturnTo } from "@/lib/routing/restoreIntent";
@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { EmptyStateCard } from "@/components/common/EmptyStateCard";
 import { getGuidedEmptyState } from "@/features/activation/emptyStateRegistry";
 import { trackActivationEvent } from "@/lib/telemetry/activationEvents";
+import { ACTION_LABELS, roleLabel } from "@/features/usability";
 
 export function WorkspaceEntryPage() {
   const navigate = useNavigate();
@@ -27,17 +28,9 @@ export function WorkspaceEntryPage() {
     loadClaims().catch(() => undefined);
   }, [loadClaims]);
 
-  function useWorkspaceAndNavigate(workspaceId: string, path: string) {
-    setActiveWorkspace(workspaceId);
-    navigate(path);
-  }
-
-  async function emitActivationEvent(action: string) {
-    if (!activeWorkspaceId) {
-      return;
-    }
+  async function emitActivationEvent(workspaceId: string, action: string) {
     await trackActivationEvent({
-      workspaceId: activeWorkspaceId,
+      workspaceId,
       projectId,
       userId,
       eventType: "EMPTY_STATE_ACTION_CLICKED",
@@ -49,54 +42,39 @@ export function WorkspaceEntryPage() {
     });
   }
 
-  function openWithCurrentWorkspace(path: string) {
-    const targetWorkspaceId = activeWorkspaceId ?? claims[0]?.workspaceId;
-    if (!targetWorkspaceId) {
-      navigate(path);
-      return;
+  function chooseWorkspace(workspaceId: string, nextPath?: string) {
+    setActiveWorkspace(workspaceId);
+    if (nextPath) {
+      navigate(nextPath);
     }
-    useWorkspaceAndNavigate(targetWorkspaceId, path);
   }
+
+  const recommendedPath = useMemo(() => {
+    if (params.get("returnTo")) {
+      return requestedPath;
+    }
+    return "/app/projects/board";
+  }, [params, requestedPath]);
 
   return (
     <section className="orbit-workspace-entry">
       <header className="orbit-workspace-entry__hero">
-        <h2 style={{ margin: 0 }}>Select a workspace</h2>
+        <h2 style={{ margin: 0 }}>먼저 워크스페이스 범위를 고르세요</h2>
+        <p>
+          어느 워크스페이스에서 일할지 먼저 정하면, 그 다음 보드나 스프린트 같은 작업 화면은 추천 경로로 안내합니다.
+        </p>
 
-        {loading && <p className="orbit-text-subtle">Loading workspace claims...</p>}
-        {error && (
+        {loading ? <p className="orbit-text-subtle">워크스페이스 목록을 불러오는 중...</p> : null}
+        {error ? (
           <p role="alert" className="orbit-danger">
             {error}
           </p>
-        )}
-        {fallbackNotice && (
+        ) : null}
+        {fallbackNotice ? (
           <p role="status" className="orbit-text-subtle">
             {fallbackNotice}
           </p>
-        )}
-
-        <div className="orbit-workspace-entry__actions">
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => openWithCurrentWorkspace("/app/projects/board")}>
-            Open Kanban
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => openWithCurrentWorkspace("/app/projects/timeline")}>
-            Open Timeline
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => openWithCurrentWorkspace("/app/projects/table")}>
-            Open Table
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => openWithCurrentWorkspace("/app/sprint")}>
-            Open Sprint
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => openWithCurrentWorkspace("/app/inbox")}>
-            Open Inbox
-          </button>
-          {params.get("returnTo") ? (
-            <button className="orbit-button" type="button" onClick={() => openWithCurrentWorkspace(requestedPath)}>
-              Continue Requested Page
-            </button>
-          ) : null}
-        </div>
+        ) : null}
       </header>
 
       {!loading && !error && claims.length === 0 ? (
@@ -107,8 +85,11 @@ export function WorkspaceEntryPage() {
             {
               label: guided.primaryAction.label,
               onClick: () => {
-                emitActivationEvent("use_default_workspace").catch(() => undefined);
-                openWithCurrentWorkspace(guided.primaryAction.path);
+                const nextWorkspaceId = activeWorkspaceId ?? claims[0]?.workspaceId;
+                if (nextWorkspaceId) {
+                  emitActivationEvent(nextWorkspaceId, "use_default_workspace").catch(() => undefined);
+                  chooseWorkspace(nextWorkspaceId, guided.primaryAction.path);
+                }
               }
             }
           ]}
@@ -117,47 +98,51 @@ export function WorkspaceEntryPage() {
 
       {!loading && !error && claims.length > 0 ? (
         <div className="orbit-workspace-entry__list">
-          {claims.map((claim) => (
-            <article key={claim.workspaceId} className="orbit-workspace-entry__claim orbit-animate-card">
-              <div>
-                <strong>{claim.workspaceName}</strong>
-                <div className="orbit-workspace-entry__meta">Workspace scope ready</div>
-              </div>
-              <div className="orbit-workspace-entry__right">
-                <div className="orbit-workspace-entry__meta" style={{ fontWeight: 700 }}>
-                  {claim.role}
+          {claims.map((claim) => {
+            const isActive = activeWorkspaceId === claim.workspaceId;
+            return (
+              <article key={claim.workspaceId} className="orbit-workspace-entry__claim orbit-animate-card">
+                <div>
+                  <strong>{claim.workspaceName}</strong>
+                  <div className="orbit-workspace-entry__meta">{roleLabel(claim.role)} · {claim.defaultWorkspace ? "기본 워크스페이스" : "선택 가능"}</div>
                 </div>
-                {claim.defaultWorkspace && (
-                  <div className="orbit-workspace-entry__meta orbit-accent" style={{ textTransform: "uppercase" }}>
-                    Default
-                  </div>
-                )}
-                <div className="orbit-workspace-entry__buttons">
-                  <button
-                    className={`orbit-button ${activeWorkspaceId === claim.workspaceId ? "orbit-button--ghost" : ""}`}
-                    type="button"
-                    onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/projects/board")}
-                  >
-                    {activeWorkspaceId === claim.workspaceId ? "Open Board" : "Use & Open"}
-                  </button>
-                  <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/projects/timeline")}>
-                    Timeline
-                  </button>
-                  <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/projects/table")}>
-                    Table
-                  </button>
-                  <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/sprint")}>
-                    Sprint
-                  </button>
-                  {activeWorkspaceId === claim.workspaceId ? (
-                    <button className="orbit-button orbit-button--ghost" type="button" onClick={() => useWorkspaceAndNavigate(claim.workspaceId, "/app/inbox")}>
-                      Open Inbox
+                <div className="orbit-workspace-entry__right">
+                  <div className="orbit-workspace-entry__buttons">
+                    <button
+                      className="orbit-button"
+                      type="button"
+                      onClick={() => {
+                        emitActivationEvent(claim.workspaceId, "select_workspace").catch(() => undefined);
+                        chooseWorkspace(claim.workspaceId);
+                      }}
+                    >
+                      {isActive ? "현재 워크스페이스" : ACTION_LABELS.continueWorkspace}
                     </button>
+                  </div>
+                  {isActive ? (
+                    <div className="orbit-workspace-entry__buttons">
+                      <button
+                        className="orbit-button"
+                        type="button"
+                        onClick={() => {
+                          emitActivationEvent(claim.workspaceId, params.get("returnTo") ? "continue_requested" : "open_board").catch(() => undefined);
+                          chooseWorkspace(claim.workspaceId, recommendedPath);
+                        }}
+                      >
+                        {params.get("returnTo") ? ACTION_LABELS.continueRequestedPage : ACTION_LABELS.goToBoard}
+                      </button>
+                      <button className="orbit-button orbit-button--ghost" type="button" onClick={() => chooseWorkspace(claim.workspaceId, "/app/sprint?mode=planning")}>
+                        {ACTION_LABELS.goToSprint}
+                      </button>
+                      <button className="orbit-button orbit-button--ghost" type="button" onClick={() => chooseWorkspace(claim.workspaceId, "/app/inbox")}>
+                        {ACTION_LABELS.goToInbox}
+                      </button>
+                    </div>
                   ) : null}
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       ) : null}
     </section>

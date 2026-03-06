@@ -37,8 +37,10 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
 
   return (
     <section className="orbit-project-filterbar" aria-label="Task filters">
-      <h2 className="orbit-project-filterbar__title">{title}</h2>
-      {subtitle ? <p className="orbit-project-filterbar__subtitle">{subtitle}</p> : null}
+      <div className="orbit-project-filterbar__copy">
+        <h2 className="orbit-project-filterbar__title">{title}</h2>
+        {subtitle ? <p className="orbit-project-filterbar__subtitle">{subtitle}</p> : null}
+      </div>
       <div className="orbit-project-filterbar__controls">
         <input
           className="orbit-input"
@@ -69,7 +71,7 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
             )
           }
         >
-          {isAdvancedExpanded ? "Hide Advanced" : "More Filters"}
+          {isAdvancedExpanded ? "상세 필터 숨기기" : "상세 필터"}
         </button>
         <button
           className="orbit-text-button"
@@ -81,7 +83,7 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
             setFilter(projectId, "sprintOnly", false);
           }}
         >
-          초기화
+          필터 초기화
         </button>
       </div>
 

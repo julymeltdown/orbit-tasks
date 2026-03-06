@@ -9,8 +9,8 @@ describe("OperationsHubPage", () => {
   it("prioritizes a single primary activation CTA", () => {
     const source = readFileSync(path.resolve(testDir, "./OperationsHubPage.tsx"), "utf8");
 
-    expect(source).toContain("Create your first task");
-    expect(source).toContain("Set up your first workflow");
+    expect(source).toContain("primaryAction");
+    expect(source).toContain("Activation Flow");
     expect(source).toContain("ActivationChecklist");
   });
 

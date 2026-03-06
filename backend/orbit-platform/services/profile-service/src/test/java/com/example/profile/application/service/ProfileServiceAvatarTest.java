@@ -65,6 +65,16 @@ class ProfileServiceAvatarTest {
         assertTrue(service.getAvatar("user-1").isEmpty());
     }
 
+    @Test
+    void allowsOptionalAvatarAndBioDuringProfileUpdate() {
+        ProfileService service = newService();
+
+        Profile profile = service.updateProfile("user-1", "user_one", "User One", "", null);
+
+        assertEquals("", profile.avatarUrl());
+        assertEquals("", profile.bio());
+    }
+
     private static ProfileService newService() {
         return new ProfileService(new InMemoryProfileRepository(), new InMemoryAvatarRepository());
     }

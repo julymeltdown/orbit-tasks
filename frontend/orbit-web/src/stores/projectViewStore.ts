@@ -13,29 +13,52 @@ export interface ProjectViewFilters {
 
 export interface ProjectViewContext {
   view: ProjectViewType;
+  viewIntent: "execution" | "bulk_edit" | "planning" | "schedule" | "summary";
   filters: ProjectViewFilters;
   selectedWorkItemId: string | null;
+  lastDrilldownMetric: string | null;
 }
 
 interface ProjectViewState {
   byProject: Record<string, ProjectViewContext>;
   setView: (projectId: string, view: ProjectViewType) => void;
+  setIntent: (projectId: string, intent: ProjectViewContext["viewIntent"]) => void;
   setFilter: <K extends keyof ProjectViewFilters>(projectId: string, key: K, value: ProjectViewFilters[K]) => void;
   setSelectedWorkItem: (projectId: string, workItemId: string | null) => void;
+  setLastDrilldownMetric: (projectId: string, metric: string | null) => void;
   getContext: (projectId: string) => ProjectViewContext;
   resetProjectContext: (projectId: string) => void;
 }
 
 const DEFAULT_CONTEXT: ProjectViewContext = {
   view: "board",
+  viewIntent: "execution",
   filters: {
     assignee: "",
     status: "ALL",
     sprintOnly: false,
     query: ""
   },
-  selectedWorkItemId: null
+  selectedWorkItemId: null,
+  lastDrilldownMetric: null
 };
+
+function resolveIntent(view: ProjectViewType): ProjectViewContext["viewIntent"] {
+  switch (view) {
+    case "board":
+      return "execution";
+    case "table":
+      return "bulk_edit";
+    case "timeline":
+      return "planning";
+    case "calendar":
+      return "schedule";
+    case "dashboard":
+      return "summary";
+    default:
+      return "execution";
+  }
+}
 
 function readPersisted(): Record<string, ProjectViewContext> {
   if (typeof window === "undefined") {
@@ -80,7 +103,22 @@ export const useProjectViewStore = create<ProjectViewState>((set, get) => ({
 
   setView: (projectId, view) => {
     set((state) => {
-      const byProject = withProjectContext(state, projectId, (current) => ({ ...current, view }));
+      const byProject = withProjectContext(state, projectId, (current) => ({
+        ...current,
+        view,
+        viewIntent: resolveIntent(view)
+      }));
+      writePersisted(byProject);
+      return { byProject };
+    });
+  },
+
+  setIntent: (projectId, intent) => {
+    set((state) => {
+      const byProject = withProjectContext(state, projectId, (current) => ({
+        ...current,
+        viewIntent: intent
+      }));
       writePersisted(byProject);
       return { byProject };
     });
@@ -105,6 +143,17 @@ export const useProjectViewStore = create<ProjectViewState>((set, get) => ({
       const byProject = withProjectContext(state, projectId, (current) => ({
         ...current,
         selectedWorkItemId: workItemId
+      }));
+      writePersisted(byProject);
+      return { byProject };
+    });
+  },
+
+  setLastDrilldownMetric: (projectId, metric) => {
+    set((state) => {
+      const byProject = withProjectContext(state, projectId, (current) => ({
+        ...current,
+        lastDrilldownMetric: metric
       }));
       writePersisted(byProject);
       return { byProject };

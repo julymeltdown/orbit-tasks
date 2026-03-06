@@ -18,9 +18,12 @@ import { featureFlags } from "@/lib/config/featureFlags";
 import { hashActivationUserId, trackActivationEvent } from "@/lib/telemetry/activationEvents";
 import { resolveGuidanceStatus } from "@/features/insights/aiGuidanceStatus";
 import { deriveInsightSignals } from "@/features/insights/insightSignals";
+import { getAIPresentationTone } from "@/features/insights/aiStatePresentation";
+import { useGlobalSearch } from "@/features/search/hooks/useGlobalSearch";
+import { resolveRoutePurpose } from "@/app/routePurposeRegistry";
+import { roleLabel } from "@/features/usability";
 import {
   canAccessNavItem,
-  projectViewNavigation,
   resolveScopeLabel,
   scopeNavigation,
   splitScopeNavigationByTier
@@ -56,6 +59,7 @@ export function AppShell() {
   const [applying, setApplying] = useState(false);
   const [dsuReminder, setDsuReminder] = useState<DsuReminder | null>(null);
   const [activationLoading, setActivationLoading] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     loadClaims().catch(() => undefined);
@@ -106,7 +110,7 @@ export function AppShell() {
     return claims.find((claim) => claim.workspaceId === activeWorkspaceId) ?? null;
   }, [claims, activeWorkspaceId]);
 
-  const activeWorkspaceName = activeWorkspace?.workspaceName ?? "No Workspace";
+  const activeWorkspaceName = activeWorkspace?.workspaceName ?? "워크스페이스 없음";
   const activeRole = activeWorkspace?.role ?? null;
   const scopeLabel = resolveScopeLabel(location.pathname);
   const visibleScopeNav = useMemo(
@@ -118,8 +122,12 @@ export function AppShell() {
   const visibleCoreNav = splitScopeNav.core;
   const visibleAdvancedNav = splitScopeNav.advanced;
   const advancedNavVisible = navProfile === "ADVANCED" || advancedExpanded;
-  const showProjectViews = location.pathname.startsWith("/app/projects");
-  const [query, setQuery] = useState("");
+  const routePurpose = useMemo(() => resolveRoutePurpose(location.pathname), [location.pathname]);
+  const { results: searchResults, loading: searchLoading, error: searchError } = useGlobalSearch(
+    activeWorkspaceId,
+    projectId,
+    query
+  );
   const totalWorkItems = useMemo(() => items.filter((item) => item.status !== "ARCHIVED").length, [items]);
   const doneWorkItems = byStatus.DONE.length;
   const progressPercent = totalWorkItems > 0 ? Math.round((doneWorkItems / totalWorkItems) * 100) : 0;
@@ -132,44 +140,32 @@ export function AppShell() {
         latestEvaluation,
         totalWorkItems > 0
           ? `현재 ${insightSignals.remainingStoryPoints}SP / 블로커 ${insightSignals.blockedCount}개 상태입니다.`
-          : "보드에서 작업을 생성하면 AI 평가 카드가 자동으로 활성화됩니다."
+          : "작업을 생성하면 일정 흐름과 리스크 분석이 활성화됩니다."
       ),
     [insightSignals.blockedCount, insightSignals.remainingStoryPoints, latestEvaluation, totalWorkItems]
   );
-
-  const heroTitle = useMemo(() => {
-    if (location.pathname.startsWith("/app/projects/board")) return "Cinematic Board";
-    if (location.pathname.startsWith("/app/projects/timeline")) return "Timeline";
-    if (location.pathname.startsWith("/app/projects/table")) return "Table";
-    if (location.pathname.startsWith("/app/projects/calendar")) return "Calendar";
-    if (location.pathname.startsWith("/app/projects/dashboard")) return "Dashboard";
-    if (location.pathname.startsWith("/app/sprint")) return "Sprint Workspace";
-    if (location.pathname.startsWith("/app/inbox")) return "Collaboration Inbox";
-    return activeWorkspaceName ? `${activeWorkspaceName} Workspace` : "Workspace";
-  }, [activeWorkspaceName, location.pathname]);
-
-  const sidebarCoachMessage = useMemo(() => {
-    if (topRisk) {
-      return topRisk.recommendedActions?.[0] ?? topRisk.impact;
-    }
-    if (insightSignals.remainingStoryPoints === 0) {
-      return "작업을 생성하면 AI가 일정 흐름과 리스크를 분석합니다.";
-    }
-    return `남은 ${insightSignals.remainingStoryPoints}SP, 블로커 ${insightSignals.blockedCount}개를 기준으로 평가를 실행하세요.`;
-  }, [insightSignals.blockedCount, insightSignals.remainingStoryPoints, topRisk]);
-
+  const aiTone = useMemo(() => getAIPresentationTone(guidanceStatus), [guidanceStatus]);
   const secondaryRiskSummary = useMemo(() => {
     if (secondaryRisk) {
       return secondaryRisk.impact;
     }
     if (insightSignals.atRiskCount > 0) {
-      return `현재 위험 신호 ${insightSignals.atRiskCount}개가 감지되었습니다. Insights에서 상세 평가를 실행하세요.`;
+      return `현재 위험 신호 ${insightSignals.atRiskCount}개가 감지되었습니다. 인사이트에서 상세 평가를 확인하세요.`;
     }
     if (insightSignals.remainingStoryPoints === 0) {
       return "추가 작업 데이터가 쌓이면 보조 리스크 신호가 자동으로 표시됩니다.";
     }
     return "보조 리스크는 최신 평가 이후 자동 표시됩니다.";
   }, [insightSignals.atRiskCount, insightSignals.remainingStoryPoints, secondaryRisk]);
+  const showRail =
+    location.pathname.startsWith("/app/projects/table") ||
+    location.pathname.startsWith("/app/projects/timeline") ||
+    location.pathname.startsWith("/app/projects/calendar") ||
+    location.pathname.startsWith("/app/projects/dashboard");
+  const showFloatingAi =
+    !location.pathname.startsWith("/app/insights") &&
+    !location.pathname.startsWith("/app/workspace") &&
+    !location.pathname.startsWith("/app/projects/dashboard");
 
   useEffect(() => {
     if (!activeWorkspaceId || !projectId) {
@@ -192,7 +188,7 @@ export function AppShell() {
           setLatestEvaluation(null);
           return;
         }
-        setEvaluationError(error instanceof Error ? error.message : "Failed to load latest evaluation");
+        setEvaluationError(error instanceof Error ? error.message : "최신 평가를 불러오지 못했습니다.");
       })
       .finally(() => {
         setEvaluationLoading(false);
@@ -208,7 +204,6 @@ export function AppShell() {
       setDsuReminder(null);
       return;
     }
-    const controller = new AbortController();
     fetchDsuReminder(activeWorkspaceId, projectId, userId)
       .then((response) => {
         setDsuReminder(response);
@@ -216,9 +211,6 @@ export function AppShell() {
       .catch(() => {
         setDsuReminder(null);
       });
-    return () => {
-      controller.abort();
-    };
   }, [activeWorkspaceId, projectId, userId, location.pathname]);
 
   async function signOut() {
@@ -250,6 +242,11 @@ export function AppShell() {
     } finally {
       setApplying(false);
     }
+  }
+
+  function openSearchResult(path: string) {
+    navigate(path);
+    setQuery("");
   }
 
   return (
@@ -301,7 +298,7 @@ export function AppShell() {
               <span className="material-symbols-outlined orbit-side-link__icon">
                 {advancedNavVisible ? "expand_less" : "expand_more"}
               </span>
-              <span>{advancedNavVisible ? "Hide Advanced" : "More"}</span>
+              <span>{advancedNavVisible ? "고급 메뉴 숨기기" : "고급 메뉴"}</span>
             </button>
           ) : null}
         </nav>
@@ -321,48 +318,59 @@ export function AppShell() {
           </nav>
         ) : null}
 
-        {activationLoading ? <p className="orbit-shell__activation-loading">Loading activation...</p> : null}
-
-        {showProjectViews ? (
-          <div className="orbit-side-subnav">
-            <p className="orbit-side-subnav__title">Project Views</p>
-            <div className="orbit-side-subnav__links">
-              {projectViewNavigation.map((view) => (
-                <NavLink
-                  key={view.id}
-                  to={view.to}
-                  className={({ isActive }) => `orbit-side-link orbit-side-link--sub${isActive ? " is-active" : ""}`}
-                >
-                  <span className="material-symbols-outlined orbit-side-link__icon">{view.icon}</span>
-                  <span>{view.label}</span>
-                </NavLink>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        <section className="orbit-shell__coach">
-          <div className="orbit-shell__coach-head">
-            <span className="material-symbols-outlined">auto_awesome</span>
-            <span>AI Coach</span>
-          </div>
-          <p>{sidebarCoachMessage}</p>
-        </section>
+        {activationLoading ? <p className="orbit-shell__activation-loading">활성화 상태를 불러오는 중...</p> : null}
       </aside>
 
       <header className="orbit-shell__top" role="banner">
         <div className="orbit-shell__top-left">
-          <h1>{heroTitle}</h1>
-          <label className="orbit-shell__search">
-            <span className="material-symbols-outlined">search</span>
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search tasks, threads, notes..."
-              aria-label="Search"
-            />
-          </label>
+          <div className="orbit-shell__hero-copy">
+            <p className="orbit-shell__eyebrow">{routePurpose.kicker}</p>
+            <h1>{routePurpose.title}</h1>
+            <p className="orbit-shell__hero-description">{routePurpose.description}</p>
+          </div>
+          <div className="orbit-shell__search-wrap">
+            <label className="orbit-shell__search">
+              <span className="material-symbols-outlined">search</span>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && searchResults.length > 0) {
+                    event.preventDefault();
+                    openSearchResult(searchResults[0].path);
+                  }
+                }}
+                placeholder={routePurpose.searchPlaceholder ?? "작업, 스레드, 화면 검색"}
+                aria-label="Search"
+              />
+            </label>
+            {query.trim().length >= 2 ? (
+              <div className="orbit-search-results" role="listbox" aria-label="Search results">
+                {searchLoading ? <p className="orbit-search-results__status">검색 중...</p> : null}
+                {!searchLoading && searchError ? <p className="orbit-search-results__status">{searchError}</p> : null}
+                {!searchLoading && !searchError && searchResults.length === 0 ? (
+                  <p className="orbit-search-results__status">일치하는 결과가 없습니다.</p>
+                ) : null}
+                {!searchLoading && !searchError
+                  ? searchResults.map((result) => (
+                      <button
+                        key={`${result.type}-${result.id}`}
+                        className="orbit-search-results__item"
+                        type="button"
+                        onClick={() => openSearchResult(result.path)}
+                      >
+                        <span className="material-symbols-outlined orbit-search-results__icon">{result.icon}</span>
+                        <span>
+                          <strong>{result.title}</strong>
+                          <small>{result.subtitle}</small>
+                        </span>
+                      </button>
+                    ))
+                  : null}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="orbit-shell__top-actions">
@@ -374,30 +382,35 @@ export function AppShell() {
             aria-controls="orbit-side-nav"
           >
             <span className="material-symbols-outlined">{mobileNavOpen ? "close" : "menu"}</span>
-            <span>{mobileNavOpen ? "Close" : "Menu"}</span>
+            <span>{mobileNavOpen ? "닫기" : "메뉴"}</span>
           </button>
 
-          <button className="orbit-button orbit-button--ghost orbit-workspace-pill" type="button" onClick={() => navigate("/app/workspace/select")} title="Select workspace">
+          <button
+            className="orbit-button orbit-button--ghost orbit-workspace-pill"
+            type="button"
+            onClick={() => navigate("/app/workspace/select")}
+            title="워크스페이스 선택"
+          >
             <span className="material-symbols-outlined">workspaces</span>
             <span>{activeWorkspaceName}</span>
           </button>
-          <span className="orbit-shell__scope-label">{activeRole ?? "WORKSPACE_MEMBER"}</span>
+          <span className="orbit-shell__scope-label">{roleLabel(activeRole ?? "WORKSPACE_MEMBER")}</span>
           <ThemeToggleButton variant="shell" />
           <button className="orbit-button orbit-button--ghost" type="button" onClick={signOut}>
             <span className="material-symbols-outlined">logout</span>
-            <span>Sign Out</span>
+            <span>로그아웃</span>
           </button>
           {navProfile === "ADVANCED" || dsuReminder?.pending ? (
             <button className="orbit-button orbit-button--ghost orbit-desktop-only" type="button" onClick={() => navigate("/app/sprint?mode=dsu")}>
               <span className="material-symbols-outlined">event_note</span>
-              <span>DSU</span>
+              <span>DSU 리뷰</span>
               {dsuReminder?.pending ? <span className="orbit-notice-badge">!</span> : null}
             </button>
           ) : null}
           {navProfile === "ADVANCED" ? (
             <button className="orbit-button orbit-desktop-only" type="button" onClick={() => navigate("/app/projects/board?create=1")}>
               <span className="material-symbols-outlined">add</span>
-              <span>New Task</span>
+              <span>새 작업</span>
             </button>
           ) : null}
         </div>
@@ -412,7 +425,7 @@ export function AppShell() {
             </div>
             <div className="orbit-dsu-reminder__actions">
               <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/inbox")}>
-                Inbox
+                인박스
               </button>
               <button className="orbit-button" type="button" onClick={() => navigate(dsuReminder.actionPath || "/app/sprint?mode=planning")}>
                 DSU 입력하기
@@ -423,62 +436,64 @@ export function AppShell() {
         <Outlet />
       </main>
 
-      <aside className="orbit-shell__rail" aria-label="Project health">
-        <header className="orbit-shell__rail-head">
-          <h3>
-            <span className="material-symbols-outlined">analytics</span>
-            <span>Project Health</span>
-          </h3>
-        </header>
-        <div className="orbit-shell__rail-body">
-          <article className="orbit-shell__rail-widget">
-            <div className="orbit-shell__rail-row">
-              <span>Overall Progress</span>
-              <strong>{progressPercent}%</strong>
-            </div>
-            <div className="orbit-shell__progress">
-              <span style={{ width: `${progressPercent}%` }} />
-            </div>
-          </article>
+      {showRail ? (
+        <aside className="orbit-shell__rail" aria-label="Project health">
+          <header className="orbit-shell__rail-head">
+            <h3>
+              <span className="material-symbols-outlined">analytics</span>
+              <span>프로젝트 상태</span>
+            </h3>
+          </header>
+          <div className="orbit-shell__rail-body">
+            <article className="orbit-shell__rail-widget">
+              <div className="orbit-shell__rail-row">
+                <span>전체 진행률</span>
+                <strong>{progressPercent}%</strong>
+              </div>
+              <div className="orbit-shell__progress">
+                <span style={{ width: `${progressPercent}%` }} />
+              </div>
+            </article>
 
-          <article className="orbit-shell__rail-widget">
-            <p className="orbit-shell__rail-eyebrow">AI Coaching Summary</p>
-            {evaluationLoading ? <p>Loading latest evaluation...</p> : null}
-            {!evaluationLoading && evaluationError ? <p>{evaluationError}</p> : null}
-            {!evaluationLoading && !evaluationError && topRisk ? (
-              <>
-                <h4>{topRisk.summary}</h4>
-                <p>{guidanceStatus.summaryLabel}</p>
-                <p className="orbit-shell__rail-meta">
-                  {guidanceStatus.reasonLabel} · {guidanceStatus.confidenceLabel}
-                </p>
-                <button className="orbit-link-button orbit-link-button--tab" type="button" onClick={applyTopStrategy} disabled={applying}>
-                  {applying ? "Applying..." : "Apply Strategy"}
-                </button>
-              </>
-            ) : null}
-            {!evaluationLoading && !evaluationError && !topRisk ? (
-              <>
-                <h4>{guidanceStatus.state === "not_run" ? "Evaluation Pending" : guidanceStatus.stateLabel}</h4>
-                <p>{guidanceStatus.summaryLabel}</p>
-                <p className="orbit-shell__rail-meta">
-                  {guidanceStatus.reasonLabel} · {guidanceStatus.confidenceLabel}
-                </p>
-                <button className="orbit-link-button orbit-link-button--tab" type="button" onClick={() => navigate("/app/insights")}>
-                  Run Evaluation
-                </button>
-              </>
-            ) : null}
-          </article>
+            <article className="orbit-shell__rail-widget">
+              <p className="orbit-shell__rail-eyebrow">AI 요약</p>
+              {evaluationLoading ? <p>최신 평가를 불러오는 중...</p> : null}
+              {!evaluationLoading && evaluationError ? <p>{evaluationError}</p> : null}
+              {!evaluationLoading && !evaluationError && topRisk ? (
+                <>
+                  <h4>{topRisk.summary}</h4>
+                  <p>{guidanceStatus.summaryLabel}</p>
+                  <p className="orbit-shell__rail-meta">
+                    {aiTone.badge} · {guidanceStatus.reasonLabel} · {guidanceStatus.confidenceLabel}
+                  </p>
+                  <button className="orbit-link-button orbit-link-button--tab" type="button" onClick={applyTopStrategy} disabled={applying}>
+                    {applying ? "적용 중..." : "초안 적용"}
+                  </button>
+                </>
+              ) : null}
+              {!evaluationLoading && !evaluationError && !topRisk ? (
+                <>
+                  <h4>{guidanceStatus.state === "not_run" ? "평가 대기" : guidanceStatus.stateLabel}</h4>
+                  <p>{guidanceStatus.summaryLabel}</p>
+                  <p className="orbit-shell__rail-meta">
+                    {aiTone.badge} · {guidanceStatus.reasonLabel} · {guidanceStatus.confidenceLabel}
+                  </p>
+                  <button className="orbit-link-button orbit-link-button--tab" type="button" onClick={() => navigate("/app/insights")}>
+                    평가 열기
+                  </button>
+                </>
+              ) : null}
+            </article>
 
-          <article className="orbit-shell__rail-widget orbit-shell__rail-widget--warn">
-            <h4>{secondaryRisk?.summary ?? "Secondary Signal"}</h4>
-            <p>{secondaryRiskSummary}</p>
-          </article>
-        </div>
-      </aside>
+            <article className="orbit-shell__rail-widget orbit-shell__rail-widget--warn">
+              <h4>{secondaryRisk?.summary ?? "보조 신호"}</h4>
+              <p>{secondaryRiskSummary}</p>
+            </article>
+          </div>
+        </aside>
+      ) : null}
 
-      <FloatingAgentWidget />
+      {showFloatingAi ? <FloatingAgentWidget /> : null}
     </div>
   );
 }

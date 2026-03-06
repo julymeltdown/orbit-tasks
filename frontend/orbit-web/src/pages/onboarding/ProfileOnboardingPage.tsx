@@ -5,6 +5,7 @@ import { getApiBaseUrl, request } from "@/lib/http/client";
 import { resolveReturnTo, stashIntent } from "@/lib/routing/restoreIntent";
 import { useAuthStore } from "@/stores/authStore";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
+import { ACTION_LABELS } from "@/features/usability";
 
 interface AvatarUploadResponse {
   avatarUrl: string;
@@ -34,6 +35,7 @@ export function ProfileOnboardingPage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [showOptional, setShowOptional] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -70,6 +72,9 @@ export function ProfileOnboardingPage() {
   }, [avatarPreview]);
 
   function toAbsoluteAvatarUrl(rawUrl: string): string {
+    if (!rawUrl) {
+      return "";
+    }
     if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
       return rawUrl;
     }
@@ -98,24 +103,26 @@ export function ProfileOnboardingPage() {
       return;
     }
 
+    const payload: Pick<BasicProfile, "username" | "nickname"> = {
+      username: username.trim(),
+      nickname: nickname.trim()
+    };
+    if (!isProfileComplete(payload)) {
+      setError("username과 display name은 필수입니다.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const resolvedAvatarUrl = await ensureAvatarUrl();
-
-      const payload = {
-        username: username.trim(),
-        nickname: nickname.trim(),
-        avatarUrl: resolvedAvatarUrl.trim(),
-        bio: bio.trim()
-      };
-      if (!isProfileComplete(payload as BasicProfile)) {
-        setError("username, nickname, avatar, bio를 모두 입력해 주세요.");
-        return;
-      }
-
       await request<ProfileUpdateResponse>(`/api/profile/${encodeURIComponent(userId)}`, {
         method: "PUT",
-        body: payload
+        body: {
+          username: username.trim(),
+          nickname: nickname.trim(),
+          avatarUrl: resolvedAvatarUrl.trim(),
+          bio: bio.trim()
+        }
       });
 
       const nextPath = resolveReturnTo(returnTo, "/app/workspace/select");
@@ -146,18 +153,18 @@ export function ProfileOnboardingPage() {
       <main className="orbit-onboarding-wrap">
         <section className="orbit-auth-pane">
           <p className="orbit-auth-eyebrow">First Login Setup</p>
-          <h1 className="orbit-auth-title">Complete Profile</h1>
+          <h1 className="orbit-auth-title">워크스페이스에 들어가기 전에 이름만 정리하세요</h1>
           <p className="orbit-auth-copy">
-            최초 로그인 1회에 한해 프로필 기본 정보를 완료해야 워크스페이스를 사용할 수 있습니다.
+            처음에는 username과 display name만 있으면 됩니다. 아바타와 소개는 나중에 보완할 수 있습니다.
           </p>
           <div className="orbit-metric-grid">
             <div className="orbit-metric">
               <p className="orbit-metric__label">Required</p>
-              <p className="orbit-metric__value">4 Fields</p>
+              <p className="orbit-metric__value">2 Fields</p>
             </div>
             <div className="orbit-metric">
-              <p className="orbit-metric__label">Next Login</p>
-              <p className="orbit-metric__value">Direct Entry</p>
+              <p className="orbit-metric__label">Optional</p>
+              <p className="orbit-metric__value">Avatar · Bio</p>
             </div>
           </div>
         </section>
@@ -181,63 +188,71 @@ export function ProfileOnboardingPage() {
                 className="orbit-input"
                 value={nickname}
                 onChange={(event) => setNickname(event.target.value)}
-                placeholder="Your Name"
+                placeholder="홍길동"
                 required
               />
             </label>
 
-            <label className="orbit-auth-field">
-              <span>Avatar</span>
-              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <div className="orbit-onboarding-avatar">
-                  {avatarPreview || avatarUrl ? (
-                    <img alt="Avatar preview" src={avatarPreview || avatarUrl} />
-                  ) : (
-                    (nickname || username || "OR").slice(0, 2)
-                  )}
-                </div>
-                <input
-                  className="orbit-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null;
-                    setAvatarFile(file);
-                    if (avatarPreview) {
-                      URL.revokeObjectURL(avatarPreview);
-                    }
-                    setAvatarPreview(file ? URL.createObjectURL(file) : null);
-                  }}
-                />
-              </div>
-              <input
-                className="orbit-input"
-                placeholder="or paste avatar URL"
-                value={avatarUrl}
-                onChange={(event) => setAvatarUrl(event.target.value)}
-              />
-            </label>
+            <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setShowOptional((value) => !value)}>
+              {showOptional ? "선택 입력 접기" : "아바타와 소개 추가"}
+            </button>
 
-            <label className="orbit-auth-field">
-              <span>Bio</span>
-              <textarea
-                className="orbit-input orbit-onboarding-textarea"
-                value={bio}
-                onChange={(event) => setBio(event.target.value)}
-                required
-              />
-            </label>
+            {showOptional ? (
+              <>
+                <label className="orbit-auth-field">
+                  <span>Avatar (optional)</span>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <div className="orbit-onboarding-avatar">
+                      {avatarPreview || avatarUrl ? (
+                        <img alt="Avatar preview" src={avatarPreview || avatarUrl} />
+                      ) : (
+                        (nickname || username || "OR").slice(0, 2)
+                      )}
+                    </div>
+                    <input
+                      className="orbit-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null;
+                        setAvatarFile(file);
+                        if (avatarPreview) {
+                          URL.revokeObjectURL(avatarPreview);
+                        }
+                        setAvatarPreview(file ? URL.createObjectURL(file) : null);
+                      }}
+                    />
+                  </div>
+                  <input
+                    className="orbit-input"
+                    placeholder="or paste avatar URL"
+                    value={avatarUrl}
+                    onChange={(event) => setAvatarUrl(event.target.value)}
+                  />
+                </label>
 
-            {error && (
+                <label className="orbit-auth-field">
+                  <span>Bio (optional)</span>
+                  <textarea
+                    className="orbit-input orbit-onboarding-textarea"
+                    value={bio}
+                    onChange={(event) => setBio(event.target.value)}
+                    placeholder="어떤 역할로 일하는지 한 줄 정도 남겨두면 협업에 도움이 됩니다."
+                  />
+                </label>
+              </>
+            ) : null}
+
+            {error ? (
               <p className="orbit-auth-error" role="alert">
                 {error}
               </p>
-            )}
+            ) : null}
 
             <div className="orbit-auth-row">
-              <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>완료 후 앱 사용 가능</span>
+              <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{ACTION_LABELS.enrichProfileLater}</span>
               <button className="orbit-button" type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Complete Setup"}
+                {isLoading ? "저장 중..." : "워크스페이스로 계속"}
               </button>
             </div>
           </form>

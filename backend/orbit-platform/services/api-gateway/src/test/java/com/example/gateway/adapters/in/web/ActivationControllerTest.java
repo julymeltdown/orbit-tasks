@@ -23,8 +23,13 @@ class ActivationControllerTest {
                 "00000000-0000-0000-0000-000000000002",
                 "member@test.local",
                 "NOT_STARTED",
+                "first_session",
                 "NOVICE",
                 false,
+                null,
+                new ActivationDtos.ActionLink("Create first task", "/app/projects/board?create=1"),
+                List.of(new ActivationDtos.ActionLink("Import tasks", "/app/integrations/import")),
+                null,
                 null,
                 List.of(),
                 "2026-03-05T00:00:00Z"
@@ -68,9 +73,14 @@ class ActivationControllerTest {
                 "00000000-0000-0000-0000-000000000002",
                 "member@test.local",
                 "FIRST_ACTION_DONE",
+                "returning_user",
                 "NOVICE",
                 false,
                 "FIRST_TASK_ONLY",
+                new ActivationDtos.ActionLink("Open board", "/app/projects/board"),
+                List.of(),
+                null,
+                new ActivationDtos.ResumeTarget("Board", "/app/projects/board", "Resume board execution"),
                 List.of(),
                 "2026-03-05T00:00:00Z"
         ));

@@ -11,17 +11,7 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
 import { useAuthStore } from "@/stores/authStore";
 import { useActivationStore } from "@/stores/activationStore";
-
-type HubModule = {
-  id: string;
-  title: string;
-  path: string;
-  primaryLabel: string;
-  secondaryPath: string;
-  secondaryLabel: string;
-  metricLabel: string;
-  metricValue: string;
-};
+import { ACTION_LABELS, roleLabel } from "@/features/usability";
 
 export function OperationsHubPage() {
   const navigate = useNavigate();
@@ -74,65 +64,58 @@ export function OperationsHubPage() {
     return claims.find((claim) => claim.workspaceId === activeWorkspaceId) ?? null;
   }, [claims, activeWorkspaceId]);
 
-  const modules: HubModule[] = useMemo(() => {
+  const modules = useMemo(() => {
     const activeCount = byStatus.IN_PROGRESS.length;
     const backlogCount = byStatus.TODO.length;
     const reviewCount = byStatus.REVIEW.length;
     const doneCount = byStatus.DONE.length;
-    const inboxCount = Math.max(0, items.length - doneCount);
-
     return [
       {
-        id: "kanban",
-        title: "Board",
+        id: "board",
+        title: "보드 실행",
         path: "/app/projects/board",
-        primaryLabel: "Open Board",
+        primaryLabel: ACTION_LABELS.goToBoard,
         secondaryPath: "/app/projects/table",
-        secondaryLabel: "Open Table",
+        secondaryLabel: "테이블 검토",
         metricLabel: "Backlog",
         metricValue: `${backlogCount}`
       },
       {
         id: "sprint",
-        title: "Sprint",
-        path: "/app/sprint",
-        primaryLabel: "Open Sprint",
+        title: "스프린트 루프",
+        path: "/app/sprint?mode=planning",
+        primaryLabel: ACTION_LABELS.goToSprint,
         secondaryPath: "/app/insights",
-        secondaryLabel: "Open Insights",
-        metricLabel: "In Progress",
+        secondaryLabel: ACTION_LABELS.goToInsights,
+        metricLabel: "Doing",
         metricValue: `${activeCount}`
       },
       {
         id: "inbox",
-        title: "Inbox",
+        title: "협업 triage",
         path: "/app/inbox",
-        primaryLabel: "Open Inbox",
-        secondaryPath: "/app/team",
-        secondaryLabel: "Open Team",
-        metricLabel: "Signals",
-        metricValue: `${inboxCount}`
-      },
-      {
-        id: "dashboard",
-        title: "Dashboard",
-        path: "/app/projects/dashboard",
-        primaryLabel: "Open Dashboard",
-        secondaryPath: "/app/projects/calendar",
-        secondaryLabel: "Open Calendar",
+        primaryLabel: ACTION_LABELS.goToInbox,
+        secondaryPath: "/app/projects/dashboard",
+        secondaryLabel: "대시보드 보기",
         metricLabel: "Review",
         metricValue: `${reviewCount}`
+      },
+      {
+        id: "done",
+        title: "완료된 일",
+        path: "/app/projects/dashboard",
+        primaryLabel: "요약 보기",
+        secondaryPath: "/app/insights",
+        secondaryLabel: "평가 보기",
+        metricLabel: "Done",
+        metricValue: `${doneCount}`
       }
     ];
-  }, [byStatus, items.length]);
-
-  const isFirstSession = useMemo(() => {
-    if (!activationState) {
-      return true;
-    }
-    return activationState.activationStage === "NOT_STARTED" || activationState.activationStage === "FIRST_ACTION_DONE";
-  }, [activationState]);
+  }, [byStatus]);
 
   const dashboardEmptyState = getGuidedEmptyState("DASHBOARD");
+  const primaryAction = activationState?.primaryAction ?? { label: ACTION_LABELS.createFirstTask, path: "/app/projects/board?create=1" };
+  const secondaryActions = activationState?.secondaryActions ?? [];
 
   async function emitActivation(eventType: "ACTIVATION_PRIMARY_CTA_CLICKED" | "EMPTY_STATE_ACTION_CLICKED", metadata?: Record<string, unknown>) {
     if (!activeWorkspaceId) {
@@ -162,16 +145,18 @@ export function OperationsHubPage() {
         <div className="orbit-ops-hub__hero-head">
           <div>
             <p className="orbit-ops-hub__eyebrow">Activation Flow</p>
-            <h2 style={{ marginTop: 0, marginBottom: 8 }}>Set up your first workflow in 60 seconds</h2>
+            <h2 style={{ marginTop: 0, marginBottom: 8 }}>처음이라면 한 가지 행동만 먼저 시작하세요</h2>
             <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>
-              Start with one task, then continue to board, sprint, and AI insights.
+              {activationState?.sessionType === "returning_user"
+                ? activationState.resumeTarget?.reason ?? "이전에 진행하던 작업 흐름을 이어갈 수 있습니다."
+                : "먼저 작업 범위를 정하고, 첫 작업을 만든 뒤 보드에서 실행 흐름을 시작합니다."}
             </p>
           </div>
           <div className="orbit-ops-hub__workspace">
-            <strong>{activeWorkspace?.workspaceName ?? "No workspace selected"}</strong>
-            <span>{activeWorkspace?.role ?? "WORKSPACE_MEMBER"} · Scope ready</span>
+            <strong>{activeWorkspace?.workspaceName ?? "워크스페이스를 선택하세요"}</strong>
+            <span>{roleLabel(activeWorkspace?.role ?? "WORKSPACE_MEMBER")} · {activationState?.sessionType === "returning_user" ? "Resume available" : "First session"}</span>
             <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate("/app/workspace/select")}>
-              Change Workspace
+              워크스페이스 변경
             </button>
           </div>
         </div>
@@ -181,23 +166,28 @@ export function OperationsHubPage() {
             className="orbit-button"
             type="button"
             onClick={() => {
-              emitActivation("ACTIVATION_PRIMARY_CTA_CLICKED", { cta: "create_first_task" }).catch(() => undefined);
-              ensureWorkspaceThenNavigate("/app/projects/board?create=1");
+              emitActivation("ACTIVATION_PRIMARY_CTA_CLICKED", { cta: primaryAction.label }).catch(() => undefined);
+              ensureWorkspaceThenNavigate(primaryAction.path);
             }}
           >
-            Create your first task
+            {primaryAction.label}
           </button>
-          <button
-            className="orbit-button orbit-button--ghost"
-            type="button"
-            onClick={() => {
-              emitActivation("EMPTY_STATE_ACTION_CLICKED", { scope: "DASHBOARD", action: "import_tasks" }).catch(() => undefined);
-              ensureWorkspaceThenNavigate("/app/integrations/import");
-            }}
-          >
-            Import tasks
-          </button>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={() => ensureWorkspaceThenNavigate("/app/team")}>Invite teammate</button>
+          {(secondaryActions.length > 0 ? secondaryActions : [
+            { label: ACTION_LABELS.importTasks, path: "/app/integrations/import" },
+            { label: ACTION_LABELS.inviteTeammate, path: "/app/team" }
+          ]).slice(0, 2).map((action) => (
+            <button
+              key={action.path}
+              className="orbit-button orbit-button--ghost"
+              type="button"
+              onClick={() => {
+                emitActivation("EMPTY_STATE_ACTION_CLICKED", { action: action.label }).catch(() => undefined);
+                ensureWorkspaceThenNavigate(action.path);
+              }}
+            >
+              {action.label}
+            </button>
+          ))}
         </div>
       </article>
 
@@ -206,10 +196,10 @@ export function OperationsHubPage() {
           <ActivationChecklist checklist={activationState.checklist} />
         ) : (
           <EmptyStateCard
-            title="Preparing activation checklist"
-            description="Loading your next-step checklist for this workspace and project."
+            title="다음 행동을 준비하는 중입니다"
+            description="이 워크스페이스와 프로젝트 기준으로 첫 단계 체크리스트를 불러오고 있습니다."
             statusHint={loadingActivation ? "Syncing" : "Ready soon"}
-            actions={[{ label: "Open Board", onClick: () => ensureWorkspaceThenNavigate("/app/projects/board"), variant: "ghost" }]}
+            actions={[{ label: ACTION_LABELS.goToBoard, onClick: () => ensureWorkspaceThenNavigate("/app/projects/board"), variant: "ghost" }]}
           />
         )}
       </div>
@@ -219,6 +209,7 @@ export function OperationsHubPage() {
           <EmptyStateCard
             title={dashboardEmptyState.title}
             description={dashboardEmptyState.description}
+            statusHint="첫 작업이 있어야 전체 흐름이 시작됩니다"
             actions={[
               {
                 label: dashboardEmptyState.primaryAction.label,
@@ -228,13 +219,20 @@ export function OperationsHubPage() {
                 }
               }
             ]}
+            secondaryActions={[
+              {
+                label: ACTION_LABELS.goToSprint,
+                onClick: () => ensureWorkspaceThenNavigate("/app/sprint?mode=planning"),
+                variant: "ghost"
+              }
+            ]}
             learnMoreHref="/app/insights"
-            learnMoreLabel="How AI readiness works"
+            learnMoreLabel="AI 준비 상태 보기"
           />
         </div>
       ) : null}
 
-      {(!isFirstSession || items.length > 0) &&
+      {items.length > 0 &&
         modules.map((module) => (
           <article key={module.id} className="orbit-card orbit-ops-hub__module" style={{ gridColumn: "span 6" }}>
             <div className="orbit-ops-hub__module-head">

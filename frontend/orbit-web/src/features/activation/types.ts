@@ -5,6 +5,7 @@ export type ActivationStage =
   | "COMPLETED";
 
 export type NavigationProfile = "NOVICE" | "ADVANCED";
+export type ActivationSessionType = "first_session" | "returning_user" | "recovery_state";
 
 export type ActivationStepCode =
   | "CREATE_TASK"
@@ -18,6 +19,7 @@ export type ActivationStepStatus = "LOCKED" | "AVAILABLE" | "DONE" | "SKIPPED";
 export interface ActivationActionLink {
   label: string;
   path: string;
+  description?: string;
 }
 
 export interface ActivationStep {
@@ -34,9 +36,18 @@ export interface ActivationState {
   projectId: string;
   userId: string;
   activationStage: ActivationStage;
+  sessionType: ActivationSessionType;
   navigationProfile: NavigationProfile;
   completed: boolean;
   completionReason: string | null;
+  primaryAction: ActivationActionLink | null;
+  secondaryActions: ActivationActionLink[];
+  blockingReason: string | null;
+  resumeTarget: {
+    title: string;
+    path: string;
+    reason: string;
+  } | null;
   checklist: ActivationStep[];
   updatedAt: string;
 }

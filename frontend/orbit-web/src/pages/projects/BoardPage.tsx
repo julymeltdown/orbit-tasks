@@ -225,7 +225,7 @@ function CreateTaskPanel({
         onChange={(event) => onComposerChange("title", event.target.value)}
       />
       <button className="orbit-button orbit-button--ghost" type="button" onClick={onToggleAdvancedFields}>
-        {showAdvancedFields ? "Hide Details" : "Add Details"}
+        {showAdvancedFields ? "상세 입력 닫기" : "상세 입력"}
       </button>
       {showAdvancedFields ? (
         <div className="orbit-board-create-panel__grid">
@@ -236,16 +236,16 @@ function CreateTaskPanel({
             <option value="DONE">Done</option>
           </select>
           <select className="orbit-input" value={composer.type} onChange={(event) => onComposerChange("type", event.target.value)}>
-            <option value="TASK">Task</option>
-            <option value="STORY">Story</option>
-            <option value="BUG">Bug</option>
-            <option value="EPIC">Epic</option>
+            <option value="TASK">작업</option>
+            <option value="STORY">스토리</option>
+            <option value="BUG">버그</option>
+            <option value="EPIC">에픽</option>
           </select>
           <select className="orbit-input" value={composer.priority} onChange={(event) => onComposerChange("priority", event.target.value)}>
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-            <option value="CRITICAL">Critical</option>
+            <option value="LOW">낮음</option>
+            <option value="MEDIUM">보통</option>
+            <option value="HIGH">높음</option>
+            <option value="CRITICAL">치명적</option>
           </select>
           <input className="orbit-input" placeholder="담당자" value={composer.assignee} onChange={(event) => onComposerChange("assignee", event.target.value)} />
           <input className="orbit-input" type="date" value={composer.dueAt} onChange={(event) => onComposerChange("dueAt", event.target.value)} />
@@ -279,9 +279,8 @@ export function BoardPage() {
 
   const [composerOpen, setComposerOpen] = useState(false);
   const [composer, setComposer] = useState<ComposerState>(() => makeComposer());
-  const [showDependencyInspector, setShowDependencyInspector] = useState(false);
+  const [sideMode, setSideMode] = useState<"idle" | "create" | "detail" | "dependency">("idle");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
   const [showAdvancedFields, setShowAdvancedFields] = useState(false);
   const [boardInteractionSent, setBoardInteractionSent] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -333,6 +332,21 @@ export function BoardPage() {
       return true;
     });
   }, [items, projectView.filters.assignee, projectView.filters.query, projectView.filters.status, sprintBacklogMap, sprintOnly]);
+  const blockedCount = useMemo(
+    () => filteredItems.filter((item) => item.status !== "DONE" && item.status !== "ARCHIVED" && Boolean(item.blockedReason?.trim())).length,
+    [filteredItems]
+  );
+  const dueSoonCount = useMemo(() => {
+    const now = Date.now();
+    const threshold = now + 2 * 24 * 60 * 60 * 1000;
+    return filteredItems.filter((item) => {
+      if (!item.dueAt || item.status === "DONE" || item.status === "ARCHIVED") {
+        return false;
+      }
+      const due = new Date(item.dueAt).getTime();
+      return Number.isFinite(due) && due <= threshold;
+    }).length;
+  }, [filteredItems]);
 
   const filteredByStatus = useMemo(() => {
     const grouped: Record<WorkItemStatus, WorkItem[]> = {
@@ -363,7 +377,7 @@ export function BoardPage() {
   useEffect(() => {
     if (selectedItemId && !itemIndex[selectedItemId]) {
       setSelectedItemId(null);
-      setDetailOpen(false);
+      setSideMode("idle");
       setSelectedWorkItem(projectId, null);
     }
   }, [itemIndex, projectId, selectedItemId, setSelectedWorkItem]);
@@ -403,6 +417,7 @@ export function BoardPage() {
 
   function openComposerFor(lane: WorkItemStatus) {
     setComposerOpen(true);
+    setSideMode("create");
     setShowAdvancedFields(false);
     setComposer((previous) => ({
       ...previous,
@@ -418,6 +433,7 @@ export function BoardPage() {
     setComposerOpen(false);
     setShowAdvancedFields(false);
     setComposer(makeComposer());
+    setSideMode(selectedItem ? "detail" : "idle");
   }
 
   function onComposerChange(field: keyof ComposerState, value: string) {
@@ -460,7 +476,7 @@ export function BoardPage() {
       }
 
       setSelectedItemId(created.workItemId);
-      setDetailOpen(true);
+      setSideMode("detail");
       await emitActivationEvent("FIRST_TASK_CREATED", {
         workItemId: created.workItemId,
         status: composer.status
@@ -574,7 +590,7 @@ export function BoardPage() {
   function openDetails(workItemId: string) {
     setSelectedItemId(workItemId);
     setSelectedWorkItem(projectId, workItemId);
-    setDetailOpen(true);
+    setSideMode("detail");
     if (!boardInteractionSent) {
       setBoardInteractionSent(true);
       emitActivationEvent("BOARD_FIRST_INTERACTION", { mode: "open_detail", workItemId }).catch(() => undefined);
@@ -585,9 +601,30 @@ export function BoardPage() {
     <section className="orbit-notion-layout">
       <ProjectViewTabs />
       <ProjectFilterBar title="작업 보드" />
+      <section className="orbit-board-focus-strip">
+        <article className="orbit-board-focus-strip__metric">
+          <strong>현재 scope</strong>
+          <span>{sprintOnly && activeSprint ? `${activeSprint.name}만 보기` : "프로젝트 전체 보기"}</span>
+        </article>
+        <article className="orbit-board-focus-strip__metric">
+          <strong>가시 작업</strong>
+          <span>{filteredItems.length}개</span>
+        </article>
+        <article className="orbit-board-focus-strip__metric">
+          <strong>긴급 차단</strong>
+          <span>{blockedCount}개</span>
+        </article>
+        <article className="orbit-board-focus-strip__metric">
+          <strong>기한 임박</strong>
+          <span>{dueSoonCount}개</span>
+        </article>
+      </section>
       <section className="orbit-notion-toolbar">
         <div className="orbit-notion-toolbar__head">
-          <h2 style={{ margin: 0 }}>실행 작업</h2>
+          <div className="orbit-notion-toolbar__summary">
+            <h2 style={{ margin: 0 }}>오늘 처리할 실행 작업</h2>
+            <p style={{ margin: 0 }}>상태 이동은 보드에서, 세부 결정은 오른쪽 컨텍스트 패널에서 처리합니다.</p>
+          </div>
           <div className="orbit-notion-toolbar__actions">
             <button className="orbit-button" type="button" onClick={() => openComposerFor("TODO")}>
               + 새 작업
@@ -718,7 +755,7 @@ export function BoardPage() {
 
         <aside className="orbit-board-side">
           <CreateTaskPanel
-            open={composerOpen}
+            open={composerOpen && sideMode === "create"}
             composer={composer}
             showAdvancedFields={showAdvancedFields}
             onComposerChange={onComposerChange}
@@ -727,48 +764,54 @@ export function BoardPage() {
             onClose={closeComposer}
           />
 
-          {detailOpen && selectedItem ? (
+          {sideMode !== "create" && selectedItem ? (
             <>
               <div className="orbit-board-side__toolbar">
-                <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setShowDependencyInspector((value) => !value)}>
-                  {showDependencyInspector ? "의존성 닫기" : "의존성 보기"}
+                <button
+                  className="orbit-button orbit-button--ghost"
+                  type="button"
+                  onClick={() => setSideMode((current) => (current === "dependency" ? "detail" : "dependency"))}
+                >
+                  {sideMode === "dependency" ? "상세 보기" : "의존성 보기"}
                 </button>
               </div>
-              <WorkItemDetailPanel
-                item={selectedItem}
-                sprintLabel={activeSprint?.name ?? null}
-                sprintStateLabel={
-                  activeSprint
-                    ? `${activeSprint.startDate} ~ ${activeSprint.endDate}`
-                    : null
-                }
-                canAddToSprint={!sprintBacklogMap.has(selectedItem.workItemId)}
-                sprintLoading={sprintLoading}
-                onAddToSprint={() => addItemToSprint(selectedItem.workItemId)}
-                onClose={() => setDetailOpen(false)}
-                onArchive={() => archiveItem(selectedItem.workItemId)}
-                onUpdateStatus={(status) => updateStatus(selectedItem.workItemId, status)}
-                onPatch={(patch) => updateItem(selectedItem.workItemId, patch)}
-                onLoadActivity={loadActivity}
-              />
+              {sideMode === "dependency" ? (
+                <DependencyInspectorPanel
+                  open
+                  selectedWorkItemId={selectedItemId}
+                  items={items}
+                  edges={dependencyGraph.edges}
+                  onClose={() => setSideMode("detail")}
+                  onAddDependency={onAddDependency}
+                />
+              ) : (
+                <WorkItemDetailPanel
+                  item={selectedItem}
+                  sprintLabel={activeSprint?.name ?? null}
+                  sprintStateLabel={
+                    activeSprint
+                      ? `${activeSprint.startDate} ~ ${activeSprint.endDate}`
+                      : null
+                  }
+                  canAddToSprint={!sprintBacklogMap.has(selectedItem.workItemId)}
+                  sprintLoading={sprintLoading}
+                  onAddToSprint={() => addItemToSprint(selectedItem.workItemId)}
+                  onClose={() => setSideMode("idle")}
+                  onArchive={() => archiveItem(selectedItem.workItemId)}
+                  onUpdateStatus={(status) => updateStatus(selectedItem.workItemId, status)}
+                  onPatch={(patch) => updateItem(selectedItem.workItemId, patch)}
+                  onLoadActivity={loadActivity}
+                />
+              )}
             </>
-          ) : !composerOpen ? (
+          ) : sideMode !== "create" ? (
             <article className="orbit-board-side__placeholder">
-              <h3 style={{ margin: 0 }}>카드를 선택하세요</h3>
+              <h3 style={{ margin: 0 }}>작업을 선택하거나 새로 만드세요</h3>
               <p style={{ margin: 0 }}>
-                카드 상세와 의존성 관리는 오른쪽 패널에서 처리됩니다.
+                왼쪽 보드에서는 상태를 움직이고, 오른쪽에서는 세부 결정과 의존성 점검을 처리합니다.
               </p>
             </article>
           ) : null}
-
-          <DependencyInspectorPanel
-            open={showDependencyInspector}
-            selectedWorkItemId={selectedItemId}
-            items={items}
-            edges={dependencyGraph.edges}
-            onClose={() => setShowDependencyInspector(false)}
-            onAddDependency={onAddDependency}
-          />
         </aside>
       </div>
 

@@ -41,32 +41,22 @@ export function CalendarPage() {
     });
   }, [items, context.filters.assignee, context.filters.query, context.filters.status]);
 
-  const events = useMemo<EventInput[]>(() => {
-    return filtered.flatMap((item) => {
-      const dueDate = dateOnly(item.dueAt);
-      if (!dueDate) {
-        return [];
-      }
-      const sanitizedTitle = displayWorkItemTitle(item.title);
-      return [
-        {
-          id: item.workItemId,
-          title: sanitizedTitle,
-          start: dueDate,
-          allDay: true,
-          classNames: ["orbit-fc-event", `orbit-fc-event--${item.status.toLowerCase()}`],
-          extendedProps: {
-            assignee: item.assignee ?? "unassigned",
-            status: item.status
-          }
-        }
-      ];
-    });
-  }, [filtered]);
+  const scheduledItems = useMemo(() => filtered.filter((item) => dateOnly(item.dueAt)), [filtered]);
+  const unscheduledItems = useMemo(() => filtered.filter((item) => !dateOnly(item.dueAt)), [filtered]);
 
-  const unscheduledItems = useMemo(() => {
-    return filtered.filter((item) => !dateOnly(item.dueAt));
-  }, [filtered]);
+  const events = useMemo<EventInput[]>(() => {
+    return scheduledItems.map((item) => ({
+      id: item.workItemId,
+      title: displayWorkItemTitle(item.title),
+      start: dateOnly(item.dueAt),
+      allDay: true,
+      classNames: ["orbit-fc-event", `orbit-fc-event--${item.status.toLowerCase()}`],
+      extendedProps: {
+        assignee: item.assignee ?? "unassigned",
+        status: item.status
+      }
+    }));
+  }, [scheduledItems]);
 
   const selectedItem = useMemo(() => {
     if (!context.selectedWorkItemId) {
@@ -78,8 +68,24 @@ export function CalendarPage() {
   return (
     <section className="orbit-calendar-layout">
       <ProjectViewTabs />
-      <ProjectFilterBar title="Calendar View" subtitle="Deadlines and unscheduled items from the same work-item dataset." />
-      {loading ? <p>Loading calendar...</p> : null}
+      <ProjectFilterBar title="캘린더" subtitle="기한이 있는 작업은 달력에, 미배치 작업은 아래 리스트에서 바로 날짜를 잡습니다." />
+
+      <section className="orbit-board-focus-strip">
+        <article className="orbit-board-focus-strip__metric">
+          <strong>달력 배치</strong>
+          <span>{scheduledItems.length}개</span>
+        </article>
+        <article className="orbit-board-focus-strip__metric">
+          <strong>미배치</strong>
+          <span>{unscheduledItems.length}개</span>
+        </article>
+        <article className="orbit-board-focus-strip__metric">
+          <strong>선택 작업</strong>
+          <span>{selectedItem ? displayWorkItemTitle(selectedItem.title) : "없음"}</span>
+        </article>
+      </section>
+
+      {loading ? <p>캘린더를 불러오는 중...</p> : null}
       {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
 
       <section className="orbit-calendar-surface">
@@ -100,6 +106,11 @@ export function CalendarPage() {
               arg.revert();
             });
           }}
+          dateClick={(arg) => {
+            if (selectedItem) {
+              updateItem(selectedItem.workItemId, { dueAt: arg.dateStr }).catch(() => undefined);
+            }
+          }}
           headerToolbar={{
             left: "prev,next today",
             center: "title",
@@ -115,29 +126,43 @@ export function CalendarPage() {
             <strong>{displayWorkItemTitle(selectedItem.title)}</strong>
           </div>
           <div className="orbit-calendar-selected__meta">
-            <span>{selectedItem.assignee || "unassigned"}</span>
-            <span>{selectedItem.dueAt ? new Date(selectedItem.dueAt).toLocaleDateString() : "No due date"}</span>
+            <span>{selectedItem.assignee || "담당자 미지정"}</span>
             <span>{selectedItem.type}</span>
+            <span>{selectedItem.dueAt ? new Date(selectedItem.dueAt).toLocaleDateString() : "기한 없음"}</span>
+          </div>
+          <div className="orbit-timeline-row__controls">
+            <input
+              className="orbit-input"
+              type="date"
+              value={selectedItem.dueAt ? new Date(selectedItem.dueAt).toISOString().slice(0, 10) : ""}
+              onChange={(event) => updateItem(selectedItem.workItemId, { dueAt: event.target.value || null }).catch(() => undefined)}
+            />
+            <input
+              className="orbit-input"
+              value={selectedItem.assignee ?? ""}
+              placeholder="담당자"
+              onChange={(event) => updateItem(selectedItem.workItemId, { assignee: event.target.value || null }).catch(() => undefined)}
+            />
           </div>
         </section>
       ) : null}
 
       <section className="orbit-calendar-unscheduled">
         <div className="orbit-calendar-unscheduled__head">
-          <strong>Unscheduled</strong>
+          <strong>미배치 작업</strong>
           <span>{unscheduledItems.length}</span>
         </div>
         <div className="orbit-calendar-unscheduled__list">
           {unscheduledItems.map((item) => (
-            <button
-              key={item.workItemId}
-              type="button"
-              className="orbit-calendar-unscheduled__item orbit-animate-row"
-              onClick={() => setSelectedWorkItem(projectId, item.workItemId)}
-            >
+            <article key={item.workItemId} className="orbit-calendar-unscheduled__item orbit-animate-row">
               <div style={{ display: "grid", gap: 4 }}>
                 <strong>{displayWorkItemTitle(item.title)}</strong>
-                <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{item.assignee || "unassigned"}</span>
+                <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{item.assignee || "담당자 미지정"}</span>
+              </div>
+              <div className="orbit-thread-panel__context-actions">
+                <button className="orbit-button orbit-button--ghost" type="button" onClick={() => setSelectedWorkItem(projectId, item.workItemId)}>
+                  선택
+                </button>
                 <input
                   className="orbit-input"
                   type="date"
@@ -145,17 +170,16 @@ export function CalendarPage() {
                   onChange={(event) => updateItem(item.workItemId, { dueAt: event.target.value || null }).catch(() => undefined)}
                 />
               </div>
-              <span className="orbit-notion-pill">{item.status}</span>
-            </button>
+            </article>
           ))}
           {unscheduledItems.length === 0 ? (
-            <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>Every visible item is scheduled on the calendar.</p>
+            <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>현재 보이는 작업은 모두 달력에 배치되어 있습니다.</p>
           ) : null}
         </div>
       </section>
 
       {!loading && !error && filtered.length === 0 ? (
-        <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No items for the current filter.</p>
+        <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>현재 필터에는 작업이 없습니다.</p>
       ) : null}
     </section>
   );

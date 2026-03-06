@@ -15,7 +15,8 @@ describe("CalendarPage", () => {
 
   it("keeps unscheduled work items visible outside the calendar grid", () => {
     const source = readFileSync(path.resolve(testDir, "./CalendarPage.tsx"), "utf8");
-    expect(source).toContain("Unscheduled");
+    expect(source).toContain("미배치 작업");
     expect(source).toContain("unscheduledItems");
+    expect(source).toContain("selectedItem");
   });
 });

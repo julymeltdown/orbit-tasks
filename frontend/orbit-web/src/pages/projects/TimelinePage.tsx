@@ -46,46 +46,87 @@ export function TimelinePage() {
     });
   }, [items, viewContext.filters.assignee, viewContext.filters.query, viewContext.filters.status]);
 
+  const scheduledItems = useMemo(() => filteredItems.filter((item) => item.startAt || item.dueAt), [filteredItems]);
+  const unscheduledItems = useMemo(() => filteredItems.filter((item) => !item.startAt && !item.dueAt), [filteredItems]);
+
   const bounds = useMemo(() => {
-    if (filteredItems.length === 0) {
+    if (scheduledItems.length === 0) {
       const today = new Date();
       return { min: today, max: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) };
     }
 
-    const starts = filteredItems.map((item) => toDate(item.startAt) ?? new Date(item.createdAt));
-    const ends = filteredItems.map((item) => toDate(item.dueAt) ?? new Date(item.createdAt));
+    const starts = scheduledItems.map((item) => toDate(item.startAt) ?? new Date(item.createdAt));
+    const ends = scheduledItems.map((item) => toDate(item.dueAt) ?? new Date(item.createdAt));
     const min = new Date(Math.min(...starts.map((date) => date.getTime())));
     const max = new Date(Math.max(...ends.map((date) => date.getTime())));
     return { min, max };
-  }, [filteredItems]);
+  }, [scheduledItems]);
 
   const totalDays = Math.max(1, diffDays(bounds.min, bounds.max));
 
   return (
-    <section style={{ display: "grid", gap: 14 }}>
+    <section className="orbit-timeline-layout">
       <ProjectViewTabs />
-      <ProjectFilterBar title="Timeline View" subtitle="Dependency-aware scheduling and date-range operations." />
-      <article className="orbit-card" style={{ padding: 20 }}>
-        <h2 style={{ marginTop: 0 }}>Timeline</h2>
-        {loading ? <p>Loading timeline...</p> : null}
-        {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
-      </article>
+      <ProjectFilterBar title="일정 타임라인" subtitle="같은 작업 집합을 날짜 계획 관점에서 검토하고 조정합니다." />
 
-      <article className="orbit-card orbit-timeline-scroll-shell" style={{ padding: 14, overflowX: "auto" }}>
-        <div style={{ minWidth: "max(100%, 56rem)", display: "grid", gap: 8 }}>
-          {filteredItems.map((item) => {
+      <section className="orbit-board-focus-strip">
+        <article className="orbit-board-focus-strip__metric">
+          <strong>배치된 작업</strong>
+          <span>{scheduledItems.length}개</span>
+        </article>
+        <article className="orbit-board-focus-strip__metric">
+          <strong>미배치 작업</strong>
+          <span>{unscheduledItems.length}개</span>
+        </article>
+        <article className="orbit-board-focus-strip__metric">
+          <strong>계획 범위</strong>
+          <span>{bounds.min.toLocaleDateString()} ~ {bounds.max.toLocaleDateString()}</span>
+        </article>
+      </section>
+
+      <section className="orbit-timeline-shell">
+        <header className="orbit-timeline-shell__header">
+          <div>
+            <h2 style={{ margin: 0 }}>날짜와 상태를 함께 보는 계획 화면</h2>
+            <p className="orbit-timeline-shell__summary">작업마다 시작일과 기한을 조정하고, 범위를 벗어난 미배치 항목을 바로 확인할 수 있습니다.</p>
+          </div>
+        </header>
+
+        {loading ? <p>타임라인을 불러오는 중...</p> : null}
+        {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
+
+        <section className="orbit-timeline-list">
+          {scheduledItems.map((item) => {
             const start = toDate(item.startAt) ?? new Date(item.createdAt);
             const end = toDate(item.dueAt) ?? new Date(start.getTime() + 2 * 24 * 60 * 60 * 1000);
-            const left = ((start.getTime() - bounds.min.getTime()) / (bounds.max.getTime() - bounds.min.getTime() || 1)) * 100;
-            const width = (diffDays(start, end) / totalDays) * 100;
+            const spanStart = bounds.max.getTime() === bounds.min.getTime() ? 0 : ((start.getTime() - bounds.min.getTime()) / (bounds.max.getTime() - bounds.min.getTime())) * 100;
+            const spanWidth = (diffDays(start, end) / totalDays) * 100;
+
             return (
-              <div key={item.workItemId} className="orbit-panel orbit-animate-card" style={{ padding: 10, display: "grid", gap: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <article key={item.workItemId} className="orbit-timeline-row orbit-animate-row">
+                <div className="orbit-timeline-row__summary">
                   <strong>{displayWorkItemTitle(item.title)}</strong>
+                  <div className="orbit-timeline-row__meta">
+                    <span>{item.assignee || "담당자 미지정"}</span>
+                    <span>{item.startAt ? new Date(item.startAt).toLocaleDateString() : "시작일 없음"}</span>
+                    <span>{item.dueAt ? new Date(item.dueAt).toLocaleDateString() : "기한 없음"}</span>
+                  </div>
+                </div>
+                <div className="orbit-timeline-row__track">
+                  <div className="orbit-timeline-row__track-line">
+                    <div
+                      className="orbit-timeline-row__track-span"
+                      style={{
+                        left: `${Math.max(0, spanStart)}%`,
+                        width: `${Math.max(7, spanWidth)}%`
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="orbit-timeline-row__controls">
                   <select
                     className="orbit-input"
                     value={item.status}
-                    style={{ width: "10.5rem" }}
                     onChange={(event) => updateStatus(item.workItemId, event.target.value as WorkItemStatus)}
                   >
                     {STATUS_STEPS.map((status) => (
@@ -94,48 +135,58 @@ export function TimelinePage() {
                       </option>
                     ))}
                   </select>
+                  <input
+                    className="orbit-input"
+                    type="date"
+                    value={item.startAt ? new Date(item.startAt).toISOString().slice(0, 10) : ""}
+                    onChange={(event) => updateItem(item.workItemId, { startAt: event.target.value || null }).catch(() => undefined)}
+                  />
+                  <input
+                    className="orbit-input"
+                    type="date"
+                    value={item.dueAt ? new Date(item.dueAt).toISOString().slice(0, 10) : ""}
+                    onChange={(event) => updateItem(item.workItemId, { dueAt: event.target.value || null }).catch(() => undefined)}
+                  />
                 </div>
-                <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>
-                  {start.toLocaleDateString()} → {end.toLocaleDateString()} · {item.assignee || "unassigned"}
+              </article>
+            );
+          })}
+          {!loading && scheduledItems.length === 0 ? (
+            <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>현재 필터에서는 날짜가 배치된 작업이 없습니다.</p>
+          ) : null}
+        </section>
+
+        <section className="orbit-timeline-unscheduled">
+          <div className="orbit-calendar-unscheduled__head">
+            <strong>미배치 작업</strong>
+            <span>{unscheduledItems.length}</span>
+          </div>
+          <div className="orbit-calendar-unscheduled__list">
+            {unscheduledItems.map((item) => (
+              <div key={item.workItemId} className="orbit-calendar-unscheduled__item">
+                <div style={{ display: "grid", gap: 4 }}>
+                  <strong>{displayWorkItemTitle(item.title)}</strong>
+                  <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{item.assignee || "담당자 미지정"}</span>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
-                  <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
-                    Start
-                    <input
-                      className="orbit-input"
-                      type="date"
-                      value={item.startAt ? new Date(item.startAt).toISOString().slice(0, 10) : ""}
-                      onChange={(event) => updateItem(item.workItemId, { startAt: event.target.value || null }).catch(() => undefined)}
-                    />
-                  </label>
-                  <label style={{ display: "grid", gap: 4, fontSize: 12 }}>
-                    Due
-                    <input
-                      className="orbit-input"
-                      type="date"
-                      value={item.dueAt ? new Date(item.dueAt).toISOString().slice(0, 10) : ""}
-                      onChange={(event) => updateItem(item.workItemId, { dueAt: event.target.value || null }).catch(() => undefined)}
-                    />
-                  </label>
-                </div>
-                <div style={{ position: "relative", height: 12, border: "1px solid var(--orbit-border)", background: "var(--orbit-surface-1)" }}>
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      bottom: 0,
-                      left: `${Math.max(0, left)}%`,
-                      width: `${Math.max(6, width)}%`,
-                      background: "var(--orbit-accent)"
-                    }}
+                <div className="orbit-timeline-row__controls">
+                  <input
+                    className="orbit-input"
+                    type="date"
+                    value={item.startAt ? new Date(item.startAt).toISOString().slice(0, 10) : ""}
+                    onChange={(event) => updateItem(item.workItemId, { startAt: event.target.value || null }).catch(() => undefined)}
+                  />
+                  <input
+                    className="orbit-input"
+                    type="date"
+                    value={item.dueAt ? new Date(item.dueAt).toISOString().slice(0, 10) : ""}
+                    onChange={(event) => updateItem(item.workItemId, { dueAt: event.target.value || null }).catch(() => undefined)}
                   />
                 </div>
               </div>
-            );
-          })}
-          {filteredItems.length === 0 ? <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>No items to display yet.</p> : null}
-        </div>
-      </article>
+            ))}
+          </div>
+        </section>
+      </section>
     </section>
   );
 }

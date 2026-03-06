@@ -13,9 +13,10 @@ describe("BoardPage", () => {
     expect(source).toContain("ArrowRight");
   });
 
-  it("renders dependency inspector panel in board layout", () => {
+  it("uses a single side-mode rail for create, detail, and dependency contexts", () => {
     const source = readFileSync(path.resolve(testDir, "./BoardPage.tsx"), "utf8");
+    expect(source).toContain("sideMode");
     expect(source).toContain("DependencyInspectorPanel");
-    expect(source).toContain("showDependencyInspector");
+    expect(source).toContain("orbit-board-focus-strip");
   });
 });

@@ -2,13 +2,11 @@ import { describe, expect, it } from "vitest";
 import { isProfileComplete } from "@/lib/auth/profileCompletion";
 
 describe("isProfileComplete", () => {
-  it("returns true when username/nickname/avatar/bio are all filled", () => {
+  it("returns true when username and nickname are filled", () => {
     expect(
       isProfileComplete({
         username: "orbit_user",
-        nickname: "Orbit User",
-        avatarUrl: "https://example.com/avatar.png",
-        bio: "I ship schedules."
+        nickname: "Orbit User"
       })
     ).toBe(true);
   });
@@ -17,11 +15,8 @@ describe("isProfileComplete", () => {
     expect(
       isProfileComplete({
         username: "orbit_user",
-        nickname: "",
-        avatarUrl: "https://example.com/avatar.png",
-        bio: "I ship schedules."
+        nickname: ""
       })
     ).toBe(false);
   });
 });
-

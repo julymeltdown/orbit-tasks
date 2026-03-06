@@ -26,17 +26,17 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
   const statusOptions = useMemo(
     () => [
       { value: "ALL", label: "전체 상태" },
-      { value: "TODO", label: "Backlog" },
-      { value: "IN_PROGRESS", label: "In Progress" },
-      { value: "REVIEW", label: "Review" },
-      { value: "DONE", label: "Done" },
-      { value: "ARCHIVED", label: "Archived" }
+      { value: "TODO", label: "백로그" },
+      { value: "IN_PROGRESS", label: "진행 중" },
+      { value: "REVIEW", label: "검토" },
+      { value: "DONE", label: "완료" },
+      { value: "ARCHIVED", label: "보관됨" }
     ],
     []
   );
 
   return (
-    <section className="orbit-project-filterbar" aria-label="Task filters">
+    <section className="orbit-project-filterbar" aria-label="작업 필터">
       <div className="orbit-project-filterbar__copy">
         <h2 className="orbit-project-filterbar__title">{title}</h2>
         {subtitle ? <p className="orbit-project-filterbar__subtitle">{subtitle}</p> : null}
@@ -91,7 +91,7 @@ export function ProjectFilterBar({ title, subtitle }: Props) {
         <div className="orbit-project-filterbar__advanced">
           <input
             className="orbit-input"
-            placeholder="담당자"
+            placeholder="담당자 이름"
             value={context.filters.assignee}
             onChange={(event) => setFilter(projectId, "assignee", event.target.value)}
           />

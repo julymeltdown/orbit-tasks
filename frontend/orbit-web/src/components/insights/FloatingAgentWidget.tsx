@@ -79,7 +79,7 @@ export function FloatingAgentWidget() {
 
   async function runAssistant() {
     if (!workspaceId) {
-      setError("Select workspace first");
+      setError("워크스페이스를 먼저 선택하세요.");
       return;
     }
     if (!draft.trim()) {
@@ -118,12 +118,12 @@ export function FloatingAgentWidget() {
         role: "assistant",
         text: firstRisk
           ? `[${result.health.toUpperCase()}] ${firstRisk.summary}\n권고: ${firstRisk.recommendedActions.join(" / ")}`
-          : `[${result.health.toUpperCase()}] 리스크 없음`
+          : `[${result.health.toUpperCase()}] 현재 주요 리스크 없음`
       };
       setMessages((prev) => [...prev, assistantMessage]);
       setDraft("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Assistant request failed");
+      setError(e instanceof Error ? e.message : "코치 요청을 처리하지 못했습니다.");
     } finally {
       setLoading(false);
     }
@@ -137,10 +137,10 @@ export function FloatingAgentWidget() {
       await submitAction({
         evaluationId: evaluation.evaluationId,
         action: "accept",
-        note: "Accepted from floating agent"
+        note: "Floating agent에서 상단 권고 수락"
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save action");
+      setError(e instanceof Error ? e.message : "권고 수락을 저장하지 못했습니다.");
     }
   }
 
@@ -149,16 +149,16 @@ export function FloatingAgentWidget() {
       {open ? (
         <section className="orbit-ai-widget__panel orbit-animate-card" ref={panelRef as any}>
           <header className="orbit-ai-widget__header">
-            <strong>Orbit Agent</strong>
+            <strong>AI 코치</strong>
             <button className="orbit-button orbit-button--ghost" type="button" onClick={toggle}>
-              Minimize
+              접기
             </button>
           </header>
 
           <div className="orbit-ai-widget__messages">
             {messages.length === 0 ? (
               <p style={{ margin: 0, color: "var(--orbit-text-subtle)" }}>
-                일정, 스프린트, 블로커에 대해 물어보면 즉시 진단합니다.
+                현재 컨텍스트 기준으로 일정, 스프린트, 블로커를 진단합니다.
               </p>
             ) : null}
             {messages.map((message) => (
@@ -169,14 +169,14 @@ export function FloatingAgentWidget() {
           </div>
 
           {evaluation ? (
-            <div className="orbit-panel" style={{ padding: 10 }}>
+            <div className="orbit-ai-widget__status">
               <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)", marginBottom: 6 }}>
                 {guidanceStatus.stateLabel} · {guidanceStatus.reasonLabel} · {guidanceStatus.confidenceLabel} ·{" "}
-                {selectedWorkItemId ? "work item context" : "project context"}
+                {selectedWorkItemId ? "선택 작업 기준" : "프로젝트 기준"}
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button className="orbit-button orbit-button--ghost" type="button" onClick={acceptTopRisk} disabled={!guidanceStatus.canApplyAction}>
-                  Accept Top Action
+                  상단 권고 적용
                 </button>
               </div>
             </div>
@@ -192,13 +192,13 @@ export function FloatingAgentWidget() {
               placeholder={draftPlaceholder}
             />
             <button className="orbit-button" type="button" onClick={runAssistant} disabled={loading}>
-              {loading ? "..." : "Send"}
+              {loading ? "..." : "실행"}
             </button>
           </div>
         </section>
       ) : null}
 
-      <button className="orbit-ai-widget__trigger orbit-animate-card" type="button" onClick={toggle} aria-label="Toggle orbit agent">
+      <button className="orbit-ai-widget__trigger orbit-animate-card" type="button" onClick={toggle} aria-label="AI 코치 열기">
         AI
         {unreadHints > 0 ? <span className="orbit-ai-widget__badge">{unreadHints}</span> : null}
       </button>

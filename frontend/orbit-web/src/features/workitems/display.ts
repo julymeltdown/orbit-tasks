@@ -7,8 +7,8 @@ export function maskUuidTokens(value: string): string {
 export function displayWorkItemTitle(rawTitle: string | null | undefined): string {
   const normalized = (rawTitle ?? "").trim();
   if (!normalized) {
-    return "Untitled Task";
+    return "제목 없는 작업";
   }
   const masked = maskUuidTokens(normalized);
-  return masked.length > 0 ? masked : "Untitled Task";
+  return masked.length > 0 ? masked : "제목 없는 작업";
 }

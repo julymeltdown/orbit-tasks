@@ -46,9 +46,18 @@ export function TablePage() {
     });
   }, [drilldownMetric, items, viewContext.filters.assignee, viewContext.filters.query, viewContext.filters.status]);
 
+  const blockedCount = useMemo(
+    () => visible.filter((item) => item.status !== "DONE" && item.status !== "ARCHIVED" && Boolean(item.blockedReason?.trim())).length,
+    [visible]
+  );
+  const overdueCount = useMemo(() => {
+    const now = Date.now();
+    return visible.filter((item) => item.dueAt && item.status !== "DONE" && new Date(item.dueAt).getTime() < now).length;
+  }, [visible]);
+
   async function onCreate() {
     if (!title.trim()) {
-      setLocalError("Title is required");
+      setLocalError("제목을 입력하세요.");
       return;
     }
     setLocalError(null);
@@ -61,14 +70,30 @@ export function TablePage() {
       });
       setTitle("");
     } catch (e) {
-      setLocalError(e instanceof Error ? e.message : "Create failed");
+      setLocalError(e instanceof Error ? e.message : "작업을 만들지 못했습니다.");
     }
   }
 
   return (
     <section className="orbit-table-layout">
       <ProjectViewTabs />
-      <ProjectFilterBar title="작업 테이블" subtitle="여러 작업을 비교·정리·수정하는 검토용 화면입니다." />
+      <ProjectFilterBar title="작업 테이블" subtitle="여러 작업을 한눈에 비교하고 상태, 담당자, 기한을 빠르게 정리합니다." />
+
+      <section className="orbit-board-focus-strip">
+        <article className="orbit-board-focus-strip__metric">
+          <strong>가시 작업</strong>
+          <span>{visible.length}개</span>
+        </article>
+        <article className="orbit-board-focus-strip__metric">
+          <strong>차단</strong>
+          <span>{blockedCount}개</span>
+        </article>
+        <article className="orbit-board-focus-strip__metric">
+          <strong>기한 초과</strong>
+          <span>{overdueCount}개</span>
+        </article>
+      </section>
+
       {drilldownMetric ? (
         <section className="orbit-sprint-inline-note">
           <strong>현재 drilldown</strong>
@@ -89,31 +114,31 @@ export function TablePage() {
           </div>
         </section>
       ) : null}
-      <section className="orbit-table-operations">
-        <h2 style={{ marginTop: 0 }}>Table Operations</h2>
 
+      <section className="orbit-table-operations">
+        <h2 style={{ marginTop: 0 }}>빠른 추가와 일괄 검토</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))", gap: 8 }}>
-          <input className="orbit-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="New work item title" />
-          <input className="orbit-input" value={assignee} onChange={(event) => setAssignee(event.target.value)} placeholder="Assignee" />
+          <input className="orbit-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="새 작업 제목" />
+          <input className="orbit-input" value={assignee} onChange={(event) => setAssignee(event.target.value)} placeholder="담당자" />
           <select className="orbit-input" value={type} onChange={(event) => setType(event.target.value as WorkItemType)}>
-            <option value="TASK">Task</option>
-            <option value="STORY">Story</option>
-            <option value="BUG">Bug</option>
-            <option value="EPIC">Epic</option>
+            <option value="TASK">작업</option>
+            <option value="STORY">스토리</option>
+            <option value="BUG">버그</option>
+            <option value="EPIC">에픽</option>
           </select>
           <button className="orbit-button" type="button" onClick={onCreate}>
-            Create
+            작업 추가
           </button>
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <select
             className="orbit-input"
             style={{ maxWidth: "14rem" }}
             value={viewContext.filters.status}
             onChange={(event) => setFilter(projectId, "status", event.target.value as WorkItemStatus | "ALL")}
           >
-            <option value="ALL">All status</option>
+            <option value="ALL">전체 상태</option>
             {STATUS_OPTIONS.map((status) => (
               <option key={status} value={status}>
                 {status}
@@ -122,7 +147,7 @@ export function TablePage() {
           </select>
         </div>
 
-        {loading ? <p>Loading work items...</p> : null}
+        {loading ? <p>작업을 불러오는 중...</p> : null}
         {error ? <p style={{ color: "var(--orbit-danger)" }}>{error}</p> : null}
         {mutation.error ? <p style={{ color: "var(--orbit-danger)" }}>{mutation.error}</p> : null}
         {localError ? <p style={{ color: "var(--orbit-danger)" }}>{localError}</p> : null}
@@ -133,12 +158,12 @@ export function TablePage() {
           <table style={{ width: "100%", minWidth: "max(100%, 54rem)", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr>
-                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>Title</th>
-                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>Type</th>
-                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>Status</th>
-                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>Assignee</th>
-                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>Due</th>
-                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>Actions</th>
+                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>제목</th>
+                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>유형</th>
+                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>상태</th>
+                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>담당자</th>
+                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>기한</th>
+                <th style={{ textAlign: "left", borderBottom: "1px solid var(--orbit-border)", paddingBottom: 8 }}>동작</th>
               </tr>
             </thead>
             <tbody>
@@ -158,12 +183,12 @@ export function TablePage() {
                     <select
                       className="orbit-input"
                       value={item.type}
-                      onChange={(event) => updateItem(item.workItemId, { type: event.target.value as WorkItemType })}
+                      onChange={(event) => updateItem(item.workItemId, { type: event.target.value as WorkItemType }).catch(() => undefined)}
                     >
-                      <option value="TASK">Task</option>
-                      <option value="STORY">Story</option>
-                      <option value="BUG">Bug</option>
-                      <option value="EPIC">Epic</option>
+                      <option value="TASK">작업</option>
+                      <option value="STORY">스토리</option>
+                      <option value="BUG">버그</option>
+                      <option value="EPIC">에픽</option>
                     </select>
                   </td>
                   <td>
@@ -171,7 +196,7 @@ export function TablePage() {
                       className="orbit-input"
                       style={{ width: "10.5rem", minWidth: "10.5rem" }}
                       value={item.status}
-                      onChange={(event) => updateStatus(item.workItemId, event.target.value as WorkItemStatus)}
+                      onChange={(event) => updateStatus(item.workItemId, event.target.value as WorkItemStatus).catch(() => undefined)}
                     >
                       {STATUS_OPTIONS.map((status) => (
                         <option key={status} value={status}>
@@ -184,7 +209,7 @@ export function TablePage() {
                     <input
                       className="orbit-input"
                       value={item.assignee ?? ""}
-                      placeholder="Assignee"
+                      placeholder="담당자"
                       onChange={(event) => {
                         const next = event.target.value.trim();
                         updateItem(item.workItemId, { assignee: next.length > 0 ? next : null }).catch(() => undefined);
@@ -201,11 +226,11 @@ export function TablePage() {
                   </td>
                   <td>
                     {item.status !== "ARCHIVED" ? (
-                      <button className="orbit-button orbit-button--ghost" type="button" onClick={() => archiveItem(item.workItemId)}>
-                        Archive
+                      <button className="orbit-button orbit-button--ghost" type="button" onClick={() => archiveItem(item.workItemId).catch(() => undefined)}>
+                        보관
                       </button>
                     ) : (
-                      <span style={{ color: "var(--orbit-text-subtle)", fontSize: 12 }}>Archived</span>
+                      <span style={{ color: "var(--orbit-text-subtle)", fontSize: 12 }}>보관됨</span>
                     )}
                   </td>
                 </tr>
@@ -213,7 +238,7 @@ export function TablePage() {
               {visible.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ paddingTop: 14, color: "var(--orbit-text-subtle)" }}>
-                    No work items for this filter.
+                    현재 필터에 맞는 작업이 없습니다.
                   </td>
                 </tr>
               ) : null}

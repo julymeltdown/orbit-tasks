@@ -25,7 +25,7 @@ export function EmptyStateCard({
   actions = [],
   secondaryActions = [],
   learnMoreHref,
-  learnMoreLabel = "Learn more"
+  learnMoreLabel = "자세히 보기"
 }: Props) {
   return (
     <article className="orbit-empty-state">

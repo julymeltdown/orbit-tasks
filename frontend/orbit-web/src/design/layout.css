@@ -662,6 +662,13 @@
   align-items: center;
 }
 
+.orbit-ai-widget__status {
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 72%, transparent);
+}
+
 .orbit-mobile-side-actions {
   display: none;
 }

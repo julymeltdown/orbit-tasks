@@ -748,7 +748,7 @@ export function BoardPage() {
                 }
               }))}
               learnMoreHref="/app/insights"
-              learnMoreLabel="Learn how flow works"
+              learnMoreLabel="흐름 이해하기"
             />
           ) : null}
         </section>

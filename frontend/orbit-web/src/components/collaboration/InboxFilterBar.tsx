@@ -1,48 +1,44 @@
-type InboxFilter = "all" | "notifications" | "requests" | "mentions" | "ai_questions";
+import { type InboxFilter, getInboxFilterLabel } from "@/features/collaboration/inboxPresentation";
 
 interface Props {
   value: InboxFilter;
+  counts: Record<InboxFilter, number>;
   onChange: (value: InboxFilter) => void;
   unreadCount: number;
   onMarkAllRead: () => void;
   onRefresh: () => void;
 }
 
-const FILTERS: Array<{ id: InboxFilter; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "notifications", label: "Notifications" },
-  { id: "requests", label: "Requests" },
-  { id: "mentions", label: "Mentions" },
-  { id: "ai_questions", label: "AI Questions" }
-];
+const FILTERS: InboxFilter[] = ["all", "needs_action", "mentions", "ai_questions", "resolved"];
 
-export function InboxFilterBar({ value, onChange, unreadCount, onMarkAllRead, onRefresh }: Props) {
+export function InboxFilterBar({ value, counts, unreadCount, onChange, onMarkAllRead, onRefresh }: Props) {
   return (
-    <article className="orbit-inbox-filterbar" aria-label="Inbox filters">
+    <section className="orbit-inbox-filterbar" aria-label="Inbox triage filters">
       <nav className="orbit-inbox-filterbar__tabs" role="tablist" aria-label="Inbox categories">
         {FILTERS.map((filter) => (
           <button
-            key={filter.id}
+            key={filter}
             role="tab"
-            aria-selected={value === filter.id}
-            className={`orbit-link-button orbit-link-button--tab${value === filter.id ? " is-active" : ""}`}
+            aria-selected={value === filter}
+            className={`orbit-link-button orbit-link-button--tab${value === filter ? " is-active" : ""}`}
             type="button"
-            onClick={() => onChange(filter.id)}
+            onClick={() => onChange(filter)}
           >
-            {filter.label}
+            <span>{getInboxFilterLabel(filter)}</span>
+            <span className="orbit-inbox-filterbar__count">{counts[filter] ?? 0}</span>
           </button>
         ))}
       </nav>
       <section className="orbit-inbox-filterbar__actions" aria-label="Inbox actions">
-        <span style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>Unread {unreadCount}</span>
+        <span className="orbit-inbox-filterbar__meta">미확인 {unreadCount}</span>
         <button className="orbit-button orbit-button--ghost" type="button" onClick={onMarkAllRead}>
-          Mark all read
+          모두 읽음 처리
         </button>
         <button className="orbit-button orbit-button--ghost" type="button" onClick={onRefresh}>
-          Refresh
+          새로고침
         </button>
       </section>
-    </article>
+    </section>
   );
 }
 

@@ -1160,10 +1160,48 @@
   width: 100%;
 }
 
+.orbit-inbox-page {
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.orbit-inbox-page__hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.orbit-inbox-page__summary {
+  margin: 6px 0 0;
+  color: var(--orbit-text-subtle);
+  max-width: 42rem;
+}
+
+.orbit-inbox-page__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .orbit-inbox-filterbar__tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.orbit-inbox-filterbar__count {
+  min-width: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  color: var(--orbit-text-subtle);
 }
 
 .orbit-inbox-filterbar__actions {
@@ -1171,6 +1209,153 @@
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.orbit-inbox-filterbar__meta {
+  font-size: 12px;
+  color: var(--orbit-text-subtle);
+}
+
+.orbit-inbox-list {
+  display: grid;
+  gap: 10px;
+}
+
+.orbit-inbox-row {
+  display: grid;
+  gap: 10px;
+  padding: 14px 0;
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 72%, transparent);
+}
+
+.orbit-inbox-row:first-child {
+  border-top: 0;
+}
+
+.orbit-inbox-row.is-selected {
+  border-color: color-mix(in srgb, var(--orbit-accent) 60%, var(--orbit-border));
+}
+
+.orbit-inbox-row__content {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.orbit-inbox-row__head,
+.orbit-inbox-row__meta,
+.orbit-inbox-row__actions,
+.orbit-thread-panel__meta,
+.orbit-thread-panel__context-actions,
+.orbit-thread-message__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.orbit-inbox-row__chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.orbit-inbox-row__time,
+.orbit-inbox-row__meta {
+  font-size: 12px;
+  color: var(--orbit-text-subtle);
+}
+
+.orbit-inbox-row__title {
+  font-size: 16px;
+}
+
+.orbit-inbox-row__preview,
+.orbit-thread-panel__summary,
+.orbit-thread-panel__empty,
+.orbit-thread-panel__deeplink {
+  margin: 0;
+  color: var(--orbit-text-subtle);
+}
+
+.orbit-inbox-row__urgency--high {
+  background: color-mix(in srgb, var(--orbit-danger) 18%, transparent);
+  color: var(--orbit-danger);
+}
+
+.orbit-inbox-row__urgency--medium {
+  background: color-mix(in srgb, var(--orbit-warning) 18%, transparent);
+  color: var(--orbit-warning);
+}
+
+.orbit-inbox-row__urgency--low {
+  background: color-mix(in srgb, var(--orbit-success) 18%, transparent);
+  color: var(--orbit-success);
+}
+
+.orbit-thread-panel {
+  border-left: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+  padding: 0 0 0 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.orbit-thread-panel__header,
+.orbit-thread-panel__context,
+.orbit-thread-panel__create,
+.orbit-thread-panel__composer {
+  display: grid;
+  gap: 10px;
+}
+
+.orbit-thread-panel__eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--orbit-text-subtle);
+}
+
+.orbit-thread-panel__title {
+  margin: 0;
+}
+
+.orbit-thread-panel__context,
+.orbit-thread-panel__create {
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+}
+
+.orbit-thread-panel__messages {
+  display: grid;
+  gap: 10px;
+}
+
+.orbit-thread-message {
+  display: grid;
+  gap: 6px;
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, var(--orbit-border) 72%, transparent);
+}
+
+.orbit-thread-message:first-child {
+  border-top: 0;
+}
+
+.orbit-thread-message p {
+  margin: 0;
+}
+
+.orbit-thread-panel__composer-input {
+  min-height: 6.5rem;
+  resize: vertical;
 }
 
 .orbit-timeline-scroll-shell {
@@ -3055,6 +3240,12 @@ button.orbit-dashboard-metric {
     align-items: stretch;
   }
 
+  .orbit-thread-panel {
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--orbit-border) 70%, transparent);
+    padding: 14px 0 0;
+  }
+
   .orbit-workspace-entry__actions {
     overflow-x: auto;
     overflow-y: hidden;
@@ -3103,5 +3294,14 @@ button.orbit-dashboard-metric {
 
   .orbit-project-filterbar {
     padding: 7px;
+  }
+
+  .orbit-inbox-page {
+    padding: 14px;
+  }
+
+  .orbit-inbox-row__actions .orbit-button,
+  .orbit-thread-panel__context-actions .orbit-button {
+    width: 100%;
   }
 }

@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { request } from "@/lib/http/client";
 import { useAuthStore } from "@/stores/authStore";
 import { useProjectStore } from "@/stores/projectStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { displayWorkItemTitle } from "@/features/workitems/display";
 import { useWorkItems } from "@/features/workitems/hooks/useWorkItems";
-
-interface ThreadView {
-  threadId: string;
-  title: string;
-}
+import type { InboxItemView, ThreadContextView } from "@/features/collaboration/inboxPresentation";
 
 interface MessageView {
   messageId: string;
@@ -20,16 +17,18 @@ interface MessageView {
 
 interface Props {
   focusThreadId?: string | null;
+  selectedItem?: InboxItemView | null;
 }
 
-export function ThreadPanel({ focusThreadId = null }: Props) {
+export function ThreadPanel({ focusThreadId = null, selectedItem = null }: Props) {
+  const navigate = useNavigate();
   const userId = useAuthStore((state) => state.userId) ?? "member@orbit.local";
   const workspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
   const projectId = useProjectStore((state) => state.getProjectId(workspaceId));
   const { items } = useWorkItems(projectId);
 
-  const [thread, setThread] = useState<ThreadView | null>(null);
-  const [threadTitle, setThreadTitle] = useState("New collaboration thread");
+  const [thread, setThread] = useState<ThreadContextView | null>(null);
+  const [threadTitle, setThreadTitle] = useState("새 협업 스레드");
   const [workItemId, setWorkItemId] = useState("");
   const [messages, setMessages] = useState<MessageView[]>([]);
   const [draft, setDraft] = useState("@owner ETA 확인 부탁드립니다");
@@ -38,10 +37,18 @@ export function ThreadPanel({ focusThreadId = null }: Props) {
 
   useEffect(() => {
     if (!focusThreadId) {
+      setThread(null);
+      setMessages([]);
       return;
     }
-    // If page requests focus, keep local placeholder thread reference.
-    setThread((current) => (current && current.threadId === focusThreadId ? current : { threadId: focusThreadId, title: "Focused Thread" }));
+    request<ThreadContextView>(`/api/v2/threads/${focusThreadId}`)
+      .then((next) => {
+        setThread(next);
+        if (next.workItemId) {
+          setWorkItemId(next.workItemId);
+        }
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "스레드 정보를 불러오지 못했습니다."));
   }, [focusThreadId]);
 
   useEffect(() => {
@@ -51,33 +58,36 @@ export function ThreadPanel({ focusThreadId = null }: Props) {
     }
     request<MessageView[]>(`/api/v2/threads/${thread.threadId}/messages`)
       .then(setMessages)
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load thread messages"));
+      .catch((e) => setError(e instanceof Error ? e.message : "메시지를 불러오지 못했습니다."));
   }, [thread?.threadId]);
 
-  const availableWorkItems = useMemo(() => {
-    return items.filter((item) => item.status !== "ARCHIVED");
-  }, [items]);
+  const availableWorkItems = useMemo(() => items.filter((item) => item.status !== "ARCHIVED"), [items]);
+
+  const selectedWorkItem = useMemo(() => {
+    return availableWorkItems.find((item) => item.workItemId === workItemId) ?? null;
+  }, [availableWorkItems, workItemId]);
 
   async function createThread() {
     if (!workspaceId) {
-      setError("Select workspace first");
+      setError("워크스페이스를 먼저 선택하세요.");
       return;
     }
     if (!workItemId) {
-      setError("Select work item first");
+      setError("연결할 작업을 선택하세요.");
       return;
     }
     if (!threadTitle.trim()) {
-      setError("Thread title is required");
+      setError("스레드 제목을 입력하세요.");
       return;
     }
     setError(null);
     try {
-      const created = await request<ThreadView>("/api/v2/threads", {
+      const created = await request<ThreadContextView>("/api/v2/threads", {
         method: "POST",
         body: {
           workspaceId,
           workItemId,
+          workItemTitle: selectedWorkItem?.title ?? "",
           title: threadTitle.trim(),
           createdBy: userId
         }
@@ -86,12 +96,14 @@ export function ThreadPanel({ focusThreadId = null }: Props) {
       setMessages([]);
       setDraft("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create thread");
+      setError(e instanceof Error ? e.message : "스레드를 만들지 못했습니다.");
     }
   }
 
   async function sendMessage() {
-    if (!thread || !draft.trim()) return;
+    if (!thread || !draft.trim()) {
+      return;
+    }
     try {
       await request(`/api/v2/threads/${thread.threadId}/messages`, {
         method: "POST",
@@ -100,11 +112,15 @@ export function ThreadPanel({ focusThreadId = null }: Props) {
           body: draft
         }
       });
-      const next = await request<MessageView[]>(`/api/v2/threads/${thread.threadId}/messages`);
-      setMessages(next);
+      const [nextThread, nextMessages] = await Promise.all([
+        request<ThreadContextView>(`/api/v2/threads/${thread.threadId}`),
+        request<MessageView[]>(`/api/v2/threads/${thread.threadId}/messages`)
+      ]);
+      setThread(nextThread);
+      setMessages(nextMessages);
       setDraft("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to post message");
+      setError(e instanceof Error ? e.message : "메시지를 전송하지 못했습니다.");
     }
   }
 
@@ -133,67 +149,112 @@ export function ThreadPanel({ focusThreadId = null }: Props) {
         await navigator.clipboard.writeText(url);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create deep link");
+      setError(e instanceof Error ? e.message : "딥링크를 만들지 못했습니다.");
     }
   }
 
   return (
-    <article className="orbit-card orbit-animate-card" style={{ padding: 16, display: "grid", gap: 10 }}>
-      <h3 style={{ margin: 0 }}>Thread</h3>
-      <p style={{ margin: 0, color: "var(--orbit-text-subtle)", fontSize: 13 }}>
-        Mention teammates with <code>@username</code> to generate inbox notifications.
-      </p>
-      <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
-        <input className="orbit-input" value={threadTitle} onChange={(event) => setThreadTitle(event.target.value)} placeholder="Thread title" />
-        <select className="orbit-input" value={workItemId} onChange={(event) => setWorkItemId(event.target.value)}>
-          <option value="">Select work item...</option>
-          {availableWorkItems.map((item) => (
-            <option key={item.workItemId} value={item.workItemId}>
-              {displayWorkItemTitle(item.title)}
-            </option>
-          ))}
-        </select>
-        <button className="orbit-button orbit-button--ghost" type="button" onClick={createThread}>
-          Create
-        </button>
-      </div>
+    <aside className="orbit-thread-panel">
+      <header className="orbit-thread-panel__header">
+        <div className="orbit-thread-panel__eyebrow">협업 컨텍스트</div>
+        <h3 className="orbit-thread-panel__title">{thread ? thread.title : "스레드 또는 요청 선택"}</h3>
+        <p className="orbit-thread-panel__summary">
+          {thread
+            ? thread.sourceSummary
+            : selectedItem?.sourceSummary ?? "인박스에서 항목을 선택하면 관련 스레드와 원본 작업 맥락을 여기서 검토합니다."}
+        </p>
+      </header>
 
       {thread ? (
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <strong>{thread.title}</strong>
-          <button className="orbit-button orbit-button--ghost" type="button" onClick={createDeepLink}>
-            Copy Deep Link
-          </button>
-        </div>
+        <>
+          <section className="orbit-thread-panel__meta">
+            <span className="orbit-notion-pill">{thread.status}</span>
+            <span>{thread.messageCount}개 메시지</span>
+            <span>{thread.lastMessageAt ? new Date(thread.lastMessageAt).toLocaleString() : "새 스레드"}</span>
+          </section>
+
+          <section className="orbit-thread-panel__context">
+            <div>
+              <strong>원본 작업</strong>
+              <div>{displayWorkItemTitle(thread.workItemTitle)}</div>
+            </div>
+            <div>
+              <strong>권장 처리</strong>
+              <div>{thread.resolutionHint}</div>
+            </div>
+            <div className="orbit-thread-panel__context-actions">
+              <button className="orbit-button orbit-button--ghost" type="button" onClick={() => navigate(thread.sourcePath)}>
+                원본 작업 보기
+              </button>
+              <button className="orbit-button orbit-button--ghost" type="button" onClick={createDeepLink}>
+                딥링크 복사
+              </button>
+            </div>
+          </section>
+
+          <section className="orbit-thread-panel__messages" aria-label="Thread messages">
+            {messages.length === 0 ? (
+              <p className="orbit-thread-panel__empty">아직 메시지가 없습니다. 첫 메시지로 담당자와 다음 행동을 명확히 남기세요.</p>
+            ) : null}
+            {messages.map((message) => (
+              <article key={message.messageId} className="orbit-thread-message">
+                <div className="orbit-thread-message__head">
+                  <strong>{message.authorId}</strong>
+                  <span>{new Date(message.createdAt).toLocaleString()}</span>
+                </div>
+                <p>{message.body}</p>
+              </article>
+            ))}
+          </section>
+
+          <section className="orbit-thread-panel__composer">
+            <textarea
+              className="orbit-input orbit-thread-panel__composer-input"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="@username 형태로 멘션하면 인박스에 바로 전달됩니다."
+            />
+            <div className="orbit-thread-panel__context-actions">
+              <button className="orbit-button" type="button" onClick={sendMessage}>
+                메시지 전송
+              </button>
+            </div>
+          </section>
+        </>
       ) : (
-        <span>Create a thread to start conversation.</span>
+        <section className="orbit-thread-panel__create">
+          <div className="orbit-thread-panel__meta">
+            <span className="orbit-notion-pill">새 스레드</span>
+            {selectedItem ? <span>{selectedItem.nextActionLabel}</span> : <span>작업 중심 협업 시작</span>}
+          </div>
+          <input className="orbit-input" value={threadTitle} onChange={(event) => setThreadTitle(event.target.value)} placeholder="스레드 제목" />
+          <select className="orbit-input" value={workItemId} onChange={(event) => setWorkItemId(event.target.value)}>
+            <option value="">연결할 작업 선택...</option>
+            {availableWorkItems.map((item) => (
+              <option key={item.workItemId} value={item.workItemId}>
+                {displayWorkItemTitle(item.title)}
+              </option>
+            ))}
+          </select>
+          {selectedWorkItem ? (
+            <p className="orbit-thread-panel__summary">
+              연결 예정: {displayWorkItemTitle(selectedWorkItem.title)} · {selectedWorkItem.assignee || "담당자 미지정"}
+            </p>
+          ) : null}
+          <div className="orbit-thread-panel__context-actions">
+            <button className="orbit-button" type="button" onClick={createThread}>
+              스레드 만들기
+            </button>
+          </div>
+        </section>
       )}
+
       {deepLinkUrl ? (
-        <p style={{ margin: 0, fontSize: 12, color: "var(--orbit-text-subtle)" }}>
-          Deep link: <a href={deepLinkUrl}>{deepLinkUrl}</a>
+        <p className="orbit-thread-panel__deeplink">
+          공유 링크: <a href={deepLinkUrl}>{deepLinkUrl}</a>
         </p>
       ) : null}
-      <div style={{ display: "grid", gap: 8 }}>
-        {messages.map((message) => (
-          <div key={message.messageId} className="orbit-panel" style={{ padding: 10 }}>
-            <div style={{ fontSize: 12, color: "var(--orbit-text-subtle)" }}>{message.authorId}</div>
-            <div>{message.body}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <input
-          className="orbit-input"
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          placeholder={thread ? "Type message with @mention..." : "Create thread first"}
-          disabled={!thread}
-        />
-        <button className="orbit-button" type="button" onClick={sendMessage} disabled={!thread}>
-          Send
-        </button>
-      </div>
       {error ? <p style={{ margin: 0, color: "var(--orbit-danger)" }}>{error}</p> : null}
-    </article>
+    </aside>
   );
 }
